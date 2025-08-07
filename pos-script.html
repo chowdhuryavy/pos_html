@@ -6,6 +6,7 @@
 
 // Global Variables
 let currentUser = null;
+let currentSessionId = null;
 let products = [];
 let cart = [];
 let currentTaxRate = 0.0875; // Default 8.75%
@@ -44,10 +45,13 @@ function initializeApp() {
     
     // Check if user is already logged in
     const savedUser = sessionStorage.getItem('posUser') || localStorage.getItem('posUser');
-    if (savedUser) {
-        console.log('Found saved user, loading main app...');
+    const savedSessionId = sessionStorage.getItem('currentSessionId') || localStorage.getItem('currentSessionId');
+    
+    if (savedUser && savedSessionId) {
+        console.log('Found saved user and session, loading main app...');
         try {
             currentUser = JSON.parse(savedUser);
+            currentSessionId = savedSessionId;
             showMainApp();
             loadDashboardData();
             loadCompanyBranding();
@@ -57,7 +61,7 @@ function initializeApp() {
             loadCompanyBranding();
         }
     } else {
-        console.log('No saved user, showing login modal...');
+        console.log('No saved user or session, showing login modal...');
         showLoginModal();
         loadCompanyBranding();
     }
@@ -158,6 +162,7 @@ async function handleLogin(e) {
         
         if (result.success) {
             currentUser = result.user;
+            currentSessionId = result.user.sessionId;
             
             // Step 2: Loading Data
             updateLoadingProgress(2, 'Loading Data...');
@@ -165,9 +170,11 @@ async function handleLogin(e) {
             // Handle remember me
             if (document.getElementById('rememberMe').checked) {
                 localStorage.setItem('posUser', JSON.stringify(currentUser));
+                localStorage.setItem('currentSessionId', currentSessionId);
                 localStorage.setItem('rememberAuth', 'true');
             } else {
                 sessionStorage.setItem('posUser', JSON.stringify(currentUser));
+                sessionStorage.setItem('currentSessionId', currentSessionId);
             }
             
             // Small delay to show progress
@@ -346,10 +353,26 @@ async function loadCompanyBranding() {
 /**
  * Logout user
  */
-function logout() {
+async function logout() {
+    if (currentSessionId && currentUser) {
+        try {
+            // End session on server
+            await callServerFunction('logoutUser', currentSessionId, currentUser.username);
+        } catch (error) {
+            console.error('Error ending session:', error);
+        }
+    }
+    
+    // Clear user data
     currentUser = null;
+    currentSessionId = null;
     cart = [];
     sessionStorage.removeItem('posUser');
+    sessionStorage.removeItem('currentSessionId');
+    localStorage.removeItem('posUser');
+    localStorage.removeItem('currentSessionId');
+    localStorage.removeItem('rememberAuth');
+    
     showLoginModal();
     showAlert('Logged out successfully', 'success');
 }
@@ -1134,11 +1157,14 @@ async function processSale() {
     
     const paymentMethod = document.getElementById('paymentMethod').value;
     const saleData = {
+        employee: currentUser.username,
+        sessionId: currentSessionId,
         items: cart,
         paymentMethod: paymentMethod,
         employeeId: currentUser.id,
         taxRate: currentTaxRate,
-        discount: 0
+        discount: 0,
+        amountPaid: calculateCartTotal() // For receipt generation
     };
     
     try {
@@ -1154,8 +1180,12 @@ async function processSale() {
             updateCartDisplay();
             closeModal('checkoutModal');
             
-            // Show receipt modal (placeholder)
-            showReceiptModal(result);
+            // Show professional receipt
+            if (result.receipt) {
+                showProfessionalReceipt(result.receipt);
+            } else {
+                showReceiptModal(result);
+            }
             
             // Reload products to update stock
             await loadProducts();
@@ -1787,6 +1817,454 @@ function findPeakHour(hourlyData) {
 
 function exportReport() {
     showAlert('Report export functionality coming soon!', 'warning');
+}
+
+/**
+ * Show professional receipt modal
+ */
+function showProfessionalReceipt(receipt) {
+    const receiptHTML = generateReceiptHTML(receipt);
+    
+    // Create receipt modal
+    const modal = document.createElement('div');
+    modal.className = 'receipt-modal';
+    modal.innerHTML = `
+        <div class="receipt-container">
+            <div class="receipt-header">
+                <h3><i class="fas fa-receipt"></i> Receipt</h3>
+                <button onclick="closeReceiptModal()" class="close-receipt-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="receipt-content">
+                ${receiptHTML}
+            </div>
+            <div class="receipt-actions">
+                <button onclick="printReceipt()" class="btn btn-primary">
+                    <i class="fas fa-print"></i> Print
+                </button>
+                <button onclick="emailReceipt('${receipt.sessionId}')" class="btn btn-secondary">
+                    <i class="fas fa-envelope"></i> Email
+                </button>
+                <button onclick="closeReceiptModal()" class="btn btn-outline">
+                    <i class="fas fa-check"></i> Done
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Add styles if not already added
+    if (!document.getElementById('receipt-styles')) {
+        addReceiptStyles();
+    }
+}
+
+/**
+ * Generate professional receipt HTML
+ */
+function generateReceiptHTML(receipt) {
+    return `
+        <div class="receipt-paper">
+            <!-- Header -->
+            <div class="receipt-header-section">
+                <div class="company-logo-receipt">
+                    <i class="fas fa-store"></i>
+                </div>
+                <h2 class="company-name-receipt">${receipt.companyName}</h2>
+                <p class="company-tagline-receipt">${receipt.companyTagline}</p>
+                <div class="receipt-separator"></div>
+            </div>
+            
+            <!-- Transaction Info -->
+            <div class="receipt-info">
+                <div class="receipt-row">
+                    <span>Receipt #:</span>
+                    <span><strong>${receipt.receiptNumber}</strong></span>
+                </div>
+                <div class="receipt-row">
+                    <span>Date:</span>
+                    <span>${receipt.date}</span>
+                </div>
+                <div class="receipt-row">
+                    <span>Time:</span>
+                    <span>${receipt.time}</span>
+                </div>
+                <div class="receipt-row">
+                    <span>Cashier:</span>
+                    <span>${receipt.cashier}</span>
+                </div>
+                <div class="receipt-row">
+                    <span>Session:</span>
+                    <span>${receipt.sessionId}</span>
+                </div>
+            </div>
+            
+            <div class="receipt-separator"></div>
+            
+            <!-- Items -->
+            <div class="receipt-items">
+                <div class="items-header">
+                    <span>ITEM</span>
+                    <span>QTY</span>
+                    <span>PRICE</span>
+                    <span>TOTAL</span>
+                </div>
+                ${receipt.items.map(item => `
+                    <div class="receipt-item">
+                        <span class="item-name">${item.name}</span>
+                        <span class="item-qty">${item.quantity}</span>
+                        <span class="item-price">$${item.unitPrice.toFixed(2)}</span>
+                        <span class="item-total">$${item.total.toFixed(2)}</span>
+                    </div>
+                `).join('')}
+            </div>
+            
+            <div class="receipt-separator"></div>
+            
+            <!-- Totals -->
+            <div class="receipt-totals">
+                <div class="receipt-row">
+                    <span>Subtotal:</span>
+                    <span>$${receipt.subtotal.toFixed(2)}</span>
+                </div>
+                <div class="receipt-row">
+                    <span>Tax (${receipt.taxRate}%):</span>
+                    <span>$${receipt.tax.toFixed(2)}</span>
+                </div>
+                ${receipt.discount > 0 ? `
+                    <div class="receipt-row discount">
+                        <span>Discount:</span>
+                        <span>-$${receipt.discount.toFixed(2)}</span>
+                    </div>
+                ` : ''}
+                <div class="receipt-row total">
+                    <span><strong>TOTAL:</strong></span>
+                    <span><strong>$${receipt.total.toFixed(2)}</strong></span>
+                </div>
+            </div>
+            
+            <div class="receipt-separator"></div>
+            
+            <!-- Payment -->
+            <div class="receipt-payment">
+                <div class="receipt-row">
+                    <span>Payment Method:</span>
+                    <span><strong>${receipt.paymentMethod}</strong></span>
+                </div>
+                <div class="receipt-row">
+                    <span>Amount Paid:</span>
+                    <span>$${receipt.amountPaid.toFixed(2)}</span>
+                </div>
+                ${receipt.change > 0 ? `
+                    <div class="receipt-row">
+                        <span>Change:</span>
+                        <span>$${receipt.change.toFixed(2)}</span>
+                    </div>
+                ` : ''}
+            </div>
+            
+            <div class="receipt-separator"></div>
+            
+            <!-- Footer -->
+            <div class="receipt-footer">
+                <p class="footer-message">${receipt.footerMessage}</p>
+                <p class="receipt-timestamp">Printed: ${new Date().toLocaleString()}</p>
+                <div class="receipt-barcode">
+                    <div class="barcode-lines">
+                        ${Array.from({length: 30}, () => '<div class="barcode-line"></div>').join('')}
+                    </div>
+                    <p class="barcode-text">${receipt.transactionId}</p>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * Add receipt styles
+ */
+function addReceiptStyles() {
+    const style = document.createElement('style');
+    style.id = 'receipt-styles';
+    style.textContent = `
+        .receipt-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .receipt-container {
+            background: white;
+            border-radius: 12px;
+            width: 400px;
+            max-width: 95vw;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .receipt-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .receipt-header h3 {
+            margin: 0;
+            color: #333;
+            font-size: 18px;
+        }
+        
+        .close-receipt-btn {
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: #666;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+        
+        .close-receipt-btn:hover {
+            background: #e9ecef;
+            color: #333;
+        }
+        
+        .receipt-content {
+            max-height: 60vh;
+            overflow-y: auto;
+            padding: 0;
+        }
+        
+        .receipt-paper {
+            background: white;
+            padding: 30px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #333;
+        }
+        
+        .receipt-header-section {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .company-logo-receipt {
+            font-size: 32px;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .company-name-receipt {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 5px 0;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .company-tagline-receipt {
+            font-size: 11px;
+            color: #666;
+            margin: 0;
+        }
+        
+        .receipt-separator {
+            border-top: 1px dashed #999;
+            margin: 15px 0;
+        }
+        
+        .receipt-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .receipt-row.total {
+            font-size: 14px;
+            border-top: 1px solid #333;
+            padding-top: 5px;
+            margin-top: 10px;
+        }
+        
+        .receipt-row.discount span:last-child {
+            color: #dc3545;
+        }
+        
+        .items-header {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            font-weight: bold;
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+        
+        .receipt-item {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            margin-bottom: 5px;
+            align-items: center;
+        }
+        
+        .item-name {
+            font-weight: 500;
+        }
+        
+        .item-qty, .item-price, .item-total {
+            text-align: right;
+        }
+        
+        .receipt-footer {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .footer-message {
+            font-weight: bold;
+            margin: 10px 0;
+            font-size: 13px;
+        }
+        
+        .receipt-timestamp {
+            font-size: 10px;
+            color: #666;
+            margin: 5px 0;
+        }
+        
+        .receipt-barcode {
+            margin-top: 15px;
+        }
+        
+        .barcode-lines {
+            display: flex;
+            justify-content: center;
+            gap: 1px;
+            margin-bottom: 5px;
+        }
+        
+        .barcode-line {
+            width: 2px;
+            height: 30px;
+            background: #000;
+        }
+        
+        .barcode-line:nth-child(even) {
+            height: 20px;
+        }
+        
+        .barcode-text {
+            font-size: 10px;
+            color: #666;
+            margin: 0;
+        }
+        
+        .receipt-actions {
+            display: flex;
+            gap: 10px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #eee;
+        }
+        
+        .receipt-actions .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .receipt-actions .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .receipt-actions .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .receipt-actions .btn-outline {
+            background: white;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+        
+        .receipt-actions .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        @media print {
+            .receipt-modal {
+                position: static;
+                background: none;
+            }
+            
+            .receipt-container {
+                box-shadow: none;
+                border-radius: 0;
+                max-width: none;
+                max-height: none;
+            }
+            
+            .receipt-header,
+            .receipt-actions {
+                display: none;
+            }
+            
+            .receipt-content {
+                max-height: none;
+                overflow: visible;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+/**
+ * Close receipt modal
+ */
+function closeReceiptModal() {
+    const modal = document.querySelector('.receipt-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+/**
+ * Print receipt
+ */
+function printReceipt() {
+    window.print();
+}
+
+/**
+ * Email receipt (placeholder)
+ */
+function emailReceipt(sessionId) {
+    showAlert('Email receipt functionality coming soon!', 'info');
 }
 
 // This function was moved above

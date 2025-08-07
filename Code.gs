@@ -48,6 +48,10 @@ function initializePOSSystem() {
     console.log('📋 Creating Logs sheet...');
     createLogsSheet(ss);
     
+    // Create Sessions sheet
+    console.log('⏰ Creating Sessions sheet...');
+    createSessionsSheet(ss);
+    
     // Initialize default data
     console.log('🔧 Adding default data...');
     initializeDefaultData();
@@ -240,7 +244,7 @@ function createSettingsSheet(ss) {
 }
 
 /**
- * Create Logs sheet with proper structure
+ * Create Logs sheet with comprehensive structure
  */
 function createLogsSheet(ss) {
   let sheet = ss.getSheetByName(CONFIG.SHEETS.LOGS);
@@ -250,15 +254,45 @@ function createLogsSheet(ss) {
   
   sheet.clear();
   
-  const headers = ['Timestamp', 'Action', 'User', 'Details', 'IP'];
+  const headers = [
+    'Timestamp', 'Action', 'User', 'Session ID', 'Details', 
+    'Amount', 'Payment Method', 'Items Count', 'IP Address', 'Device Info'
+  ];
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
   
   const headerRange = sheet.getRange(1, 1, 1, headers.length);
-  headerRange.setBackground('#9aa0a6');
+  headerRange.setBackground('#34a853');
   headerRange.setFontColor('white');
   headerRange.setFontWeight('bold');
   
   sheet.setFrozenRows(1);
+  sheet.autoResizeColumns(1, headers.length);
+}
+
+/**
+ * Create Sessions sheet for tracking user sessions
+ */
+function createSessionsSheet(ss) {
+  let sheet = ss.getSheetByName('Sessions');
+  if (!sheet) {
+    sheet = ss.insertSheet('Sessions');
+  }
+  
+  sheet.clear();
+  
+  const headers = [
+    'Session ID', 'User', 'Role', 'Opening Time', 'Closing Time', 
+    'Duration (minutes)', 'Transactions Count', 'Total Sales', 'Status', 'IP Address'
+  ];
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  
+  const headerRange = sheet.getRange(1, 1, 1, headers.length);
+  headerRange.setBackground('#1976d2');
+  headerRange.setFontColor('white');
+  headerRange.setFontWeight('bold');
+  
+  sheet.setFrozenRows(1);
+  sheet.autoResizeColumns(1, headers.length);
 }
 
 /**
@@ -320,7 +354,10 @@ function authenticateUser(username, credential, authType = 'pin') {
           // Update last login
           sheet.getRange(i + 1, 8).setValue(new Date());
           
-          logAction('User Login', username, `User ${name} logged in successfully using ${authType.toUpperCase()}`);
+          // Start user session
+          const sessionId = startSession(username, role);
+          
+          logAction('User Login', username, `User ${name} logged in successfully using ${authType.toUpperCase()}`, sessionId);
           
           return {
             success: true,
@@ -328,7 +365,8 @@ function authenticateUser(username, credential, authType = 'pin') {
               id: id,
               name: name,
               role: role,
-              username: user
+              username: user,
+              sessionId: sessionId
             }
           };
         }
@@ -477,13 +515,14 @@ function processSale(saleData) {
       sheet.getRange(startRow, 1, saleRecords.length, saleRecords[0].length).setValues(saleRecords);
     }
     
-    logAction('Sale Processed', employeeId, `Sale processed for $${totalSale.toFixed(2)}`);
+    logAction('Sale Completed', employeeId, `Sale completed: ${saleData.items.length} items, Total: $${totalSale.toFixed(2)}`, sessionId, totalSale, saleData.paymentMethod, saleData.items.length);
     
     return {
       success: true,
       sessionId: sessionId,
       total: totalSale,
-      saleRecords: saleRecords.length
+      saleRecords: saleRecords.length,
+      receipt: generateReceipt(sessionId, saleData, totalSale)
     };
     
   } catch (error) {
@@ -638,17 +677,26 @@ function getSetting(key) {
 /**
  * Log system actions
  */
-function logAction(action, user, details) {
+function logAction(action, user, details, sessionId = null, amount = null, paymentMethod = null, itemsCount = null) {
   try {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.SHEETS.LOGS);
     const lastRow = sheet.getLastRow();
+    
+    // Get client info (limited in Apps Script environment)
+    const ipAddress = Session.getActiveUser().getEmail() || 'Unknown';
+    const deviceInfo = 'Web Browser';
     
     const logEntry = [
       new Date(),
       action,
       user || 'System',
-      details,
-      Session.getActiveUser().getEmail() || 'Unknown'
+      sessionId || '',
+      details || '',
+      amount || '',
+      paymentMethod || '',
+      itemsCount || '',
+      ipAddress,
+      deviceInfo
     ];
     
     sheet.getRange(lastRow + 1, 1, 1, logEntry.length).setValues([logEntry]);
@@ -656,6 +704,124 @@ function logAction(action, user, details) {
   } catch (error) {
     console.error('Log action error:', error);
   }
+}
+
+/**
+ * Start user session tracking
+ */
+function startSession(user, role) {
+  try {
+    const sessionId = generateSessionId();
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Sessions');
+    const now = new Date();
+    const ipAddress = Session.getActiveUser().getEmail() || 'Unknown';
+    
+    const sessionEntry = [
+      sessionId,
+      user,
+      role,
+      now,
+      '', // Closing time (empty for now)
+      '', // Duration (calculated on close)
+      0,  // Transactions count
+      0,  // Total sales
+      'ACTIVE',
+      ipAddress
+    ];
+    
+    sheet.appendRow(sessionEntry);
+    
+    // Log session start
+    logAction('Session Start', user, `User ${user} started session`, sessionId);
+    
+    return sessionId;
+    
+  } catch (error) {
+    console.error('Start session error:', error);
+    return null;
+  }
+}
+
+/**
+ * End user session tracking
+ */
+function endSession(sessionId, user) {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Sessions');
+    const data = sheet.getDataRange().getValues();
+    const now = new Date();
+    
+    // Find the session row
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === sessionId && data[i][8] === 'ACTIVE') {
+        const openingTime = new Date(data[i][3]);
+        const duration = Math.round((now - openingTime) / (1000 * 60)); // Duration in minutes
+        
+        // Get session statistics
+        const sessionStats = getSessionStatistics(sessionId);
+        
+        // Update the row
+        sheet.getRange(i + 1, 5).setValue(now); // Closing time
+        sheet.getRange(i + 1, 6).setValue(duration); // Duration
+        sheet.getRange(i + 1, 7).setValue(sessionStats.transactionCount); // Transactions
+        sheet.getRange(i + 1, 8).setValue(sessionStats.totalSales); // Total sales
+        sheet.getRange(i + 1, 9).setValue('CLOSED'); // Status
+        
+        // Log session end
+        logAction('Session End', user, `Session duration: ${duration} minutes, Transactions: ${sessionStats.transactionCount}, Sales: $${sessionStats.totalSales.toFixed(2)}`, sessionId);
+        
+        return {
+          duration: duration,
+          transactions: sessionStats.transactionCount,
+          totalSales: sessionStats.totalSales
+        };
+      }
+    }
+    
+  } catch (error) {
+    console.error('End session error:', error);
+    return null;
+  }
+}
+
+/**
+ * Get session statistics
+ */
+function getSessionStatistics(sessionId) {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.SHEETS.LOGS);
+    const data = sheet.getDataRange().getValues();
+    
+    let transactionCount = 0;
+    let totalSales = 0;
+    
+    // Count transactions and sum sales for this session
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][3] === sessionId && data[i][1] === 'Sale Completed') {
+        transactionCount++;
+        const amount = parseFloat(data[i][5]) || 0;
+        totalSales += amount;
+      }
+    }
+    
+    return {
+      transactionCount: transactionCount,
+      totalSales: totalSales
+    };
+    
+  } catch (error) {
+    console.error('Get session statistics error:', error);
+    return { transactionCount: 0, totalSales: 0 };
+  }
+}
+
+/**
+ * Generate unique session ID
+ */
+function generateSessionId() {
+  const timestamp = new Date().getTime();
+  const random = Math.floor(Math.random() * 1000);
+  return `SES${timestamp}${random}`;
 }
 
 /**
@@ -1143,4 +1309,147 @@ function doGet() {
  */
 function include(filename) {
   return HtmlService.createHtmlOutputFromFile(filename).getContent();
+}
+
+/**
+ * Generate professional receipt
+ */
+function generateReceipt(sessionId, saleData, total) {
+  try {
+    const companyName = getSetting('COMPANY_NAME') || 'RetailPro';
+    const companyTagline = getSetting('COMPANY_TAGLINE') || 'Modern Point of Sale System';
+    const currency = getSetting('CURRENCY') || 'USD';
+    const taxRate = parseFloat(getSetting('TAX_RATE') || '0.0875');
+    
+    const now = new Date();
+    const subtotal = total / (1 + taxRate);
+    const tax = total - subtotal;
+    const discount = saleData.discount || 0;
+    
+    const receipt = {
+      // Header
+      companyName: companyName,
+      companyTagline: companyTagline,
+      
+      // Transaction Details
+      receiptNumber: sessionId,
+      date: now.toLocaleDateString(),
+      time: now.toLocaleTimeString(),
+      cashier: saleData.employee,
+      
+      // Items
+      items: saleData.items.map(item => ({
+        name: item.name,
+        quantity: item.quantity,
+        unitPrice: item.price,
+        total: item.quantity * item.price
+      })),
+      
+      // Totals
+      subtotal: subtotal,
+      tax: tax,
+      taxRate: (taxRate * 100).toFixed(2),
+      discount: discount,
+      total: total,
+      currency: currency,
+      
+      // Payment
+      paymentMethod: saleData.paymentMethod,
+      amountPaid: saleData.amountPaid || total,
+      change: (saleData.amountPaid || total) - total,
+      
+      // Footer
+      footerMessage: getSetting('RECEIPT_FOOTER') || 'Thank you for your business!',
+      
+      // Session Info
+      sessionId: sessionId,
+      transactionId: saleData.transactionId || sessionId
+    };
+    
+    return receipt;
+    
+  } catch (error) {
+    console.error('Generate receipt error:', error);
+    return null;
+  }
+}
+
+/**
+ * Create daily backup
+ */
+function createDailyBackup() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const backupName = `POS_Backup_${new Date().toISOString().split('T')[0]}`;
+    
+    // Create a copy of the spreadsheet
+    const backup = ss.copy(backupName);
+    
+    // Move to a backup folder if exists
+    try {
+      const backupFolder = DriveApp.getFoldersByName('POS_Backups').next();
+      const file = DriveApp.getFileById(backup.getId());
+      file.moveTo(backupFolder);
+    } catch (e) {
+      // Create backup folder if it doesn't exist
+      const backupFolder = DriveApp.createFolder('POS_Backups');
+      const file = DriveApp.getFileById(backup.getId());
+      file.moveTo(backupFolder);
+    }
+    
+    logAction('System Backup', 'System', `Daily backup created: ${backupName}`);
+    
+    return {
+      success: true,
+      backupId: backup.getId(),
+      backupName: backupName
+    };
+    
+  } catch (error) {
+    console.error('Create backup error:', error);
+    logAction('System Error', 'System', `Backup failed: ${error.toString()}`);
+    return {
+      success: false,
+      error: error.toString()
+    };
+  }
+}
+
+/**
+ * Schedule daily backup (can be set up as a trigger)
+ */
+function scheduleDailyBackup() {
+  // Delete existing daily triggers
+  const triggers = ScriptApp.getProjectTriggers();
+  triggers.forEach(trigger => {
+    if (trigger.getHandlerFunction() === 'createDailyBackup') {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  });
+  
+  // Create new daily trigger at 2 AM
+  ScriptApp.newTrigger('createDailyBackup')
+    .timeBased()
+    .everyDays(1)
+    .atHour(2)
+    .create();
+    
+  logAction('System Setup', 'System', 'Daily backup scheduled at 2:00 AM');
+}
+
+/**
+ * End user session (to be called on logout)
+ */
+function logoutUser(sessionId, username) {
+  try {
+    if (sessionId) {
+      const sessionSummary = endSession(sessionId, username);
+      logAction('User Logout', username, `User logged out. Session summary: ${JSON.stringify(sessionSummary)}`, sessionId);
+      return sessionSummary;
+    }
+    return null;
+  } catch (error) {
+    console.error('Logout error:', error);
+    return null;
+  }
 }
