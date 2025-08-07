@@ -2091,6 +2091,21 @@
             padding: 40px;
             color: #666;
         }
+        
+        /* Force hide loading overlay */
+        .loading-overlay.hidden,
+        #loading.hidden {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+        }
+        
+        /* Ensure login modal is visible */
+        .login-modal {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
     </style>
 </head>
 <body>
@@ -3126,48 +3141,78 @@
                         reportDateInput.value = today;
                     }
                     
-                                // Handle CSP frame restriction - improved approach
+                                // Force hide loading immediately on DOM ready
+            console.log('Forcing loading overlay to hide...');
+            const loadingOverlay = document.getElementById('loading');
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'none';
+                console.log('Loading overlay hidden on DOM ready');
+            }
+            
+            // Force show login modal
+            setTimeout(() => {
+                const loginModal = document.getElementById('loginModal');
+                if (loginModal) {
+                    loginModal.style.display = 'flex';
+                    console.log('Login modal forced to show');
+                    
+                    // Focus username field
+                    const usernameField = document.getElementById('username');
+                    if (usernameField) {
+                        usernameField.focus();
+                    }
+                }
+                
+                // Ensure main container is hidden
+                const mainContainer = document.getElementById('mainContainer');
+                if (mainContainer) {
+                    mainContainer.style.display = 'none';
+                    console.log('Main container hidden');
+                }
+            }, 100);
+            
+            // Handle CSP frame restriction - simplified approach
             try {
-                // Check if we're in a sandboxed frame
                 if (window.parent !== window.self) {
                     console.log('Running in iframe, checking for CSP restrictions...');
                     
-                    // Try to access parent - if blocked, we're sandboxed
                     try {
                         const parentLocation = window.parent.location.href;
-                        console.log('Parent access allowed');
+                        console.log('Parent access allowed - continuing normally');
                     } catch (e) {
                         console.log('Sandboxed iframe detected, showing direct link option');
                         
-                        // Show a message to open in new tab instead of trying to redirect
-                        const currentUrl = window.location.href.replace('/userCodeAppPanel', '');
-                        const message = document.createElement('div');
-                        message.style.cssText = `
-                            position: fixed; top: 10px; right: 10px; 
-                            background: #ff5722; color: white; padding: 15px; 
-                            border-radius: 8px; z-index: 10001; font-size: 14px;
-                            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-                        `;
-                        message.innerHTML = `
-                            <div style="margin-bottom: 8px;"><strong>⚠️ Frame Restriction</strong></div>
-                            <div style="margin-bottom: 10px;">For best experience, open in new tab:</div>
-                            <button onclick="window.open('${currentUrl}', '_blank')" 
-                                    style="background: white; color: #ff5722; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
-                                Open in New Tab
-                            </button>
-                            <button onclick="this.parentElement.remove()" 
-                                    style="background: transparent; color: white; border: 1px solid white; padding: 6px 10px; border-radius: 4px; cursor: pointer; margin-left: 8px;">
-                                Continue Here
-                            </button>
-                        `;
-                        document.body.appendChild(message);
-                        
-                        // Auto-remove after 10 seconds
+                        // Show a simple notification
                         setTimeout(() => {
-                            if (message.parentElement) {
-                                message.remove();
-                            }
-                        }, 10000);
+                            const currentUrl = window.location.href.replace('/userCodeAppPanel', '');
+                            const notification = document.createElement('div');
+                            notification.innerHTML = `
+                                <div style="position: fixed; top: 20px; right: 20px; background: #2196f3; color: white; 
+                                           padding: 15px; border-radius: 8px; z-index: 10001; max-width: 300px;
+                                           box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+                                    <div style="margin-bottom: 8px;"><strong>🔗 Better Experience Available</strong></div>
+                                    <div style="margin-bottom: 10px; font-size: 13px;">Open in new tab for full functionality:</div>
+                                    <button onclick="window.open('${currentUrl}', '_blank')" 
+                                            style="background: white; color: #2196f3; border: none; padding: 8px 12px; 
+                                                   border-radius: 4px; cursor: pointer; font-weight: 500;">
+                                        Open in New Tab
+                                    </button>
+                                    <button onclick="this.parentElement.parentElement.remove()" 
+                                            style="background: transparent; color: white; border: 1px solid white; 
+                                                   padding: 6px 10px; border-radius: 4px; cursor: pointer; margin-left: 8px;">
+                                        ✕
+                                    </button>
+                                </div>
+                            `;
+                            document.body.appendChild(notification);
+                            
+                            // Auto-remove after 15 seconds
+                            setTimeout(() => {
+                                if (notification.parentElement) {
+                                    notification.remove();
+                                }
+                            }, 15000);
+                        }, 2000);
                     }
                 }
             } catch (e) {

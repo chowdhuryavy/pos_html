@@ -19,24 +19,69 @@ let loginModal, mainContainer, loading;
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM fully loaded, starting POS initialization...');
     
-    // Force hide loading overlay immediately
-    const loadingOverlay = document.getElementById('loading');
-    if (loadingOverlay) {
-        loadingOverlay.style.display = 'none';
-        console.log('Loading overlay hidden on DOM ready');
+    // Force hide loading overlay immediately and repeatedly
+    function forceHideLoading() {
+        const loadingOverlay = document.getElementById('loading');
+        if (loadingOverlay) {
+            loadingOverlay.style.display = 'none';
+            loadingOverlay.style.visibility = 'hidden';
+            loadingOverlay.classList.add('hidden');
+            console.log('Loading overlay forcefully hidden');
+        }
     }
     
-    // Small delay to ensure all elements are properly rendered
-    setTimeout(() => {
+    forceHideLoading();
+    
+    // Force show login modal immediately
+    function forceShowLogin() {
+        const loginModal = document.getElementById('loginModal');
+        if (loginModal) {
+            loginModal.style.display = 'flex';
+            loginModal.style.visibility = 'visible';
+            loginModal.classList.remove('hidden');
+            console.log('Login modal forcefully shown');
+        }
+        
+        const mainContainer = document.getElementById('mainContainer');
+        if (mainContainer) {
+            mainContainer.style.display = 'none';
+            console.log('Main container hidden');
+        }
+    }
+    
+    forceShowLogin();
+    
+    // Initialize with multiple attempts
+    let initAttempts = 0;
+    function attemptInitialization() {
+        initAttempts++;
+        console.log(`Initialization attempt ${initAttempts}`);
+        
         try {
+            // Force UI state again
+            forceHideLoading();
+            forceShowLogin();
+            
+            // Initialize app
             initializeApp();
             setupEventListeners();
+            
+            console.log('POS initialization completed successfully');
         } catch (error) {
-            console.error('Error during app initialization:', error);
-            // Show error message
-            showDeploymentError();
+            console.error(`Error during app initialization (attempt ${initAttempts}):`, error);
+            
+            if (initAttempts < 3) {
+                // Retry after a short delay
+                setTimeout(attemptInitialization, 500);
+            } else {
+                // Show error message after 3 failed attempts
+                showDeploymentError();
+            }
         }
-    }, 200);
+    }
+    
+    // Start initialization with a small delay
+    setTimeout(attemptInitialization, 100);
 });
 
 /**
@@ -77,6 +122,124 @@ function showDeploymentError() {
 }
 
 /**
+ * Create fallback login if main login modal is missing
+ */
+function createFallbackLogin() {
+    console.log('Creating fallback login interface...');
+    
+    // Remove any loading overlays
+    const existingLoading = document.querySelectorAll('#loading, .loading-overlay');
+    existingLoading.forEach(el => el.remove());
+    
+    // Create simple login interface
+    const fallbackLogin = document.createElement('div');
+    fallbackLogin.id = 'fallbackLogin';
+    fallbackLogin.innerHTML = `
+        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                    display: flex; justify-content: center; align-items: center; z-index: 10000;">
+            <div style="background: white; padding: 40px; border-radius: 12px; 
+                        box-shadow: 0 10px 30px rgba(0,0,0,0.3); text-align: center; min-width: 400px;">
+                <div style="font-size: 48px; margin-bottom: 20px;">🏪</div>
+                <h2 style="margin: 0 0 20px 0; color: #333;">POS System Login</h2>
+                
+                <div style="margin-bottom: 20px;">
+                    <input type="text" id="fallbackUsername" placeholder="Username" 
+                           style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; 
+                                  margin-bottom: 10px; font-size: 16px; box-sizing: border-box;">
+                    <input type="password" id="fallbackPin" placeholder="PIN" 
+                           style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; 
+                                  margin-bottom: 20px; font-size: 16px; box-sizing: border-box;">
+                </div>
+                
+                <button onclick="fallbackLogin()" 
+                        style="background: #667eea; color: white; border: none; padding: 12px 30px; 
+                               border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 16px; width: 100%;">
+                    Sign In
+                </button>
+                
+                <div id="fallbackError" style="color: #dc3545; margin-top: 15px; display: none;"></div>
+                
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
+                    <p style="color: #666; margin: 0 0 10px 0; font-size: 14px;">Demo Credentials:</p>
+                    <p style="color: #666; margin: 0; font-size: 14px;">Username: <strong>admin</strong> | PIN: <strong>1234</strong></p>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(fallbackLogin);
+    
+    // Focus username field
+    setTimeout(() => {
+        const usernameField = document.getElementById('fallbackUsername');
+        if (usernameField) {
+            usernameField.focus();
+        }
+    }, 100);
+    
+    console.log('Fallback login created and displayed');
+}
+
+/**
+ * Handle fallback login
+ */
+async function fallbackLogin() {
+    const username = document.getElementById('fallbackUsername').value;
+    const pin = document.getElementById('fallbackPin').value;
+    const errorDiv = document.getElementById('fallbackError');
+    
+    if (!username || !pin) {
+        errorDiv.style.display = 'block';
+        errorDiv.textContent = 'Please enter both username and PIN';
+        return;
+    }
+    
+    try {
+        errorDiv.style.display = 'none';
+        
+        // Show loading state
+        const button = event.target;
+        const originalText = button.textContent;
+        button.textContent = 'Signing in...';
+        button.disabled = true;
+        
+        const result = await callServerFunction('authenticateUser', username, pin, 'pin');
+        
+        if (result.success) {
+            currentUser = result.user;
+            currentSessionId = result.user.sessionId;
+            
+            // Store session
+            sessionStorage.setItem('posUser', JSON.stringify(currentUser));
+            sessionStorage.setItem('currentSessionId', currentSessionId);
+            
+            // Remove fallback login
+            const fallbackEl = document.getElementById('fallbackLogin');
+            if (fallbackEl) {
+                fallbackEl.remove();
+            }
+            
+            // Force show main app
+            showMainApp();
+            
+        } else {
+            button.textContent = originalText;
+            button.disabled = false;
+            errorDiv.style.display = 'block';
+            errorDiv.textContent = result.message || 'Login failed';
+        }
+        
+    } catch (error) {
+        console.error('Fallback login error:', error);
+        button.textContent = originalText;
+        button.disabled = false;
+        errorDiv.style.display = 'block';
+        errorDiv.textContent = 'Login failed. Please try again.';
+    }
+}
+
+/**
  * Initialize the application
  */
 function initializeApp() {
@@ -93,25 +256,47 @@ function initializeApp() {
         loading: !!loading
     });
     
-    // Force proper initial state
+    // Aggressively force proper initial state
     if (loading) {
         loading.style.display = 'none';
-        console.log('Loading forced hidden in initializeApp');
+        loading.style.visibility = 'hidden';
+        loading.style.opacity = '0';
+        loading.classList.add('hidden');
+        console.log('Loading aggressively hidden in initializeApp');
     }
     
     if (loginModal) {
         loginModal.style.display = 'flex';
-        console.log('Login modal forced visible in initializeApp');
+        loginModal.style.visibility = 'visible';
+        loginModal.style.opacity = '1';
+        loginModal.classList.remove('hidden');
+        console.log('Login modal aggressively shown in initializeApp');
+        
+        // Focus username field
+        setTimeout(() => {
+            const usernameField = document.getElementById('username');
+            if (usernameField) {
+                usernameField.focus();
+                console.log('Username field focused');
+            }
+        }, 100);
     }
     
     if (mainContainer) {
         mainContainer.style.display = 'none';
-        console.log('Main container forced hidden in initializeApp');
+        mainContainer.style.visibility = 'hidden';
+        console.log('Main container aggressively hidden in initializeApp');
     }
     
     // If critical elements are missing, show error
-    if (!loginModal || !mainContainer) {
-        console.error('Critical DOM elements missing!');
+    if (!loginModal) {
+        console.error('Login modal missing! Creating fallback...');
+        createFallbackLogin();
+        return;
+    }
+    
+    if (!mainContainer) {
+        console.error('Main container missing!');
         showDeploymentError();
         return;
     }
