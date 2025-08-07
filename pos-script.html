@@ -697,76 +697,195 @@ function showMainApp() {
     console.log('Showing main application...');
     console.log('Current user:', currentUser);
     
+    // Re-get DOM elements to ensure they're current
+    loginModal = document.getElementById('loginModal');
+    mainContainer = document.getElementById('mainContainer');
+    loading = document.getElementById('loading');
+    
+    console.log('Re-checking DOM elements:', {
+        loginModal: !!loginModal,
+        mainContainer: !!mainContainer,
+        loading: !!loading
+    });
+    
     // Ensure DOM elements are available
-    if (!loginModal || !mainContainer) {
-        console.error('Required DOM elements not found:', {
-            loginModal: !!loginModal,
-            mainContainer: !!mainContainer
-        });
+    if (!mainContainer) {
+        console.error('Main container not found! Creating fallback...');
+        createFallbackMainApp();
         return;
     }
     
-    // Hide login modal and show main container
-    loginModal.style.display = 'none';
+    // Hide login modal aggressively
+    if (loginModal) {
+        loginModal.style.display = 'none';
+        loginModal.style.visibility = 'hidden';
+        loginModal.style.opacity = '0';
+        console.log('Login modal hidden');
+    }
+    
+    // Hide loading overlay aggressively
+    if (loading) {
+        loading.style.display = 'none';
+        loading.style.visibility = 'hidden';
+        loading.style.opacity = '0';
+        loading.classList.add('hidden');
+        console.log('Loading overlay hidden');
+    }
+    
+    // Show main container aggressively
     mainContainer.style.display = 'block';
-    if (loading) loading.style.display = 'none';
+    mainContainer.style.visibility = 'visible';
+    mainContainer.style.opacity = '1';
+    mainContainer.classList.remove('hidden');
+    console.log('Main container shown');
     
     // Update user info
-    const userName = document.getElementById('userName');
-    const userAvatar = document.getElementById('userAvatar');
-    
-    if (currentUser) {
-        if (userName) {
-            userName.textContent = currentUser.name;
-            console.log('Updated user name:', currentUser.name);
-        }
-        if (userAvatar) {
-            userAvatar.textContent = currentUser.name.charAt(0).toUpperCase();
-            console.log('Updated user avatar');
-        }
-    }
-    
-    // Hide admin-only elements based on role
-    const adminElements = document.querySelectorAll('.admin-only');
-    console.log('Found admin elements:', adminElements.length);
-    adminElements.forEach(element => {
-        if (currentUser && currentUser.role !== 'Admin') {
-            element.style.display = 'none';
-        } else {
-            element.style.display = '';
-        }
-    });
-    
-    // Force show dashboard section
-    console.log('Forcing dashboard display...');
-    const dashboardSection = document.getElementById('dashboard');
-    if (dashboardSection) {
-        // Hide all sections first
-        document.querySelectorAll('.content-section').forEach(section => {
-            section.classList.remove('active');
-        });
-        // Show dashboard
-        dashboardSection.classList.add('active');
+    setTimeout(() => {
+        const userName = document.getElementById('userName');
+        const userAvatar = document.getElementById('userAvatar');
         
-        // Update sidebar
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.classList.remove('active');
-        });
-        const dashboardNav = document.querySelector('[data-section="dashboard"]');
-        if (dashboardNav) {
-            dashboardNav.classList.add('active');
+        if (currentUser) {
+            if (userName) {
+                userName.textContent = currentUser.name;
+                console.log('Updated user name:', currentUser.name);
+            }
+            if (userAvatar) {
+                userAvatar.textContent = currentUser.name.charAt(0).toUpperCase();
+                console.log('Updated user avatar');
+            }
         }
         
-        console.log('Dashboard should now be visible');
-    } else {
-        console.error('Dashboard section not found!');
-    }
+        // Hide admin-only elements based on role
+        const adminElements = document.querySelectorAll('.admin-only');
+        console.log('Found admin elements:', adminElements.length);
+        adminElements.forEach(element => {
+            if (currentUser && currentUser.role !== 'Admin') {
+                element.style.display = 'none';
+            } else {
+                element.style.display = '';
+            }
+        });
+        
+        // Force show dashboard section
+        console.log('Forcing dashboard display...');
+        showSection('dashboard');
+        
+        // Load initial data
+        try {
+            loadProducts();
+            loadSettings();
+            loadCompanyBranding();
+        } catch (error) {
+            console.error('Error loading initial data:', error);
+        }
+        
+        console.log('Main app initialization complete');
+    }, 100);
+}
+
+/**
+ * Create fallback main app if container is missing
+ */
+function createFallbackMainApp() {
+    console.log('Creating fallback main app...');
     
-    // Load initial data
-    loadProducts();
-    loadSettings();
+    // Remove any existing elements
+    const existingLogin = document.querySelectorAll('#loginModal, #fallbackLogin');
+    existingLogin.forEach(el => el.remove());
     
-    console.log('Main app initialization complete');
+    const fallbackApp = document.createElement('div');
+    fallbackApp.id = 'fallbackMainApp';
+    fallbackApp.innerHTML = `
+        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                    background: #f5f5f5; z-index: 10000;">
+            <!-- Header -->
+            <div style="background: white; padding: 15px 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                        display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div style="width: 40px; height: 40px; background: #667eea; border-radius: 50%; 
+                               display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;">
+                        🏪
+                    </div>
+                    <h1 style="margin: 0; color: #333; font-size: 24px;">POS System</h1>
+                </div>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <span style="color: #666;">Welcome, ${currentUser ? currentUser.name : 'User'}!</span>
+                    <button onclick="logout()" style="background: #dc3545; color: white; border: none; 
+                                                     padding: 8px 16px; border-radius: 4px; cursor: pointer;">
+                        Logout
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Content -->
+            <div style="padding: 30px; max-width: 1200px; margin: 0 auto;">
+                <div style="background: white; padding: 40px; border-radius: 12px; 
+                           box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center;">
+                    <div style="font-size: 64px; margin-bottom: 20px;">🎉</div>
+                    <h2 style="margin: 0 0 20px 0; color: #333;">Welcome to POS System!</h2>
+                    <p style="color: #666; margin-bottom: 30px; font-size: 18px;">
+                        Login successful! You are now logged in as <strong>${currentUser ? currentUser.name : 'User'}</strong> 
+                        with <strong>${currentUser ? currentUser.role : 'Unknown'}</strong> role.
+                    </p>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+                               gap: 20px; margin-top: 30px;">
+                        <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; cursor: pointer;" 
+                             onclick="alert('POS functionality coming soon!')">
+                            <div style="font-size: 32px; margin-bottom: 10px;">💰</div>
+                            <h3 style="margin: 0; color: #1976d2;">Point of Sale</h3>
+                            <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">Process sales transactions</p>
+                        </div>
+                        
+                        <div style="background: #e8f5e8; padding: 20px; border-radius: 8px; cursor: pointer;" 
+                             onclick="alert('Inventory functionality coming soon!')">
+                            <div style="font-size: 32px; margin-bottom: 10px;">📦</div>
+                            <h3 style="margin: 0; color: #388e3c;">Inventory</h3>
+                            <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">Manage products and stock</p>
+                        </div>
+                        
+                        <div style="background: #fff3e0; padding: 20px; border-radius: 8px; cursor: pointer;" 
+                             onclick="alert('Reports functionality coming soon!')">
+                            <div style="font-size: 32px; margin-bottom: 10px;">📊</div>
+                            <h3 style="margin: 0; color: #f57c00;">Reports</h3>
+                            <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">View sales analytics</p>
+                        </div>
+                        
+                        ${currentUser && currentUser.role === 'Admin' ? `
+                        <div style="background: #fce4ec; padding: 20px; border-radius: 8px; cursor: pointer;" 
+                             onclick="alert('Admin functionality coming soon!')">
+                            <div style="font-size: 32px; margin-bottom: 10px;">🛡️</div>
+                            <h3 style="margin: 0; color: #c2185b;">Admin Panel</h3>
+                            <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">System administration</p>
+                        </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+                        <p style="color: #999; margin: 0; font-size: 14px;">
+                            If you're seeing this page, the main app interface had loading issues.<br>
+                            Try refreshing the page or opening in a new tab for the full interface.
+                        </p>
+                        <div style="margin-top: 15px;">
+                            <button onclick="location.reload()" 
+                                    style="background: #667eea; color: white; border: none; padding: 10px 20px; 
+                                           border-radius: 4px; cursor: pointer; margin-right: 10px;">
+                                🔄 Refresh Page
+                            </button>
+                            <button onclick="window.open(window.location.href, '_blank')" 
+                                    style="background: #28a745; color: white; border: none; padding: 10px 20px; 
+                                           border-radius: 4px; cursor: pointer;">
+                                🔗 Open in New Tab
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(fallbackApp);
+    console.log('Fallback main app created and displayed');
 }
 
 /**
@@ -864,12 +983,23 @@ function showAlert(message, type = 'success') {
  */
 
 /**
- * Show section
+ * Show section with robust display management
  */
 function showSection(sectionName) {
-    // Hide all sections
+    console.log('Showing section:', sectionName);
+    
+    // Ensure main container is visible
+    const mainContainer = document.getElementById('mainContainer');
+    if (mainContainer) {
+        mainContainer.style.display = 'block';
+        mainContainer.style.visibility = 'visible';
+        mainContainer.style.opacity = '1';
+    }
+    
+    // Hide all sections aggressively
     document.querySelectorAll('.content-section').forEach(section => {
         section.classList.remove('active');
+        section.style.display = 'none';
     });
     
     // Remove active class from nav items
@@ -877,46 +1007,94 @@ function showSection(sectionName) {
         item.classList.remove('active');
     });
     
-    // Show selected section
-    document.getElementById(sectionName).classList.add('active');
+    // Show selected section aggressively
+    const targetSection = document.getElementById(sectionName);
+    if (targetSection) {
+        targetSection.classList.add('active');
+        targetSection.style.display = 'block';
+        targetSection.style.visibility = 'visible';
+        targetSection.style.opacity = '1';
+        console.log(`Section ${sectionName} should now be visible`);
+    } else {
+        console.error(`Section ${sectionName} not found!`);
+        // Create fallback content
+        createFallbackSection(sectionName);
+        return;
+    }
     
     // Add active class to nav item
-    document.querySelector(`[data-section="${sectionName}"]`).classList.add('active');
+    const navItem = document.querySelector(`[data-section="${sectionName}"]`);
+    if (navItem) {
+        navItem.classList.add('active');
+    }
     
     // Load section-specific data
-    switch (sectionName) {
-        case 'dashboard':
-            loadDashboardData();
-            break;
-        case 'pos':
-            loadProducts();
-            break;
-        case 'products':
-            loadProductsTable();
-            break;
-        case 'sales':
-            loadSalesData();
-            break;
-        case 'reports':
-            initializeReports();
-            break;
-        case 'employees':
-            loadEmployeesTable();
-            break;
-        case 'admin':
-            // Check if user has admin permissions
-            if (currentUser && currentUser.role === 'Admin') {
-                // Load default admin tab (permissions)
-                switchAdminTab('permissions');
-            } else {
-                showAlert('Access denied. Admin privileges required.', 'error');
-                showSection('dashboard');
-                return;
-            }
-            break;
-        case 'settings':
-            loadSettings();
-            break;
+    try {
+        switch (sectionName) {
+            case 'dashboard':
+                loadDashboardData();
+                break;
+            case 'pos':
+                loadProducts();
+                break;
+            case 'products':
+                loadProductsTable();
+                break;
+            case 'sales':
+                loadSalesData();
+                break;
+            case 'reports':
+                initializeReports();
+                break;
+            case 'employees':
+                loadEmployeesTable();
+                break;
+            case 'admin':
+                // Check if user has admin permissions
+                if (currentUser && currentUser.role === 'Admin') {
+                    // Load default admin tab (permissions)
+                    switchAdminTab('permissions');
+                } else {
+                    showAlert('Access denied. Admin privileges required.', 'error');
+                    showSection('dashboard');
+                    return;
+                }
+                break;
+            case 'settings':
+                loadSettings();
+                break;
+        }
+    } catch (error) {
+        console.error(`Error loading data for section ${sectionName}:`, error);
+    }
+}
+
+/**
+ * Create fallback section if section not found
+ */
+function createFallbackSection(sectionName) {
+    console.log('Creating fallback section for:', sectionName);
+    
+    const mainContent = document.querySelector('.main-content');
+    if (mainContent) {
+        const fallbackSection = document.createElement('section');
+        fallbackSection.id = sectionName;
+        fallbackSection.className = 'content-section active';
+        fallbackSection.innerHTML = `
+            <div style="text-align: center; padding: 60px 20px;">
+                <div style="font-size: 64px; margin-bottom: 20px;">🔧</div>
+                <h2 style="margin: 0 0 15px 0; color: #333;">Section Loading</h2>
+                <p style="color: #666; margin-bottom: 25px;">
+                    The ${sectionName} section is being prepared...
+                </p>
+                <button onclick="location.reload()" 
+                        style="background: #667eea; color: white; border: none; padding: 12px 24px; 
+                               border-radius: 6px; cursor: pointer; font-weight: 500;">
+                    🔄 Refresh Page
+                </button>
+            </div>
+        `;
+        mainContent.appendChild(fallbackSection);
     }
 }
 
