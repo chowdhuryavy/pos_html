@@ -363,6 +363,69 @@ function updateInventoryAfterSale(items) {
   }
 }
 
+// Company branding and settings
+function getCompanyBranding() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const settingsSheet = ss.getSheetByName('Settings');
+    
+    if (!settingsSheet) {
+      return {
+        success: false,
+        error: 'Settings sheet not found'
+      };
+    }
+    
+    const settings = getSheetData('Settings');
+    const branding = {};
+    
+    // Extract branding settings
+    settings.forEach(setting => {
+      const key = setting.Key;
+      const value = setting.Value;
+      
+      switch(key) {
+        case 'COMPANY_NAME':
+          branding.companyName = value || 'Enterprise POS';
+          break;
+        case 'COMPANY_TAGLINE':
+          branding.tagline = value || 'Advanced Point of Sale System';
+          break;
+        case 'COMPANY_LOGO':
+          branding.logo = value || '🏪';
+          break;
+        case 'PRIMARY_COLOR':
+          branding.primaryColor = value || '#667eea';
+          break;
+        case 'COMPANY_ADDRESS':
+          branding.address = value || '';
+          break;
+        case 'COMPANY_PHONE':
+          branding.phone = value || '';
+          break;
+        case 'COMPANY_EMAIL':
+          branding.email = value || '';
+          break;
+        case 'COMPANY_WEBSITE':
+          branding.website = value || '';
+          break;
+      }
+    });
+    
+    return {
+      success: true,
+      data: branding
+    };
+    
+  } catch (error) {
+    console.error('Error getting company branding:', error);
+    return {
+      success: false,
+      error: error.toString()
+    };
+  }
+}
+
 // Utility functions
 function generateUniqueId() {
   return 'ID_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -634,15 +697,48 @@ function createSettingsSheet(ss) {
   
   sheet.clear();
   
-  const headers = ['Setting', 'Value', 'Description'];
+  const headers = ['Key', 'Value', 'Description'];
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  
+  // Add default settings with comprehensive branding
+  const defaultSettings = [
+    ['COMPANY_NAME', 'Your Business Name', 'Business name for branding'],
+    ['COMPANY_TAGLINE', 'Advanced Point of Sale System', 'Business tagline'],
+    ['COMPANY_LOGO', '🏪', 'Company logo/icon for UI'],
+    ['COMPANY_ADDRESS', '123 Business St, City, State 12345', 'Business address for receipts'],
+    ['COMPANY_PHONE', '(555) 123-4567', 'Business phone number'],
+    ['COMPANY_EMAIL', 'info@yourbusiness.com', 'Business email address'],
+    ['COMPANY_WEBSITE', 'www.yourbusiness.com', 'Business website'],
+    ['PRIMARY_COLOR', '#667eea', 'Primary brand color (hex code)'],
+    ['TAX_RATE', '0.085', 'Default tax rate (8.5%)'],
+    ['CURRENCY', 'USD', 'Currency symbol'],
+    ['LOW_STOCK_THRESHOLD', '10', 'Alert when stock below this number'],
+    ['RECEIPT_FOOTER', 'Thank you for your business!', 'Footer text on receipts'],
+    ['BACKUP_ENABLED', 'true', 'Enable automatic backups'],
+    ['SESSION_TIMEOUT', '30', 'Session timeout in minutes'],
+    ['ENABLE_LOYALTY', 'true', 'Enable loyalty program'],
+    ['ENABLE_DISCOUNTS', 'true', 'Enable discount system'],
+    ['ENABLE_SPLIT_PAYMENTS', 'true', 'Enable split payments'],
+    ['ENABLE_BARCODE_SCANNER', 'true', 'Enable barcode scanning'],
+    ['ENABLE_CUSTOMER_MANAGEMENT', 'true', 'Enable customer management']
+  ];
+  
+  // Add settings data
+  if (defaultSettings.length > 0) {
+    sheet.getRange(2, 1, defaultSettings.length, defaultSettings[0].length).setValues(defaultSettings);
+  }
   
   const headerRange = sheet.getRange(1, 1, 1, headers.length);
   headerRange.setBackground('#fbbc04');
   headerRange.setFontColor('black');
   headerRange.setFontWeight('bold');
   
+  // Auto-resize columns
+  sheet.autoResizeColumns(1, headers.length);
+  
   sheet.setFrozenRows(1);
+  
+  console.log('✅ Settings sheet configured with default company branding');
 }
 
 /**

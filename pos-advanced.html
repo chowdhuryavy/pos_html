@@ -1023,28 +1023,106 @@
             initializePOS();
         });
 
-        async function initializePOS() {
-            try {
-                // Update datetime
-                updateDateTime();
-                setInterval(updateDateTime, 1000);
+                 async function initializePOS() {
+             try {
+                 // Update datetime
+                 updateDateTime();
+                 setInterval(updateDateTime, 1000);
 
-                // Load data from Google Sheets
-                await loadProducts();
-                await loadCustomers();
+                 // Load company branding first
+                 await loadCompanyBranding();
 
-                // Setup event listeners
-                setupEventListeners();
+                 // Load data from Google Sheets
+                 await loadProducts();
+                 await loadCustomers();
 
-                // Initialize cart
-                updateCartDisplay();
+                 // Setup event listeners
+                 setupEventListeners();
 
-                console.log('✅ POS Terminal initialized successfully');
-            } catch (error) {
-                console.error('❌ POS initialization error:', error);
-                showErrorMessage('Failed to initialize POS system');
-            }
-        }
+                 // Initialize cart
+                 updateCartDisplay();
+
+                 console.log('✅ POS Terminal initialized successfully');
+             } catch (error) {
+                 console.error('❌ POS initialization error:', error);
+                 showErrorMessage('Failed to initialize POS system');
+             }
+         }
+
+         async function loadCompanyBranding() {
+             try {
+                 console.log('🏢 Loading company branding for POS...');
+                 
+                 if (typeof google !== 'undefined' && google.script && google.script.run) {
+                     const brandingResult = await new Promise((resolve, reject) => {
+                         google.script.run
+                             .withSuccessHandler(resolve)
+                             .withFailureHandler(reject)
+                             .getCompanyBranding();
+                     });
+                     
+                     if (brandingResult && brandingResult.success) {
+                         applyPOSBranding(brandingResult.data);
+                         console.log('✅ POS branding loaded:', brandingResult.data);
+                     } else {
+                         console.log('⚠️ Using default POS branding');
+                         applyDefaultPOSBranding();
+                     }
+                 } else {
+                     console.log('⚠️ Google Apps Script not available, using default POS branding');
+                     applyDefaultPOSBranding();
+                 }
+                 
+             } catch (error) {
+                 console.error('❌ Error loading POS branding:', error);
+                 applyDefaultPOSBranding();
+             }
+         }
+
+         function applyPOSBranding(branding) {
+             try {
+                 // Update POS title
+                 const posTitle = document.querySelector('.pos-title');
+                 if (posTitle) {
+                     posTitle.innerHTML = `
+                         <i class="fas fa-cash-register"></i>
+                         ${branding.companyName || 'Enterprise POS'} Terminal
+                     `;
+                 }
+                 
+                 // Update page title
+                 document.title = `${branding.companyName || 'Enterprise POS'} - POS Terminal`;
+                 
+                 // Apply custom colors
+                 if (branding.primaryColor) {
+                     document.documentElement.style.setProperty('--accent-blue', branding.primaryColor);
+                     document.documentElement.style.setProperty('--primary-gradient', 
+                         `linear-gradient(135deg, ${branding.primaryColor} 0%, #764ba2 100%)`);
+                 }
+                 
+                 // Update receipt branding (will be used in receipt generation)
+                 window.companyBranding = branding;
+                 
+                 console.log('✅ POS branding applied successfully');
+                 
+             } catch (error) {
+                 console.error('❌ Error applying POS branding:', error);
+             }
+         }
+
+         function applyDefaultPOSBranding() {
+             const branding = {
+                 companyName: 'Enterprise POS',
+                 tagline: 'Advanced Point of Sale System',
+                 logo: '🏪',
+                 primaryColor: '#667eea',
+                 address: '',
+                 phone: '',
+                 email: ''
+             };
+             
+             applyPOSBranding(branding);
+         }
 
         function updateDateTime() {
             const now = new Date();
@@ -1537,26 +1615,37 @@
             
             const receiptDate = new Date().toLocaleString();
             
-            content.innerHTML = `
-                <div style="text-align: center; margin-bottom: 2rem;">
-                    <div style="font-size: 4rem; color: var(--accent-blue); margin-bottom: 1rem;">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
-                    <h2 style="color: var(--accent-blue); margin-bottom: 0.5rem;">Payment Successful!</h2>
-                    <p style="opacity: 0.8;">Receipt #${saleResult.receiptNumber}</p>
-                </div>
-                
-                <div style="background: rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
-                        <div>
-                            <div style="font-weight: 600;">Advanced POS Terminal</div>
-                            <div style="font-size: 0.9rem; opacity: 0.8;">${receiptDate}</div>
-                        </div>
-                        <div style="text-align: right;">
-                            <div style="font-weight: 600;">Cashier: ${currentUser.name}</div>
-                            ${selectedCustomer ? `<div style="font-size: 0.9rem; opacity: 0.8;">Customer: ${selectedCustomer.Name}</div>` : ''}
-                        </div>
-                    </div>
+                         // Get company branding for receipt
+             const branding = window.companyBranding || {
+                 companyName: 'Enterprise POS',
+                 tagline: 'Advanced Point of Sale System',
+                 address: '',
+                 phone: '',
+                 email: ''
+             };
+
+             content.innerHTML = `
+                 <div style="text-align: center; margin-bottom: 2rem;">
+                     <div style="font-size: 4rem; color: var(--accent-blue); margin-bottom: 1rem;">
+                         <i class="fas fa-check-circle"></i>
+                     </div>
+                     <h2 style="color: var(--accent-blue); margin-bottom: 0.5rem;">Payment Successful!</h2>
+                     <p style="opacity: 0.8;">Receipt #${saleResult.receiptNumber}</p>
+                 </div>
+                 
+                 <div style="background: rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                     <div style="display: flex; justify-content: space-between; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                         <div>
+                             <div style="font-weight: 600;">${branding.companyName}</div>
+                             <div style="font-size: 0.9rem; opacity: 0.8;">${receiptDate}</div>
+                             ${branding.address ? `<div style="font-size: 0.8rem; opacity: 0.7;">${branding.address}</div>` : ''}
+                             ${branding.phone ? `<div style="font-size: 0.8rem; opacity: 0.7;">📞 ${branding.phone}</div>` : ''}
+                         </div>
+                         <div style="text-align: right;">
+                             <div style="font-weight: 600;">Cashier: ${currentUser.name}</div>
+                             ${selectedCustomer ? `<div style="font-size: 0.9rem; opacity: 0.8;">Customer: ${selectedCustomer.Name}</div>` : ''}
+                         </div>
+                     </div>
                     
                     <div style="margin-bottom: 1rem;">
                         ${saleData.items.map(item => `

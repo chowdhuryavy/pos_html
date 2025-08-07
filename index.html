@@ -738,16 +738,16 @@
                 </div>
 
                 <form id="loginForm" onsubmit="handleLoginSubmit(event)">
-                    <div class="form-group">
-                        <input type="text" id="username" class="form-input" placeholder="Username" required>
-                    </div>
+                                         <div class="form-group">
+                         <input type="text" id="username" class="form-input" placeholder="Username">
+                     </div>
 
                     <div class="form-group pin-field">
-                        <input type="password" id="pin" class="form-input" placeholder="Enter 4-digit PIN" maxlength="4" required>
+                        <input type="password" id="pin" class="form-input" placeholder="Enter 4-digit PIN" maxlength="4">
                     </div>
 
                     <div class="form-group password-field hidden">
-                        <input type="password" id="password" class="form-input" placeholder="Password" required>
+                        <input type="password" id="password" class="form-input" placeholder="Password">
                     </div>
 
                     <button type="submit" class="login-button" id="loginBtn">
@@ -905,22 +905,25 @@
             initializeAdvancedApp();
         });
 
-        async function initializeAdvancedApp() {
-            try {
-                // Show loading with progress
-                await simulateLoadingSteps();
-                
-                // Hide loading and show login
-                setTimeout(() => {
-                    hideLoading();
-                    showLogin();
-                }, 500);
-                
-            } catch (error) {
-                console.error('❌ Initialization error:', error);
-                showError('Failed to initialize system');
-            }
-        }
+                 async function initializeAdvancedApp() {
+             try {
+                 // Load branding early
+                 await loadCompanyBranding();
+                 
+                 // Show loading with progress
+                 await simulateLoadingSteps();
+                 
+                 // Hide loading and show login
+                 setTimeout(() => {
+                     hideLoading();
+                     showLogin();
+                 }, 500);
+                 
+             } catch (error) {
+                 console.error('❌ Initialization error:', error);
+                 showError('Failed to initialize system');
+             }
+         }
 
         async function simulateLoadingSteps() {
             const steps = [
@@ -1112,36 +1115,114 @@
             }
         }
 
-        async function loadDashboardData() {
-            try {
-                if (typeof google !== 'undefined' && google.script && google.script.run) {
-                    dashboardData = await new Promise((resolve, reject) => {
-                        google.script.run
-                            .withSuccessHandler(resolve)
-                            .withFailureHandler(reject)
-                            .getDashboardData();
-                    });
-                    
-                    if (dashboardData && dashboardData.success) {
-                        updateDashboardStats(dashboardData.data);
-                    }
-                } else {
-                    // Demo data
-                    updateDashboardStats({
-                        todayRevenue: 2450.75,
-                        todayTransactions: 47,
-                        totalProducts: 156,
-                        lowStockCount: 8,
-                        monthlyGrowth: 12.5,
-                        avgTransaction: 52.15,
-                        activeUsers: 12,
-                        systemHealth: 98
-                    });
-                }
-            } catch (error) {
-                console.error('❌ Error loading dashboard data:', error);
-            }
-        }
+                 async function loadDashboardData() {
+             try {
+                 // Load dashboard stats
+                 if (typeof google !== 'undefined' && google.script && google.script.run) {
+                     dashboardData = await new Promise((resolve, reject) => {
+                         google.script.run
+                             .withSuccessHandler(resolve)
+                             .withFailureHandler(reject)
+                             .getDashboardData();
+                     });
+                     
+                     if (dashboardData && dashboardData.success) {
+                         updateDashboardStats(dashboardData.data);
+                     }
+                 } else {
+                     // Demo data
+                     updateDashboardStats({
+                         todayRevenue: 2450.75,
+                         todayTransactions: 47,
+                         totalProducts: 156,
+                         lowStockCount: 8,
+                         monthlyGrowth: 12.5,
+                         avgTransaction: 52.15,
+                         activeUsers: 12,
+                         systemHealth: 98
+                     });
+                 }
+
+                 // Load company branding
+                 await loadCompanyBranding();
+                 
+             } catch (error) {
+                 console.error('❌ Error loading dashboard data:', error);
+             }
+         }
+
+         async function loadCompanyBranding() {
+             try {
+                 console.log('🏢 Loading company branding from Google Sheets...');
+                 
+                 if (typeof google !== 'undefined' && google.script && google.script.run) {
+                     const brandingResult = await new Promise((resolve, reject) => {
+                         google.script.run
+                             .withSuccessHandler(resolve)
+                             .withFailureHandler(reject)
+                             .getCompanyBranding();
+                     });
+                     
+                     if (brandingResult && brandingResult.success) {
+                         applyCompanyBranding(brandingResult.data);
+                         console.log('✅ Company branding loaded:', brandingResult.data);
+                     } else {
+                         console.log('⚠️ Using default branding');
+                         applyDefaultBranding();
+                     }
+                 } else {
+                     console.log('⚠️ Google Apps Script not available, using default branding');
+                     applyDefaultBranding();
+                 }
+                 
+             } catch (error) {
+                 console.error('❌ Error loading company branding:', error);
+                 applyDefaultBranding();
+             }
+         }
+
+         function applyCompanyBranding(branding) {
+             try {
+                 // Update login page branding
+                 const heroTitle = document.querySelector('.hero-title');
+                 const heroSubtitle = document.querySelector('.hero-subtitle');
+                 const brandLogo = document.querySelector('.brand-logo');
+                 const brandTextH1 = document.querySelector('.brand-text h1');
+                 const brandTextP = document.querySelector('.brand-text p');
+                 
+                 if (heroTitle) heroTitle.textContent = branding.companyName || 'Enterprise POS';
+                 if (heroSubtitle) heroSubtitle.textContent = branding.tagline || 'Advanced Point of Sale System';
+                 if (brandLogo) brandLogo.textContent = branding.logo || '🏪';
+                 if (brandTextH1) brandTextH1.textContent = branding.companyName || 'Enterprise POS';
+                 if (brandTextP) brandTextP.textContent = branding.tagline || 'Advanced Point of Sale System';
+                 
+                 // Update page title
+                 document.title = `${branding.companyName || 'Enterprise POS'} - Advanced POS System`;
+                 
+                 // Apply custom colors if provided
+                 if (branding.primaryColor) {
+                     document.documentElement.style.setProperty('--accent-blue', branding.primaryColor);
+                     document.documentElement.style.setProperty('--primary-gradient', 
+                         `linear-gradient(135deg, ${branding.primaryColor} 0%, #764ba2 100%)`);
+                 }
+                 
+                 console.log('✅ Company branding applied successfully');
+                 
+             } catch (error) {
+                 console.error('❌ Error applying company branding:', error);
+             }
+         }
+
+         function applyDefaultBranding() {
+             const branding = {
+                 companyName: 'Enterprise POS',
+                 tagline: 'Advanced Point of Sale System',
+                 logo: '🏪',
+                 primaryColor: '#667eea'
+             };
+             
+             applyCompanyBranding(branding);
+         }
 
         function updateDashboardStats(data) {
             const updates = {
