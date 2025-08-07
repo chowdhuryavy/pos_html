@@ -17,71 +17,19 @@ let loginModal, mainContainer, loading;
 
 // Initialize Application
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM fully loaded, starting POS initialization...');
+    console.log('DOM fully loaded, POS script ready...');
     
-    // Force hide loading overlay immediately and repeatedly
-    function forceHideLoading() {
-        const loadingOverlay = document.getElementById('loading');
-        if (loadingOverlay) {
-            loadingOverlay.style.display = 'none';
-            loadingOverlay.style.visibility = 'hidden';
-            loadingOverlay.classList.add('hidden');
-            console.log('Loading overlay forcefully hidden');
-        }
+    // Wait for the proper loading flow from index.html to complete
+    // This script will be called by the main app flow
+    
+    // Initialize app components but don't force UI state
+    try {
+        initializeApp();
+        setupEventListeners();
+        console.log('✅ POS script initialization completed');
+    } catch (error) {
+        console.error('❌ POS script initialization error:', error);
     }
-    
-    forceHideLoading();
-    
-    // Force show login modal immediately
-    function forceShowLogin() {
-        const loginModal = document.getElementById('loginModal');
-        if (loginModal) {
-            loginModal.style.display = 'flex';
-            loginModal.style.visibility = 'visible';
-            loginModal.classList.remove('hidden');
-            console.log('Login modal forcefully shown');
-        }
-        
-        const mainContainer = document.getElementById('mainContainer');
-        if (mainContainer) {
-            mainContainer.style.display = 'none';
-            console.log('Main container hidden');
-        }
-    }
-    
-    forceShowLogin();
-    
-    // Initialize with multiple attempts
-    let initAttempts = 0;
-    function attemptInitialization() {
-        initAttempts++;
-        console.log(`Initialization attempt ${initAttempts}`);
-        
-        try {
-            // Force UI state again
-            forceHideLoading();
-            forceShowLogin();
-            
-            // Initialize app
-            initializeApp();
-            setupEventListeners();
-            
-            console.log('POS initialization completed successfully');
-        } catch (error) {
-            console.error(`Error during app initialization (attempt ${initAttempts}):`, error);
-            
-            if (initAttempts < 3) {
-                // Retry after a short delay
-                setTimeout(attemptInitialization, 500);
-            } else {
-                // Show error message after 3 failed attempts
-                showDeploymentError();
-            }
-        }
-    }
-    
-    // Start initialization with a small delay
-    setTimeout(attemptInitialization, 100);
 });
 
 /**
@@ -243,86 +191,55 @@ async function fallbackLogin() {
  * Initialize the application
  */
 function initializeApp() {
-    console.log('Initializing POS application...');
+    console.log('🔧 Initializing POS application...');
     
     // Initialize DOM elements with better error handling
     loginModal = document.getElementById('loginModal');
     mainContainer = document.getElementById('mainContainer');
     loading = document.getElementById('loading');
     
-    console.log('DOM elements found:', {
+    console.log('📋 DOM elements found:', {
         loginModal: !!loginModal,
         mainContainer: !!mainContainer,
         loading: !!loading
     });
     
-    // Aggressively force proper initial state
-    if (loading) {
-        loading.style.display = 'none';
-        loading.style.visibility = 'hidden';
-        loading.style.opacity = '0';
-        loading.classList.add('hidden');
-        console.log('Loading aggressively hidden in initializeApp');
-    }
-    
-    if (loginModal) {
-        loginModal.style.display = 'flex';
-        loginModal.style.visibility = 'visible';
-        loginModal.style.opacity = '1';
-        loginModal.classList.remove('hidden');
-        console.log('Login modal aggressively shown in initializeApp');
-        
-        // Focus username field
-        setTimeout(() => {
-            const usernameField = document.getElementById('username');
-            if (usernameField) {
-                usernameField.focus();
-                console.log('Username field focused');
-            }
-        }, 100);
-    }
-    
-    if (mainContainer) {
-        mainContainer.style.display = 'none';
-        mainContainer.style.visibility = 'hidden';
-        console.log('Main container aggressively hidden in initializeApp');
-    }
-    
-    // If critical elements are missing, show error
-    if (!loginModal) {
-        console.error('Login modal missing! Creating fallback...');
-        createFallbackLogin();
-        return;
-    }
-    
-    if (!mainContainer) {
-        console.error('Main container missing!');
-        showDeploymentError();
-        return;
-    }
+    // Don't force UI state here - let the proper flow handle it
+    // Just check for saved sessions
     
     // Check if user is already logged in
     const savedUser = sessionStorage.getItem('posUser') || localStorage.getItem('posUser');
     const savedSessionId = sessionStorage.getItem('currentSessionId') || localStorage.getItem('currentSessionId');
     
     if (savedUser && savedSessionId) {
-        console.log('Found saved user and session, loading main app...');
+        console.log('🔄 Found saved user session, skipping login flow...');
         try {
             currentUser = JSON.parse(savedUser);
             currentSessionId = savedSessionId;
-            showMainApp();
-            loadDashboardData();
-            loadCompanyBranding();
+            
+            // Skip the loading/login flow and go straight to main app
+            setTimeout(() => {
+                console.log('🚀 Showing main app directly...');
+                if (loading) loading.style.display = 'none';
+                if (loginModal) loginModal.style.display = 'none';
+                showMainApp();
+            }, 100);
+            
         } catch (error) {
-            console.error('Error parsing saved user:', error);
-            showLoginModal();
-            loadCompanyBranding();
+            console.error('❌ Error parsing saved user:', error);
+            sessionStorage.removeItem('posUser');
+            localStorage.removeItem('posUser');
+            sessionStorage.removeItem('currentSessionId');
+            localStorage.removeItem('currentSessionId');
         }
     } else {
-        console.log('No saved user or session, showing login modal...');
-        showLoginModal();
-        loadCompanyBranding();
+        console.log('👤 No saved session - will wait for login flow');
     }
+    
+    // Always load company branding
+    loadCompanyBranding();
+    
+    console.log('✅ App initialization complete');
 }
 
 /**
@@ -763,93 +680,176 @@ function showLoginModal() {
  * Show main application
  */
 function showMainApp() {
-    console.log('Showing main application...');
-    console.log('Current user:', currentUser);
+    console.log('🚀 Showing main POS application...');
+    console.log('👤 Current user:', currentUser);
     
-    // Re-get DOM elements to ensure they're current
-    loginModal = document.getElementById('loginModal');
-    mainContainer = document.getElementById('mainContainer');
-    loading = document.getElementById('loading');
+    // Get fresh DOM elements
+    const loginModal = document.getElementById('loginModal');
+    const mainContainer = document.getElementById('mainContainer');
+    const loading = document.getElementById('loading');
     
-    console.log('Re-checking DOM elements:', {
+    console.log('🔍 Checking DOM elements:', {
         loginModal: !!loginModal,
         mainContainer: !!mainContainer,
         loading: !!loading
     });
     
-    // Ensure DOM elements are available
-    if (!mainContainer) {
-        console.error('Main container not found! Creating fallback...');
-        createFallbackMainApp();
-        return;
-    }
-    
-    // Hide login modal aggressively
-    if (loginModal) {
-        loginModal.style.display = 'none';
-        loginModal.style.visibility = 'hidden';
-        loginModal.style.opacity = '0';
-        console.log('Login modal hidden');
-    }
-    
-    // Hide loading overlay aggressively
+    // Step 1: Hide all overlays
     if (loading) {
         loading.style.display = 'none';
         loading.style.visibility = 'hidden';
         loading.style.opacity = '0';
-        loading.classList.add('hidden');
-        console.log('Loading overlay hidden');
+        console.log('✅ Loading overlay hidden');
     }
     
-    // Show main container aggressively
-    mainContainer.style.display = 'block';
-    mainContainer.style.visibility = 'visible';
-    mainContainer.style.opacity = '1';
-    mainContainer.classList.remove('hidden');
-    console.log('Main container shown');
+    if (loginModal) {
+        loginModal.style.display = 'none';
+        loginModal.style.visibility = 'hidden';
+        loginModal.style.opacity = '0';
+        console.log('✅ Login modal hidden');
+    }
     
-    // Update user info
-    setTimeout(() => {
-        const userName = document.getElementById('userName');
-        const userAvatar = document.getElementById('userAvatar');
+    // Step 2: Show main container
+    if (mainContainer) {
+        mainContainer.style.display = 'block';
+        mainContainer.style.visibility = 'visible';
+        mainContainer.style.opacity = '1';
+        mainContainer.classList.remove('hidden');
+        console.log('✅ Main container shown');
         
-        if (currentUser) {
-            if (userName) {
-                userName.textContent = currentUser.name;
-                console.log('Updated user name:', currentUser.name);
-            }
-            if (userAvatar) {
-                userAvatar.textContent = currentUser.name.charAt(0).toUpperCase();
-                console.log('Updated user avatar');
-            }
+        // Step 3: Initialize main app content
+        initializeMainAppContent();
+    } else {
+        console.error('❌ Main container not found! Creating fallback...');
+        createFallbackMainApp();
+    }
+}
+
+/**
+ * Initialize main app content and navigation
+ */
+function initializeMainAppContent() {
+    console.log('🔧 Initializing main app content...');
+    
+    // Update user information
+    if (currentUser) {
+        updateUserInterface();
+    }
+    
+    // Set up role-based access
+    setupRoleBasedAccess();
+    
+    // Show default section (dashboard)
+    showPOSInterface();
+    
+    // Load essential data
+    loadInitialData();
+    
+    console.log('✅ Main app content initialized successfully');
+}
+
+/**
+ * Update user interface elements
+ */
+function updateUserInterface() {
+    const userName = document.getElementById('userName');
+    const userAvatar = document.getElementById('userAvatar');
+    
+    if (userName && currentUser.name) {
+        userName.textContent = currentUser.name;
+        console.log('✅ Updated user name:', currentUser.name);
+    }
+    
+    if (userAvatar && currentUser.name) {
+        userAvatar.textContent = currentUser.name.charAt(0).toUpperCase();
+        console.log('✅ Updated user avatar');
+    }
+}
+
+/**
+ * Setup role-based access control
+ */
+function setupRoleBasedAccess() {
+    const adminElements = document.querySelectorAll('.admin-only');
+    console.log(`🔐 Setting up role-based access for ${adminElements.length} admin elements`);
+    
+    adminElements.forEach(element => {
+        if (currentUser && currentUser.role !== 'Admin') {
+            element.style.display = 'none';
+        } else {
+            element.style.display = '';
         }
-        
-        // Hide admin-only elements based on role
-        const adminElements = document.querySelectorAll('.admin-only');
-        console.log('Found admin elements:', adminElements.length);
-        adminElements.forEach(element => {
-            if (currentUser && currentUser.role !== 'Admin') {
-                element.style.display = 'none';
-            } else {
-                element.style.display = '';
-            }
+    });
+    
+    console.log(`✅ Role-based access configured for: ${currentUser?.role || 'Unknown'}`);
+}
+
+/**
+ * Show main POS interface
+ */
+function showPOSInterface() {
+    console.log('🏪 Showing POS interface...');
+    
+    // Force show the main POS section (dashboard by default)
+    const dashboard = document.getElementById('dashboard');
+    if (dashboard) {
+        // Hide all sections first
+        document.querySelectorAll('.content-section').forEach(section => {
+            section.classList.remove('active');
+            section.style.display = 'none';
         });
         
-        // Force show dashboard section
-        console.log('Forcing dashboard display...');
-        showSection('dashboard');
+        // Show dashboard
+        dashboard.classList.add('active');
+        dashboard.style.display = 'block';
+        dashboard.style.visibility = 'visible';
+        dashboard.style.opacity = '1';
         
-        // Load initial data
-        try {
-            loadProducts();
-            loadSettings();
-            loadCompanyBranding();
-        } catch (error) {
-            console.error('Error loading initial data:', error);
+        // Update navigation
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        
+        const dashboardNav = document.querySelector('[data-section="dashboard"]');
+        if (dashboardNav) {
+            dashboardNav.classList.add('active');
         }
         
-        console.log('Main app initialization complete');
-    }, 100);
+        console.log('✅ Dashboard section activated');
+    } else {
+        console.error('❌ Dashboard section not found!');
+        // Try to show POS section instead
+        const posSection = document.getElementById('pos');
+        if (posSection) {
+            posSection.classList.add('active');
+            posSection.style.display = 'block';
+            console.log('✅ POS section activated as fallback');
+        }
+    }
+}
+
+/**
+ * Load initial data for the application
+ */
+function loadInitialData() {
+    console.log('📊 Loading initial data...');
+    
+    try {
+        // Load essential data
+        loadProducts();
+        loadSettings();
+        loadCompanyBranding();
+        
+        // Load dashboard data if on dashboard
+        const activeSection = document.querySelector('.content-section.active');
+        if (activeSection && activeSection.id === 'dashboard') {
+            loadDashboardData();
+        }
+        
+        console.log('✅ Initial data loaded successfully');
+    } catch (error) {
+        console.error('❌ Error loading initial data:', error);
+    }
 }
 
 /**

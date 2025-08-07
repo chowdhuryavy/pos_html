@@ -3246,46 +3246,134 @@
                     alert('Please contact your system administrator to reset your credentials.');
                 }
 
-                // Handle CSP and initialization
-                document.addEventListener('DOMContentLoaded', function() {
-                    console.log('DOM ready, initializing app...');
-                    
-                    // Set default date
-                    const today = new Date().toISOString().split('T')[0];
-                    const reportDateInput = document.getElementById('reportDate');
-                    if (reportDateInput) {
-                        reportDateInput.value = today;
-                    }
-                    
-                                // Force hide loading immediately on DOM ready
-            console.log('Forcing loading overlay to hide...');
-            const loadingOverlay = document.getElementById('loading');
-            if (loadingOverlay) {
-                loadingOverlay.style.display = 'none';
-                console.log('Loading overlay hidden on DOM ready');
-            }
-            
-            // Force show login modal
-            setTimeout(() => {
+                            // Handle CSP and initialization with proper flow
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('DOM ready, starting proper app flow...');
+                
+                // Set default date
+                const today = new Date().toISOString().split('T')[0];
+                const reportDateInput = document.getElementById('reportDate');
+                if (reportDateInput) {
+                    reportDateInput.value = today;
+                }
+                
+                // PROPER FLOW: Start with loading, then show login
+                console.log('Starting with loading screen...');
+                showProperLoadingFlow();
+            });
+
+            // Proper loading flow function
+            function showProperLoadingFlow() {
+                const loadingOverlay = document.getElementById('loading');
                 const loginModal = document.getElementById('loginModal');
+                const mainContainer = document.getElementById('mainContainer');
+                
+                // Step 1: Show loading overlay
+                if (loadingOverlay) {
+                    loadingOverlay.style.display = 'flex';
+                    loadingOverlay.style.visibility = 'visible';
+                    loadingOverlay.style.opacity = '1';
+                    console.log('✅ Loading overlay shown');
+                }
+                
+                // Step 2: Hide login and main container
                 if (loginModal) {
-                    loginModal.style.display = 'flex';
-                    console.log('Login modal forced to show');
-                    
-                    // Focus username field
-                    const usernameField = document.getElementById('username');
-                    if (usernameField) {
-                        usernameField.focus();
+                    loginModal.style.display = 'none';
+                    loginModal.style.visibility = 'hidden';
+                }
+                if (mainContainer) {
+                    mainContainer.style.display = 'none';
+                    mainContainer.style.visibility = 'hidden';
+                }
+                
+                console.log('🔄 Loading POS System components...');
+                
+                // Step 3: Simulate loading steps with progress
+                let currentStep = 1;
+                const loadingSteps = [
+                    { step: 1, message: 'Initializing System', duration: 1000 },
+                    { step: 2, message: 'Loading Database', duration: 1500 },
+                    { step: 3, message: 'Preparing Interface', duration: 1000 }
+                ];
+                
+                function processLoadingStep(stepIndex) {
+                    if (stepIndex < loadingSteps.length) {
+                        const { step, message, duration } = loadingSteps[stepIndex];
+                        updateLoadingProgress(step, message);
+                        console.log(`📋 Step ${step}: ${message}`);
+                        
+                        setTimeout(() => {
+                            processLoadingStep(stepIndex + 1);
+                        }, duration);
+                    } else {
+                        // Step 4: Loading complete, show login
+                        setTimeout(() => {
+                            console.log('✅ Loading complete, showing login...');
+                            hideLoadingShowLogin();
+                        }, 500);
                     }
                 }
                 
-                // Ensure main container is hidden
-                const mainContainer = document.getElementById('mainContainer');
-                if (mainContainer) {
-                    mainContainer.style.display = 'none';
-                    console.log('Main container hidden');
+                // Start loading process
+                processLoadingStep(0);
+            }
+            
+            // Function to hide loading and show login
+            function hideLoadingShowLogin() {
+                const loadingOverlay = document.getElementById('loading');
+                const loginModal = document.getElementById('loginModal');
+                
+                // Hide loading with fade effect
+                if (loadingOverlay) {
+                    loadingOverlay.classList.add('fade-out');
+                    setTimeout(() => {
+                        loadingOverlay.style.display = 'none';
+                        loadingOverlay.style.visibility = 'hidden';
+                        console.log('✅ Loading hidden');
+                    }, 500);
                 }
-            }, 100);
+                
+                // Show login modal
+                setTimeout(() => {
+                    if (loginModal) {
+                        loginModal.style.display = 'flex';
+                        loginModal.style.visibility = 'visible';
+                        loginModal.style.opacity = '1';
+                        console.log('✅ Login modal shown');
+                        
+                        // Focus username field
+                        const usernameField = document.getElementById('username');
+                        if (usernameField) {
+                            usernameField.focus();
+                        }
+                    }
+                }, 600);
+            }
+            
+            // Update loading progress function
+            function updateLoadingProgress(step, message) {
+                const steps = ['step1', 'step2', 'step3'];
+                const progressFill = document.getElementById('progressFill');
+                
+                // Update step indicators
+                steps.forEach((stepId, index) => {
+                    const stepElement = document.getElementById(stepId);
+                    if (stepElement) {
+                        if (index < step) {
+                            stepElement.classList.add('active');
+                            stepElement.textContent = index === step - 1 ? message : 'Complete';
+                        } else {
+                            stepElement.classList.remove('active');
+                        }
+                    }
+                });
+                
+                // Update progress bar
+                if (progressFill) {
+                    const progress = (step / steps.length) * 100;
+                    progressFill.style.width = `${progress}%`;
+                }
+            }
             
             // Handle CSP frame restriction - simplified approach
             try {
