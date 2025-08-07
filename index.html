@@ -25,27 +25,139 @@
             overflow-x: hidden;
         }
 
-        /* Loading Spinner */
-        .loading {
-            display: none;
+        /* Enhanced Loading Overlay */
+        .loading-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(255, 255, 255, 0.9);
-            z-index: 9999;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
             justify-content: center;
             align-items: center;
+            z-index: 9999;
+            opacity: 1;
+            transition: opacity 0.5s ease;
         }
 
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #667eea;
+        .loading-overlay.fade-out {
+            opacity: 0;
+        }
+
+        .loading-container {
+            text-align: center;
+            color: white;
+        }
+
+        .logo-loader {
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        .logo-loader .logo-circle {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.2);
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: white;
+            margin: 0 auto;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            z-index: 2;
+            position: relative;
+        }
+
+        .loading-rings {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .ring {
+            position: absolute;
+            border: 2px solid transparent;
+            border-top: 2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            animation: spin 2s linear infinite;
+        }
+
+        .ring:nth-child(1) {
+            width: 100px;
+            height: 100px;
+            margin: -50px 0 0 -50px;
+            animation-duration: 2s;
+        }
+
+        .ring:nth-child(2) {
+            width: 120px;
+            height: 120px;
+            margin: -60px 0 0 -60px;
+            animation-duration: 3s;
+            animation-direction: reverse;
+        }
+
+        .ring:nth-child(3) {
+            width: 140px;
+            height: 140px;
+            margin: -70px 0 0 -70px;
+            animation-duration: 4s;
+        }
+
+        .loading-content h3 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .loading-progress {
+            width: 300px;
+            margin: 0 auto;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ffffff, #f0f0f0);
+            border-radius: 2px;
+            width: 0%;
+            animation: loading-progress 3s ease-in-out infinite;
+        }
+
+        @keyframes loading-progress {
+            0% { width: 0%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+        }
+
+        .loading-steps {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+        }
+
+        .step {
+            opacity: 0.5;
+            transition: opacity 0.3s ease;
+        }
+
+        .step.active {
+            opacity: 1;
+            font-weight: 600;
         }
 
         @keyframes spin {
@@ -403,6 +515,12 @@
             gap: 10px;
             position: relative;
             overflow: hidden;
+            min-height: 56px;
+        }
+
+        .login-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
         }
 
         .login-btn::before {
@@ -420,28 +538,106 @@
             left: 100%;
         }
 
-        .login-btn:hover {
+        .login-btn:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
         }
 
-        .login-btn:active {
+        .login-btn:active:not(:disabled) {
             transform: translateY(0);
+        }
+
+        .btn-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
         }
 
         .btn-loader {
             display: flex;
             align-items: center;
             justify-content: center;
+            gap: 8px;
         }
 
-        .spinner-small {
-            width: 20px;
-            height: 20px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-top: 2px solid white;
+        /* Advanced Loading Spinner */
+        .advanced-spinner {
+            width: 24px;
+            height: 24px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .advanced-spinner::before,
+        .advanced-spinner::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
             border-radius: 50%;
+            border: 2px solid transparent;
+            border-top-color: #ffffff;
             animation: spin 1s linear infinite;
+        }
+
+        .advanced-spinner::after {
+            border: 2px solid transparent;
+            border-bottom-color: #ffffff;
+            animation: spin 1s linear infinite reverse;
+        }
+
+        /* Pulse dots loader */
+        .pulse-dots {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .pulse-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: white;
+            animation: pulse-dot 1.4s ease-in-out infinite;
+        }
+
+        .pulse-dot:nth-child(1) { animation-delay: -0.32s; }
+        .pulse-dot:nth-child(2) { animation-delay: -0.16s; }
+        .pulse-dot:nth-child(3) { animation-delay: 0; }
+
+        @keyframes pulse-dot {
+            0%, 80%, 100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+        }
+
+        /* Loading text animation */
+        .loading-text {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .loading-text::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
         }
 
         /* Error Message */
@@ -1668,9 +1864,33 @@
     </style>
 </head>
 <body>
-    <!-- Loading Spinner -->
-    <div class="loading" id="loading">
-        <div class="spinner"></div>
+    <!-- Enhanced Loading Overlay -->
+    <div class="loading-overlay" id="loading">
+        <div class="loading-container">
+            <div class="logo-loader">
+                <div class="logo-circle">
+                    <i class="fas fa-store"></i>
+                </div>
+                <div class="loading-rings">
+                    <div class="ring"></div>
+                    <div class="ring"></div>
+                    <div class="ring"></div>
+                </div>
+            </div>
+            <div class="loading-content">
+                <h3>Loading POS System</h3>
+                <div class="loading-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="loading-steps">
+                        <span class="step active" id="step1">Initializing</span>
+                        <span class="step" id="step2">Loading Data</span>
+                        <span class="step" id="step3">Ready</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Login Modal -->
@@ -1762,11 +1982,14 @@
                             <a href="#" class="forgot-link" onclick="showForgotModal()">Forgot credentials?</a>
                         </div>
                         
-                        <button type="submit" class="login-btn">
-                            <i class="fas fa-sign-in-alt"></i> 
-                            <span class="btn-text">Sign In</span>
-                            <div class="btn-loader hidden">
-                                <div class="spinner-small"></div>
+                        <button type="submit" class="login-btn" id="loginBtn">
+                            <div class="btn-content" id="btnContent">
+                                <i class="fas fa-sign-in-alt"></i> 
+                                <span>Sign In</span>
+                            </div>
+                            <div class="btn-loader hidden" id="btnLoader">
+                                <div class="advanced-spinner"></div>
+                                <span class="loading-text">Authenticating</span>
                             </div>
                         </button>
                         
@@ -2530,13 +2753,26 @@
                     alert('Please contact your system administrator to reset your credentials.');
                 }
 
-                // Set default date when DOM is ready
+                // Handle CSP and initialization
                 document.addEventListener('DOMContentLoaded', function() {
-                    console.log('Setting default report date...');
+                    console.log('DOM ready, initializing app...');
+                    
+                    // Set default date
                     const today = new Date().toISOString().split('T')[0];
                     const reportDateInput = document.getElementById('reportDate');
                     if (reportDateInput) {
                         reportDateInput.value = today;
+                    }
+                    
+                    // Handle CSP frame restriction by checking if we're in the right context
+                    try {
+                        if (window.parent !== window.self && window.location.hostname.includes('googleusercontent.com')) {
+                            // We're in a frame, redirect to direct URL
+                            window.parent.location = window.location.href;
+                        }
+                    } catch (e) {
+                        // CSP might block this, which is fine
+                        console.log('Frame context check completed');
                     }
                 });
                 </script>

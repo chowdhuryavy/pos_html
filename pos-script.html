@@ -151,10 +151,16 @@ async function handleLogin(e) {
     showLoginLoading(true);
     
     try {
+        // Step 1: Authenticating
+        updateLoadingProgress(1, 'Authenticating...');
+        
         const result = await callServerFunction('authenticateUser', username, credential, currentAuthType);
         
         if (result.success) {
             currentUser = result.user;
+            
+            // Step 2: Loading Data
+            updateLoadingProgress(2, 'Loading Data...');
             
             // Handle remember me
             if (document.getElementById('rememberMe').checked) {
@@ -164,9 +170,19 @@ async function handleLogin(e) {
                 sessionStorage.setItem('posUser', JSON.stringify(currentUser));
             }
             
-            showMainApp();
-            loadDashboardData();
-            showAlert('Login successful!', 'success');
+            // Small delay to show progress
+            await new Promise(resolve => setTimeout(resolve, 800));
+            
+            // Step 3: Ready
+            updateLoadingProgress(3, 'Ready!');
+            
+            // Show main app after brief delay
+            setTimeout(() => {
+                showMainApp();
+                loadDashboardData();
+                showAlert('Welcome back, ' + currentUser.name + '!', 'success');
+            }, 500);
+            
         } else {
             showError(result.message || 'Invalid credentials');
         }
@@ -288,18 +304,20 @@ function showForgotModal() {
  * Show/hide login loading state
  */
 function showLoginLoading(show) {
-    const btn = document.querySelector('.login-btn');
-    const btnText = btn.querySelector('.btn-text');
-    const btnLoader = btn.querySelector('.btn-loader');
+    const btn = document.getElementById('loginBtn');
+    const btnContent = document.getElementById('btnContent');
+    const btnLoader = document.getElementById('btnLoader');
     
-    if (show) {
-        btnText.classList.add('hidden');
-        btnLoader.classList.remove('hidden');
-        btn.disabled = true;
-    } else {
-        btnText.classList.remove('hidden');
-        btnLoader.classList.add('hidden');
-        btn.disabled = false;
+    if (btn && btnContent && btnLoader) {
+        if (show) {
+            btnContent.classList.add('hidden');
+            btnLoader.classList.remove('hidden');
+            btn.disabled = true;
+        } else {
+            btnContent.classList.remove('hidden');
+            btnLoader.classList.add('hidden');
+            btn.disabled = false;
+        }
     }
 }
 
@@ -361,23 +379,40 @@ function showLoginModal() {
  */
 function showMainApp() {
     console.log('Showing main application...');
-    if (loginModal) loginModal.style.display = 'none';
-    if (mainContainer) mainContainer.style.display = 'block';
+    console.log('Current user:', currentUser);
+    
+    // Ensure DOM elements are available
+    if (!loginModal || !mainContainer) {
+        console.error('Required DOM elements not found:', {
+            loginModal: !!loginModal,
+            mainContainer: !!mainContainer
+        });
+        return;
+    }
+    
+    // Hide login modal and show main container
+    loginModal.style.display = 'none';
+    mainContainer.style.display = 'block';
     if (loading) loading.style.display = 'none';
     
     // Update user info
     const userName = document.getElementById('userName');
     const userAvatar = document.getElementById('userAvatar');
     
-    if (currentUser && userName) {
-        userName.textContent = currentUser.name;
-    }
-    if (currentUser && userAvatar) {
-        userAvatar.textContent = currentUser.name.charAt(0).toUpperCase();
+    if (currentUser) {
+        if (userName) {
+            userName.textContent = currentUser.name;
+            console.log('Updated user name:', currentUser.name);
+        }
+        if (userAvatar) {
+            userAvatar.textContent = currentUser.name.charAt(0).toUpperCase();
+            console.log('Updated user avatar');
+        }
     }
     
     // Hide admin-only elements based on role
     const adminElements = document.querySelectorAll('.admin-only');
+    console.log('Found admin elements:', adminElements.length);
     adminElements.forEach(element => {
         if (currentUser && currentUser.role !== 'Admin') {
             element.style.display = 'none';
@@ -386,26 +421,93 @@ function showMainApp() {
         }
     });
     
-    // Show dashboard by default
-    showSection('dashboard');
+    // Force show dashboard section
+    console.log('Forcing dashboard display...');
+    const dashboardSection = document.getElementById('dashboard');
+    if (dashboardSection) {
+        // Hide all sections first
+        document.querySelectorAll('.content-section').forEach(section => {
+            section.classList.remove('active');
+        });
+        // Show dashboard
+        dashboardSection.classList.add('active');
+        
+        // Update sidebar
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        const dashboardNav = document.querySelector('[data-section="dashboard"]');
+        if (dashboardNav) {
+            dashboardNav.classList.add('active');
+        }
+        
+        console.log('Dashboard should now be visible');
+    } else {
+        console.error('Dashboard section not found!');
+    }
     
     // Load initial data
     loadProducts();
     loadSettings();
+    
+    console.log('Main app initialization complete');
 }
 
 /**
- * Show loading spinner
+ * Show loading overlay with progress
  */
-function showLoading() {
-    loading.style.display = 'flex';
+function showLoading(message = 'Loading...') {
+    if (loading) {
+        loading.style.display = 'flex';
+        loading.classList.remove('fade-out');
+        
+        // Update loading steps
+        updateLoadingProgress(1, 'Initializing...');
+    }
 }
 
 /**
- * Hide loading spinner
+ * Hide loading overlay with fade effect
  */
 function hideLoading() {
-    loading.style.display = 'none';
+    if (loading) {
+        loading.classList.add('fade-out');
+        setTimeout(() => {
+            loading.style.display = 'none';
+        }, 500);
+    }
+}
+
+/**
+ * Update loading progress
+ */
+function updateLoadingProgress(step, message) {
+    const steps = ['step1', 'step2', 'step3'];
+    const progressFill = document.getElementById('progressFill');
+    
+    // Update active step
+    steps.forEach((stepId, index) => {
+        const stepElement = document.getElementById(stepId);
+        if (stepElement) {
+            if (index < step) {
+                stepElement.classList.add('active');
+            } else {
+                stepElement.classList.remove('active');
+            }
+        }
+    });
+    
+    // Update progress bar
+    if (progressFill) {
+        const progress = (step / steps.length) * 100;
+        progressFill.style.width = `${progress}%`;
+    }
+    
+    // Update current step text
+    const currentStepElement = document.getElementById(`step${step}`);
+    if (currentStepElement && message) {
+        currentStepElement.textContent = message;
+    }
 }
 
 /**
