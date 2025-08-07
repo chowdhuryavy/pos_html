@@ -44,6 +44,19 @@
         .loading-overlay.fade-out {
             opacity: 0;
         }
+        
+        /* Ensure main container and dashboard are visible when active */
+        #mainContainer.show, #mainContainer[style*="block"] {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+        
+        .content-section.active {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
 
         .loading-container {
             text-align: center;

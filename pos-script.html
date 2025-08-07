@@ -35,22 +35,89 @@ document.addEventListener('DOMContentLoaded', function() {
             const loading = document.getElementById('loading');
             const login = document.getElementById('loginModal');
             const main = document.getElementById('mainContainer');
+            const dashboard = document.getElementById('dashboard');
+            
+            console.log('🔍 UI Elements check:', {
+                loading: !!loading,
+                login: !!login,
+                main: !!main,
+                dashboard: !!dashboard
+            });
             
             // Hide loading and login
-            if (loading) loading.style.display = 'none';
-            if (login) login.style.display = 'none';
+            if (loading) {
+                loading.style.display = 'none';
+                console.log('✅ Loading hidden');
+            }
+            if (login) {
+                login.style.display = 'none';
+                console.log('✅ Login hidden');
+            }
             
             // Show main container
             if (main) {
                 main.style.display = 'block';
+                main.style.visibility = 'visible';
+                main.style.opacity = '1';
                 console.log('✅ Main container shown');
                 
-                // Initialize content
+                // Force show dashboard section
+                if (dashboard) {
+                    // Hide all sections first
+                    document.querySelectorAll('.content-section').forEach(section => {
+                        section.style.display = 'none';
+                        section.classList.remove('active');
+                    });
+                    
+                    // Show dashboard
+                    dashboard.style.display = 'block';
+                    dashboard.style.visibility = 'visible';
+                    dashboard.style.opacity = '1';
+                    dashboard.classList.add('active');
+                    console.log('✅ Dashboard section shown');
+                    
+                    // Update navigation
+                    document.querySelectorAll('.nav-item').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    const dashboardNav = document.querySelector('[data-section="dashboard"]');
+                    if (dashboardNav) {
+                        dashboardNav.classList.add('active');
+                        console.log('✅ Dashboard navigation activated');
+                    }
+                } else {
+                    console.error('❌ Dashboard section not found!');
+                }
+                
+                // Update user info
+                if (currentUser) {
+                    const userName = document.getElementById('userName');
+                    const userAvatar = document.getElementById('userAvatar');
+                    
+                    if (userName) {
+                        userName.textContent = currentUser.name;
+                        console.log('✅ User name updated:', currentUser.name);
+                    }
+                    if (userAvatar) {
+                        userAvatar.textContent = currentUser.name.charAt(0).toUpperCase();
+                        console.log('✅ User avatar updated');
+                    }
+                }
+                
+                // Load initial data
                 setTimeout(() => {
-                    initializeMainAppContent();
+                    try {
+                        loadProducts();
+                        loadSettings();
+                        loadCompanyBranding();
+                        console.log('✅ Initial data loading started');
+                    } catch (error) {
+                        console.error('❌ Error loading initial data:', error);
+                    }
                 }, 100);
+                
             } else {
-                console.error('❌ Main container not found!');
+                console.error('❌ Main container not found! Creating fallback...');
                 createFallbackMainApp();
             }
         };
@@ -358,17 +425,16 @@ async function handleLogin(e) {
     showLoginLoading(true);
     
     try {
-        // Step 1: Authenticating
-        updateLoadingProgress(1, 'Authenticating...');
+        console.log('🔐 Authenticating user...');
         
         const result = await callServerFunction('authenticateUser', username, credential, currentAuthType);
         
         if (result.success) {
+            console.log('✅ Authentication successful');
             currentUser = result.user;
             currentSessionId = result.user.sessionId;
             
-            // Step 2: Loading Data
-            updateLoadingProgress(2, 'Loading Data...');
+            console.log('💾 Saving user session...');
             
             // Handle remember me
             if (document.getElementById('rememberMe').checked) {
@@ -380,18 +446,14 @@ async function handleLogin(e) {
                 sessionStorage.setItem('currentSessionId', currentSessionId);
             }
             
-            // Small delay to show progress
-            await new Promise(resolve => setTimeout(resolve, 800));
+            // Small delay to show spinner
+            await new Promise(resolve => setTimeout(resolve, 1000));
             
-            // Step 3: Ready
-            updateLoadingProgress(3, 'Ready!');
+            console.log('🏪 Loading main application...');
             
-            // Show main app after brief delay
-            setTimeout(() => {
-                showMainApp();
-                loadDashboardData();
-                showAlert('Welcome back, ' + currentUser.name + '!', 'success');
-            }, 500);
+            // Show main app
+            showMainApp();
+            showAlert('Welcome back, ' + currentUser.name + '!', 'success');
             
         } else {
             showError(result.message || 'Invalid credentials');
@@ -518,44 +580,51 @@ function showLoginLoading(show) {
     const btnContent = document.getElementById('btnContent');
     const btnLoader = document.getElementById('btnLoader');
     
-    console.log('Login loading state:', show, { 
+    console.log('🔄 Login loading state:', show);
+    console.log('🔍 Button elements found:', { 
         btn: !!btn, 
         btnContent: !!btnContent, 
         btnLoader: !!btnLoader 
     });
     
-    if (btn && btnContent && btnLoader) {
-        if (show) {
-            // Hide content, show loader
+    if (show) {
+        // Show loading state
+        if (btnContent) {
             btnContent.style.display = 'none';
             btnContent.classList.add('hidden');
-            
+            console.log('✅ Button content hidden');
+        }
+        if (btnLoader) {
             btnLoader.style.display = 'flex';
             btnLoader.classList.remove('hidden');
-            
+            btnLoader.style.visibility = 'visible';
+            btnLoader.style.opacity = '1';
+            console.log('✅ Button loader shown');
+        }
+        if (btn) {
             btn.disabled = true;
             btn.style.pointerEvents = 'none';
-            
-            console.log('Login spinner activated');
-        } else {
-            // Show content, hide loader
-            btnContent.style.display = 'flex';
-            btnContent.classList.remove('hidden');
-            
-            btnLoader.style.display = 'none';
-            btnLoader.classList.add('hidden');
-            
-            btn.disabled = false;
-            btn.style.pointerEvents = 'auto';
-            
-            console.log('Login spinner deactivated');
+            btn.style.cursor = 'not-allowed';
+            console.log('✅ Button disabled');
         }
     } else {
-        console.error('Login button elements not found:', {
-            btn: !!btn,
-            btnContent: !!btnContent,
-            btnLoader: !!btnLoader
-        });
+        // Hide loading state
+        if (btnContent) {
+            btnContent.style.display = 'flex';
+            btnContent.classList.remove('hidden');
+            console.log('✅ Button content shown');
+        }
+        if (btnLoader) {
+            btnLoader.style.display = 'none';
+            btnLoader.classList.add('hidden');
+            console.log('✅ Button loader hidden');
+        }
+        if (btn) {
+            btn.disabled = false;
+            btn.style.pointerEvents = 'auto';
+            btn.style.cursor = 'pointer';
+            console.log('✅ Button enabled');
+        }
     }
 }
 
