@@ -342,19 +342,101 @@
             cursor: pointer;
             transition: all 0.3s ease;
             position: relative;
-            overflow: hidden;
-            margin-bottom: 1.5rem;
+            overflow: visible;
+            margin-bottom: 2rem;
+            z-index: 2;
+        }
+
+        .login-button::before {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            height: 12px;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(102, 126, 234, 0.4) 10%, 
+                rgba(102, 126, 234, 0.8) 30%, 
+                rgba(102, 126, 234, 1) 50%, 
+                rgba(102, 126, 234, 0.8) 70%, 
+                rgba(102, 126, 234, 0.4) 90%, 
+                transparent 100%
+            );
+            border-radius: 50px;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            filter: blur(6px);
+            z-index: -1;
+        }
+
+        .login-button::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 70%;
+            height: 8px;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(102, 126, 234, 0.6) 20%, 
+                rgba(102, 126, 234, 0.9) 50%, 
+                rgba(102, 126, 234, 0.6) 80%, 
+                transparent 100%
+            );
+            border-radius: 50px;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            filter: blur(3px);
+            z-index: -1;
         }
 
         .login-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(102, 126, 234, 0.5);
+        }
+
+        .login-button:hover::before {
+            opacity: 1;
+            bottom: -12px;
+            filter: blur(8px);
+            animation: lightGlow 2.5s ease-in-out infinite;
+        }
+
+        .login-button:hover::after {
+            opacity: 1;
+            bottom: -8px;
+            filter: blur(4px);
+            animation: lightGlow 2.5s ease-in-out infinite 0.3s;
+        }
+
+        .login-button:active {
+            transform: translateY(-1px);
+        }
+
+        .login-button:active::before {
+            opacity: 0.8;
+            bottom: -10px;
+            filter: blur(5px);
+        }
+
+        .login-button:active::after {
+            opacity: 0.7;
+            bottom: -6px;
+            filter: blur(2px);
         }
 
         .login-button:disabled {
             opacity: 0.7;
             cursor: not-allowed;
             transform: none;
+        }
+
+        .login-button:disabled::before,
+        .login-button:disabled::after {
+            opacity: 0;
         }
 
         .btn-content {
@@ -618,6 +700,29 @@
         @keyframes float {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+
+        @keyframes lightGlow {
+            0%, 100% {
+                opacity: 0.6;
+                transform: translateX(-50%) scaleX(1);
+                filter: blur(6px);
+            }
+            25% {
+                opacity: 0.9;
+                transform: translateX(-50%) scaleX(1.1);
+                filter: blur(8px);
+            }
+            50% {
+                opacity: 1;
+                transform: translateX(-50%) scaleX(1.2);
+                filter: blur(10px);
+            }
+            75% {
+                opacity: 0.8;
+                transform: translateX(-50%) scaleX(1.1);
+                filter: blur(8px);
+            }
         }
 
         @keyframes slideInUp {
