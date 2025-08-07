@@ -3323,31 +3323,54 @@
                 const loadingOverlay = document.getElementById('loading');
                 const loginModal = document.getElementById('loginModal');
                 
+                console.log('🔄 Transitioning from loading to login...');
+                console.log('Elements found:', { 
+                    loading: !!loadingOverlay, 
+                    login: !!loginModal 
+                });
+                
                 // Hide loading with fade effect
                 if (loadingOverlay) {
+                    console.log('⏳ Starting loading fade out...');
                     loadingOverlay.classList.add('fade-out');
+                    
                     setTimeout(() => {
                         loadingOverlay.style.display = 'none';
                         loadingOverlay.style.visibility = 'hidden';
-                        console.log('✅ Loading hidden');
+                        loadingOverlay.style.opacity = '0';
+                        console.log('✅ Loading completely hidden');
+                        
+                        // Show login modal immediately after loading is hidden
+                        if (loginModal) {
+                            console.log('🔑 Showing login modal...');
+                            loginModal.style.display = 'flex';
+                            loginModal.style.visibility = 'visible';
+                            loginModal.style.opacity = '1';
+                            loginModal.classList.remove('hidden');
+                            console.log('✅ Login modal displayed');
+                            
+                            // Focus username field
+                            setTimeout(() => {
+                                const usernameField = document.getElementById('username');
+                                if (usernameField) {
+                                    usernameField.focus();
+                                    console.log('🎯 Username field focused');
+                                }
+                            }, 100);
+                        } else {
+                            console.error('❌ Login modal not found!');
+                        }
                     }, 500);
-                }
-                
-                // Show login modal
-                setTimeout(() => {
+                } else {
+                    console.error('❌ Loading overlay not found!');
+                    // Try to show login anyway
                     if (loginModal) {
                         loginModal.style.display = 'flex';
                         loginModal.style.visibility = 'visible';
                         loginModal.style.opacity = '1';
-                        console.log('✅ Login modal shown');
-                        
-                        // Focus username field
-                        const usernameField = document.getElementById('username');
-                        if (usernameField) {
-                            usernameField.focus();
-                        }
+                        console.log('✅ Login shown (no loading found)');
                     }
-                }, 600);
+                }
             }
             
             // Update loading progress function
@@ -3422,8 +3445,8 @@
             } catch (e) {
                 console.log('Frame context check completed:', e.message);
             }
-                });
-                </script>
+            });
+            </script>
 
                 <?= include('pos-script'); ?>
                 <?= include('charts'); ?>
