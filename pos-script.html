@@ -333,20 +333,55 @@ function showLoginLoading(show) {
  */
 async function loadCompanyBranding() {
     try {
-        const companyName = await callServerFunction('getSetting', 'COMPANY_NAME');
-        const companyTagline = await callServerFunction('getSetting', 'COMPANY_TAGLINE');
+        console.log('Loading company branding from Google Sheets...');
         
-        const companyNameEl = document.getElementById('companyName');
-        if (companyName && companyNameEl) {
-            companyNameEl.textContent = companyName;
+        // Get all company settings at once
+        const companySettings = await callServerFunction('getCompanySettings');
+        console.log('Company settings loaded:', companySettings);
+        
+        if (companySettings) {
+            // Update login page branding
+            const companyNameEl = document.getElementById('companyName');
+            const companyTaglineEl = document.querySelector('.company-tagline');
+            const companyLogoEl = document.querySelector('.company-logo i');
+            
+            if (companyNameEl && companySettings.name) {
+                companyNameEl.textContent = companySettings.name;
+                console.log('Updated company name to:', companySettings.name);
+            }
+            
+            if (companyTaglineEl && companySettings.tagline) {
+                companyTaglineEl.textContent = companySettings.tagline;
+                console.log('Updated company tagline to:', companySettings.tagline);
+            }
+            
+            if (companyLogoEl && companySettings.logo) {
+                companyLogoEl.className = companySettings.logo;
+                console.log('Updated company logo to:', companySettings.logo);
+            }
+            
+            // Update all logo elements throughout the app
+            const allLogoElements = document.querySelectorAll('.logo-circle i, .company-logo i');
+            allLogoElements.forEach(logo => {
+                if (companySettings.logo) {
+                    logo.className = companySettings.logo;
+                }
+            });
+            
+            // Store settings globally for use throughout the app
+            window.companySettings = companySettings;
+            
+            console.log('Company branding updated successfully');
         }
         
-        const companyTaglineEl = document.querySelector('.company-tagline');
-        if (companyTagline && companyTaglineEl) {
-            companyTaglineEl.textContent = companyTagline;
-        }
     } catch (error) {
-        console.log('Using default branding:', error);
+        console.error('Error loading company branding:', error);
+        // Use fallback values
+        window.companySettings = {
+            name: 'RetailPro',
+            tagline: 'Modern Point of Sale System',
+            logo: 'fas fa-store'
+        };
     }
 }
 
@@ -1874,6 +1909,15 @@ function generateReceiptHTML(receipt) {
                 </div>
                 <h2 class="company-name-receipt">${receipt.companyName}</h2>
                 <p class="company-tagline-receipt">${receipt.companyTagline}</p>
+                <div class="company-contact">
+                    <p class="company-address">${receipt.companyAddress}</p>
+                    <p class="company-contact-line">
+                        <span class="company-phone">${receipt.companyPhone}</span> | 
+                        <span class="company-email">${receipt.companyEmail}</span>
+                    </p>
+                    <p class="company-website">${receipt.companyWebsite}</p>
+                    <p class="business-hours">${receipt.businessHours}</p>
+                </div>
                 <div class="receipt-separator"></div>
             </div>
             
@@ -2068,6 +2112,23 @@ function addReceiptStyles() {
             font-size: 32px;
             color: #667eea;
             margin-bottom: 10px;
+        }
+        
+        .company-contact {
+            margin: 15px 0;
+            font-size: 11px;
+            color: #666;
+            line-height: 1.3;
+        }
+        
+        .company-contact p {
+            margin: 3px 0;
+        }
+        
+        .company-contact-line {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
         }
         
         .company-name-receipt {

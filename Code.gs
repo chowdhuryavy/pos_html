@@ -52,6 +52,25 @@ function initializePOSSystem() {
     console.log('⏰ Creating Sessions sheet...');
     createSessionsSheet(ss);
     
+    // Create Enterprise sheets
+    console.log('🏪 Creating Tables sheet...');
+    createTablesSheet(ss);
+    
+    console.log('📋 Creating Menu Categories sheet...');
+    createMenuCategoriesSheet(ss);
+    
+    console.log('👨‍🍳 Creating Kitchen Orders sheet...');
+    createKitchenOrdersSheet(ss);
+    
+    console.log('📦 Creating Inventory Adjustments sheet...');
+    createInventoryAdjustmentsSheet(ss);
+    
+    console.log('🎯 Creating Promotions sheet...');
+    createPromotionsSheet(ss);
+    
+    console.log('⏰ Creating Time Clock sheet...');
+    createTimeClockSheet(ss);
+    
     // Initialize default data
     console.log('🔧 Adding default data...');
     initializeDefaultData();
@@ -313,6 +332,12 @@ function initializeDefaultData() {
   updateSetting('RECEIPT_FOOTER', 'Thank you for your business!', 'Footer text for receipts');
   updateSetting('COMPANY_NAME', 'RetailPro', 'Company name for branding');
   updateSetting('COMPANY_TAGLINE', 'Modern Point of Sale System', 'Company tagline');
+  updateSetting('COMPANY_LOGO', 'fas fa-store', 'FontAwesome icon class for logo');
+  updateSetting('COMPANY_ADDRESS', '123 Business St, City, State 12345', 'Company address for receipts');
+  updateSetting('COMPANY_PHONE', '(555) 123-4567', 'Company phone number');
+  updateSetting('COMPANY_EMAIL', 'info@retailpro.com', 'Company email address');
+  updateSetting('COMPANY_WEBSITE', 'www.retailpro.com', 'Company website');
+  updateSetting('BUSINESS_HOURS', 'Mon-Fri: 9AM-9PM, Sat-Sun: 10AM-8PM', 'Business hours for receipts');
   
   // Add sample products
   addProduct('Coffee', 3.50, 1.20, 50, 'Beverages', '1234567890123');
@@ -671,6 +696,42 @@ function getSetting(key) {
   } catch (error) {
     console.error('Get setting error:', error);
     return null;
+  }
+}
+
+/**
+ * Get all company branding settings
+ */
+function getCompanySettings() {
+  try {
+    return {
+      name: getSetting('COMPANY_NAME') || 'RetailPro',
+      tagline: getSetting('COMPANY_TAGLINE') || 'Modern Point of Sale System',
+      logo: getSetting('COMPANY_LOGO') || 'fas fa-store',
+      address: getSetting('COMPANY_ADDRESS') || '123 Business St, City, State 12345',
+      phone: getSetting('COMPANY_PHONE') || '(555) 123-4567',
+      email: getSetting('COMPANY_EMAIL') || 'info@retailpro.com',
+      website: getSetting('COMPANY_WEBSITE') || 'www.retailpro.com',
+      businessHours: getSetting('BUSINESS_HOURS') || 'Mon-Fri: 9AM-9PM, Sat-Sun: 10AM-8PM',
+      taxRate: parseFloat(getSetting('TAX_RATE') || '0.0875'),
+      currency: getSetting('CURRENCY') || 'USD',
+      receiptFooter: getSetting('RECEIPT_FOOTER') || 'Thank you for your business!'
+    };
+  } catch (error) {
+    console.error('Get company settings error:', error);
+    return {
+      name: 'RetailPro',
+      tagline: 'Modern Point of Sale System',
+      logo: 'fas fa-store',
+      address: '123 Business St, City, State 12345',
+      phone: '(555) 123-4567',
+      email: 'info@retailpro.com',
+      website: 'www.retailpro.com',
+      businessHours: 'Mon-Fri: 9AM-9PM, Sat-Sun: 10AM-8PM',
+      taxRate: 0.0875,
+      currency: 'USD',
+      receiptFooter: 'Thank you for your business!'
+    };
   }
 }
 
@@ -1316,20 +1377,23 @@ function include(filename) {
  */
 function generateReceipt(sessionId, saleData, total) {
   try {
-    const companyName = getSetting('COMPANY_NAME') || 'RetailPro';
-    const companyTagline = getSetting('COMPANY_TAGLINE') || 'Modern Point of Sale System';
-    const currency = getSetting('CURRENCY') || 'USD';
-    const taxRate = parseFloat(getSetting('TAX_RATE') || '0.0875');
+    const companySettings = getCompanySettings();
     
     const now = new Date();
-    const subtotal = total / (1 + taxRate);
+    const subtotal = total / (1 + companySettings.taxRate);
     const tax = total - subtotal;
     const discount = saleData.discount || 0;
     
     const receipt = {
       // Header
-      companyName: companyName,
-      companyTagline: companyTagline,
+      companyName: companySettings.name,
+      companyTagline: companySettings.tagline,
+      companyLogo: companySettings.logo,
+      companyAddress: companySettings.address,
+      companyPhone: companySettings.phone,
+      companyEmail: companySettings.email,
+      companyWebsite: companySettings.website,
+      businessHours: companySettings.businessHours,
       
       // Transaction Details
       receiptNumber: sessionId,
@@ -1348,10 +1412,10 @@ function generateReceipt(sessionId, saleData, total) {
       // Totals
       subtotal: subtotal,
       tax: tax,
-      taxRate: (taxRate * 100).toFixed(2),
+      taxRate: (companySettings.taxRate * 100).toFixed(2),
       discount: discount,
       total: total,
-      currency: currency,
+      currency: companySettings.currency,
       
       // Payment
       paymentMethod: saleData.paymentMethod,
@@ -1359,7 +1423,7 @@ function generateReceipt(sessionId, saleData, total) {
       change: (saleData.amountPaid || total) - total,
       
       // Footer
-      footerMessage: getSetting('RECEIPT_FOOTER') || 'Thank you for your business!',
+      footerMessage: companySettings.receiptFooter,
       
       // Session Info
       sessionId: sessionId,
@@ -1452,4 +1516,582 @@ function logoutUser(sessionId, username) {
     console.error('Logout error:', error);
     return null;
   }
+}
+
+/**
+ * ENTERPRISE POS FEATURES - Comparable to Micros/Symphony
+ */
+
+/**
+ * Create Tables/Seating Management sheet
+ */
+function createTablesSheet(ss) {
+  let sheet = ss.getSheetByName('Tables');
+  if (!sheet) {
+    sheet = ss.insertSheet('Tables');
+  }
+  
+  sheet.clear();
+  
+  const headers = [
+    'Table ID', 'Table Number', 'Section', 'Capacity', 'Status', 
+    'Server ID', 'Check Number', 'Opened Time', 'Total Amount', 
+    'Guest Count', 'Last Order Time', 'Special Notes'
+  ];
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  
+  const headerRange = sheet.getRange(1, 1, 1, headers.length);
+  headerRange.setBackground('#e91e63');
+  headerRange.setFontColor('white');
+  headerRange.setFontWeight('bold');
+  
+  sheet.setFrozenRows(1);
+  sheet.autoResizeColumns(1, headers.length);
+}
+
+/**
+ * Create Menu Categories/Engineering sheet
+ */
+function createMenuCategoriesSheet(ss) {
+  let sheet = ss.getSheetByName('MenuCategories');
+  if (!sheet) {
+    sheet = ss.insertSheet('MenuCategories');
+  }
+  
+  sheet.clear();
+  
+  const headers = [
+    'Category ID', 'Category Name', 'Display Order', 'Kitchen Station', 
+    'Print To', 'Course Number', 'Active', 'Color Code', 'Icon', 
+    'Preparation Time', 'Description'
+  ];
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  
+  const headerRange = sheet.getRange(1, 1, 1, headers.length);
+  headerRange.setBackground('#ff5722');
+  headerRange.setFontColor('white');
+  headerRange.setFontWeight('bold');
+  
+  sheet.setFrozenRows(1);
+  sheet.autoResizeColumns(1, headers.length);
+}
+
+/**
+ * Create Kitchen Display System sheet
+ */
+function createKitchenOrdersSheet(ss) {
+  let sheet = ss.getSheetByName('KitchenOrders');
+  if (!sheet) {
+    sheet = ss.insertSheet('KitchenOrders');
+  }
+  
+  sheet.clear();
+  
+  const headers = [
+    'Order ID', 'Table Number', 'Item Name', 'Quantity', 'Modifiers', 
+    'Special Instructions', 'Station', 'Status', 'Order Time', 
+    'Start Time', 'Complete Time', 'Priority', 'Server', 'Course'
+  ];
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  
+  const headerRange = sheet.getRange(1, 1, 1, headers.length);
+  headerRange.setBackground('#795548');
+  headerRange.setFontColor('white');
+  headerRange.setFontWeight('bold');
+  
+  sheet.setFrozenRows(1);
+  sheet.autoResizeColumns(1, headers.length);
+}
+
+/**
+ * Create Inventory Adjustments sheet
+ */
+function createInventoryAdjustmentsSheet(ss) {
+  let sheet = ss.getSheetByName('InventoryAdjustments');
+  if (!sheet) {
+    sheet = ss.insertSheet('InventoryAdjustments');
+  }
+  
+  sheet.clear();
+  
+  const headers = [
+    'Adjustment ID', 'Product ID', 'Product Name', 'Previous Stock', 
+    'Adjustment Qty', 'New Stock', 'Reason Code', 'Reason Description', 
+    'User', 'Date Time', 'Cost Impact', 'Reference Number'
+  ];
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  
+  const headerRange = sheet.getRange(1, 1, 1, headers.length);
+  headerRange.setBackground('#607d8b');
+  headerRange.setFontColor('white');
+  headerRange.setFontWeight('bold');
+  
+  sheet.setFrozenRows(1);
+  sheet.autoResizeColumns(1, headers.length);
+}
+
+/**
+ * Create Promotions/Discounts sheet
+ */
+function createPromotionsSheet(ss) {
+  let sheet = ss.getSheetByName('Promotions');
+  if (!sheet) {
+    sheet = ss.insertSheet('Promotions');
+  }
+  
+  sheet.clear();
+  
+  const headers = [
+    'Promo ID', 'Name', 'Type', 'Value', 'Min Purchase', 'Max Discount', 
+    'Start Date', 'End Date', 'Start Time', 'End Time', 'Days Valid', 
+    'Usage Limit', 'Used Count', 'Items/Categories', 'Active', 'Description'
+  ];
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  
+  const headerRange = sheet.getRange(1, 1, 1, headers.length);
+  headerRange.setBackground('#9c27b0');
+  headerRange.setFontColor('white');
+  headerRange.setFontWeight('bold');
+  
+  sheet.setFrozenRows(1);
+  sheet.autoResizeColumns(1, headers.length);
+}
+
+/**
+ * Create Time Clock sheet for employee time tracking
+ */
+function createTimeClockSheet(ss) {
+  let sheet = ss.getSheetByName('TimeClock');
+  if (!sheet) {
+    sheet = ss.insertSheet('TimeClock');
+  }
+  
+  sheet.clear();
+  
+  const headers = [
+    'Employee ID', 'Clock In', 'Clock Out', 'Break Start', 'Break End', 
+    'Total Hours', 'Regular Hours', 'Overtime Hours', 'Break Minutes', 
+    'Job Code', 'Department', 'Tips Declared', 'Hourly Rate'
+  ];
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  
+  const headerRange = sheet.getRange(1, 1, 1, headers.length);
+  headerRange.setBackground('#3f51b5');
+  headerRange.setFontColor('white');
+  headerRange.setFontWeight('bold');
+  
+  sheet.setFrozenRows(1);
+  sheet.autoResizeColumns(1, headers.length);
+}
+
+/**
+ * ENTERPRISE BUSINESS LOGIC FUNCTIONS
+ */
+
+/**
+ * Table Management Functions
+ */
+function openTable(tableNumber, serverID, guestCount, section = 'Main') {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Tables');
+    const checkNumber = generateCheckNumber();
+    const now = new Date();
+    
+    const tableData = [
+      generateTableID(),
+      tableNumber,
+      section,
+      guestCount,
+      'OCCUPIED',
+      serverID,
+      checkNumber,
+      now,
+      0,
+      guestCount,
+      now,
+      ''
+    ];
+    
+    sheet.appendRow(tableData);
+    
+    logAction('Table Opened', serverID, `Table ${tableNumber} opened for ${guestCount} guests`, currentSessionId);
+    
+    return {
+      success: true,
+      checkNumber: checkNumber,
+      tableID: tableData[0]
+    };
+    
+  } catch (error) {
+    console.error('Open table error:', error);
+    return { success: false, error: error.toString() };
+  }
+}
+
+function closeTable(tableID, serverID) {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Tables');
+    const data = sheet.getDataRange().getValues();
+    
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === tableID) {
+        sheet.getRange(i + 1, 5).setValue('AVAILABLE'); // Status
+        sheet.getRange(i + 1, 6).setValue(''); // Server ID
+        sheet.getRange(i + 1, 7).setValue(''); // Check Number
+        sheet.getRange(i + 1, 8).setValue(''); // Opened Time
+        sheet.getRange(i + 1, 9).setValue(0); // Total Amount
+        sheet.getRange(i + 1, 12).setValue(''); // Special Notes
+        
+        logAction('Table Closed', serverID, `Table ${data[i][1]} closed`, currentSessionId);
+        
+        return { success: true };
+      }
+    }
+    
+    return { success: false, error: 'Table not found' };
+    
+  } catch (error) {
+    console.error('Close table error:', error);
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * Kitchen Display System Functions
+ */
+function sendOrderToKitchen(orderData) {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('KitchenOrders');
+    const now = new Date();
+    
+    orderData.items.forEach(item => {
+      const kitchenOrder = [
+        generateOrderID(),
+        orderData.tableNumber,
+        item.name,
+        item.quantity,
+        item.modifiers || '',
+        item.specialInstructions || '',
+        item.kitchenStation || 'HOT',
+        'PENDING',
+        now,
+        '',
+        '',
+        item.priority || 'NORMAL',
+        orderData.serverID,
+        item.course || 1
+      ];
+      
+      sheet.appendRow(kitchenOrder);
+    });
+    
+    logAction('Order Sent to Kitchen', orderData.serverID, `${orderData.items.length} items sent to kitchen for table ${orderData.tableNumber}`, currentSessionId);
+    
+    return { success: true };
+    
+  } catch (error) {
+    console.error('Send order to kitchen error:', error);
+    return { success: false, error: error.toString() };
+  }
+}
+
+function updateKitchenOrderStatus(orderID, status, station) {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('KitchenOrders');
+    const data = sheet.getDataRange().getValues();
+    const now = new Date();
+    
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === orderID) {
+        sheet.getRange(i + 1, 8).setValue(status); // Status
+        
+        if (status === 'COOKING') {
+          sheet.getRange(i + 1, 10).setValue(now); // Start Time
+        } else if (status === 'READY') {
+          sheet.getRange(i + 1, 11).setValue(now); // Complete Time
+        }
+        
+        logAction('Kitchen Order Update', station, `Order ${orderID} status changed to ${status}`, currentSessionId);
+        
+        return { success: true };
+      }
+    }
+    
+    return { success: false, error: 'Order not found' };
+    
+  } catch (error) {
+    console.error('Update kitchen order error:', error);
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * Advanced Inventory Management
+ */
+function adjustInventory(productID, adjustmentQty, reasonCode, reasonDescription, userID) {
+  try {
+    const productsSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.SHEETS.PRODUCTS);
+    const adjustmentsSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('InventoryAdjustments');
+    const productsData = productsSheet.getDataRange().getValues();
+    
+    let productFound = false;
+    let previousStock = 0;
+    let productName = '';
+    let productCost = 0;
+    
+    // Find product and update stock
+    for (let i = 1; i < productsData.length; i++) {
+      if (productsData[i][0] === productID) {
+        previousStock = productsData[i][3];
+        productName = productsData[i][1];
+        productCost = productsData[i][2];
+        
+        const newStock = previousStock + adjustmentQty;
+        productsSheet.getRange(i + 1, 4).setValue(newStock); // Update stock
+        
+        productFound = true;
+        break;
+      }
+    }
+    
+    if (!productFound) {
+      return { success: false, error: 'Product not found' };
+    }
+    
+    // Record adjustment
+    const costImpact = adjustmentQty * productCost;
+    const adjustmentData = [
+      generateAdjustmentID(),
+      productID,
+      productName,
+      previousStock,
+      adjustmentQty,
+      previousStock + adjustmentQty,
+      reasonCode,
+      reasonDescription,
+      userID,
+      new Date(),
+      costImpact,
+      generateReferenceNumber()
+    ];
+    
+    adjustmentsSheet.appendRow(adjustmentData);
+    
+    logAction('Inventory Adjustment', userID, `${productName}: ${adjustmentQty} units (${reasonCode})`, currentSessionId, costImpact);
+    
+    return {
+      success: true,
+      newStock: previousStock + adjustmentQty,
+      costImpact: costImpact
+    };
+    
+  } catch (error) {
+    console.error('Inventory adjustment error:', error);
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * Employee Time Clock Functions
+ */
+function clockIn(employeeID, jobCode = 'SERVER', department = 'FRONT') {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('TimeClock');
+    const now = new Date();
+    
+    // Check if already clocked in
+    const data = sheet.getDataRange().getValues();
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === employeeID && !data[i][2]) { // No clock out time
+        return { success: false, error: 'Employee already clocked in' };
+      }
+    }
+    
+    const timeEntry = [
+      employeeID,
+      now,
+      '', // Clock out (empty)
+      '', // Break start (empty)
+      '', // Break end (empty)
+      0,  // Total hours
+      0,  // Regular hours
+      0,  // Overtime hours
+      0,  // Break minutes
+      jobCode,
+      department,
+      0,  // Tips declared
+      getEmployeeHourlyRate(employeeID)
+    ];
+    
+    sheet.appendRow(timeEntry);
+    
+    logAction('Clock In', employeeID, `Clocked in as ${jobCode} in ${department}`, currentSessionId);
+    
+    return { success: true, clockInTime: now };
+    
+  } catch (error) {
+    console.error('Clock in error:', error);
+    return { success: false, error: error.toString() };
+  }
+}
+
+function clockOut(employeeID, tipsDeclared = 0) {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('TimeClock');
+    const data = sheet.getDataRange().getValues();
+    const now = new Date();
+    
+    // Find open clock in record
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === employeeID && !data[i][2]) { // No clock out time
+        const clockInTime = new Date(data[i][1]);
+        const totalMinutes = Math.round((now - clockInTime) / (1000 * 60));
+        const totalHours = totalMinutes / 60;
+        const regularHours = Math.min(totalHours, 8);
+        const overtimeHours = Math.max(totalHours - 8, 0);
+        
+        sheet.getRange(i + 1, 3).setValue(now); // Clock out
+        sheet.getRange(i + 1, 6).setValue(totalHours); // Total hours
+        sheet.getRange(i + 1, 7).setValue(regularHours); // Regular hours
+        sheet.getRange(i + 1, 8).setValue(overtimeHours); // Overtime hours
+        sheet.getRange(i + 1, 12).setValue(tipsDeclared); // Tips declared
+        
+        logAction('Clock Out', employeeID, `Worked ${totalHours.toFixed(2)} hours, Tips: $${tipsDeclared}`, currentSessionId);
+        
+        return {
+          success: true,
+          totalHours: totalHours,
+          regularHours: regularHours,
+          overtimeHours: overtimeHours,
+          tipsDeclared: tipsDeclared
+        };
+      }
+    }
+    
+    return { success: false, error: 'No active clock in found' };
+    
+  } catch (error) {
+    console.error('Clock out error:', error);
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * Promotions and Discounts Engine
+ */
+function calculatePromotionalDiscount(items, customerID = null, promoCode = null) {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Promotions');
+    const data = sheet.getDataRange().getValues();
+    const now = new Date();
+    const currentTime = now.getTime();
+    
+    let bestDiscount = 0;
+    let appliedPromo = null;
+    const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    
+    for (let i = 1; i < data.length; i++) {
+      const [promoID, name, type, value, minPurchase, maxDiscount, startDate, endDate, startTime, endTime, daysValid, usageLimit, usedCount, itemsCategories, active] = data[i];
+      
+      if (!active) continue;
+      
+      // Check date validity
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (currentTime < start.getTime() || currentTime > end.getTime()) continue;
+      
+      // Check minimum purchase
+      if (subtotal < minPurchase) continue;
+      
+      // Check usage limit
+      if (usageLimit > 0 && usedCount >= usageLimit) continue;
+      
+      // Calculate discount
+      let discount = 0;
+      if (type === 'PERCENTAGE') {
+        discount = subtotal * (value / 100);
+      } else if (type === 'FIXED') {
+        discount = value;
+      } else if (type === 'BUY_X_GET_Y') {
+        // Implement buy X get Y logic
+        discount = calculateBuyXGetYDiscount(items, value);
+      }
+      
+      // Apply maximum discount limit
+      if (maxDiscount > 0) {
+        discount = Math.min(discount, maxDiscount);
+      }
+      
+      if (discount > bestDiscount) {
+        bestDiscount = discount;
+        appliedPromo = {
+          id: promoID,
+          name: name,
+          type: type,
+          discount: discount
+        };
+      }
+    }
+    
+    return {
+      success: true,
+      discount: bestDiscount,
+      promotion: appliedPromo
+    };
+    
+  } catch (error) {
+    console.error('Calculate promotional discount error:', error);
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * Helper Functions for Enterprise Features
+ */
+function generateTableID() {
+  return 'TBL' + new Date().getTime() + Math.floor(Math.random() * 100);
+}
+
+function generateCheckNumber() {
+  return 'CHK' + new Date().getTime().toString().slice(-8);
+}
+
+function generateOrderID() {
+  return 'ORD' + new Date().getTime() + Math.floor(Math.random() * 100);
+}
+
+function generateAdjustmentID() {
+  return 'ADJ' + new Date().getTime() + Math.floor(Math.random() * 100);
+}
+
+function generateReferenceNumber() {
+  return 'REF' + new Date().getTime().toString().slice(-10);
+}
+
+function getEmployeeHourlyRate(employeeID) {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.SHEETS.EMPLOYEES);
+    const data = sheet.getDataRange().getValues();
+    
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === employeeID) {
+        return data[i][9] || 15.00; // Default hourly rate
+      }
+    }
+    
+    return 15.00; // Default rate
+  } catch (error) {
+    return 15.00;
+  }
+}
+
+function calculateBuyXGetYDiscount(items, value) {
+  // Simplified buy X get Y calculation
+  // In real implementation, this would be more complex
+  const eligibleItems = items.filter(item => item.category === 'PROMO_ELIGIBLE');
+  if (eligibleItems.length >= value) {
+    const cheapestItem = eligibleItems.sort((a, b) => a.price - b.price)[0];
+    return cheapestItem.price;
+  }
+  return 0;
 }
