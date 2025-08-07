@@ -71,6 +71,13 @@ function initializePOSSystem() {
     console.log('⏰ Creating Time Clock sheet...');
     createTimeClockSheet(ss);
     
+    // Create Admin/Permissions sheets
+    console.log('🔐 Creating Permissions sheet...');
+    createPermissionsSheet(ss);
+    
+    console.log('👥 Creating Roles sheet...');
+    createRolesSheet(ss);
+    
     // Initialize default data
     console.log('🔧 Adding default data...');
     initializeDefaultData();
@@ -1682,6 +1689,289 @@ function createTimeClockSheet(ss) {
   
   sheet.setFrozenRows(1);
   sheet.autoResizeColumns(1, headers.length);
+}
+
+/**
+ * Create Permissions Matrix sheet
+ */
+function createPermissionsSheet(ss) {
+  let sheet = ss.getSheetByName('Permissions');
+  if (!sheet) {
+    sheet = ss.insertSheet('Permissions');
+  }
+  
+  sheet.clear();
+  
+  const headers = [
+    'Permission ID', 'Permission Name', 'Category', 'Description', 
+    'Admin', 'Manager', 'Supervisor', 'Cashier', 'Server', 'Kitchen', 'Host'
+  ];
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  
+  const headerRange = sheet.getRange(1, 1, 1, headers.length);
+  headerRange.setBackground('#2196f3');
+  headerRange.setFontColor('white');
+  headerRange.setFontWeight('bold');
+  
+  sheet.setFrozenRows(1);
+  sheet.autoResizeColumns(1, headers.length);
+  
+  // Add default permissions
+  const defaultPermissions = [
+    ['POS_SALES', 'Process Sales', 'POS', 'Ability to process sales transactions', true, true, true, true, true, false, false],
+    ['POS_REFUNDS', 'Process Refunds', 'POS', 'Ability to process refunds and returns', true, true, true, false, false, false, false],
+    ['POS_VOIDS', 'Void Transactions', 'POS', 'Ability to void transactions', true, true, true, false, false, false, false],
+    ['POS_DISCOUNTS', 'Apply Discounts', 'POS', 'Ability to apply manual discounts', true, true, true, false, false, false, false],
+    
+    ['INVENTORY_VIEW', 'View Inventory', 'Inventory', 'View inventory levels and reports', true, true, true, true, false, false, false],
+    ['INVENTORY_ADJUST', 'Adjust Inventory', 'Inventory', 'Adjust inventory quantities', true, true, false, false, false, false, false],
+    ['INVENTORY_RECEIVE', 'Receive Inventory', 'Inventory', 'Receive new inventory shipments', true, true, true, false, false, false, false],
+    ['INVENTORY_TRANSFER', 'Transfer Inventory', 'Inventory', 'Transfer inventory between locations', true, true, false, false, false, false, false],
+    
+    ['EMPLOYEE_VIEW', 'View Employees', 'Employee', 'View employee information', true, true, true, false, false, false, false],
+    ['EMPLOYEE_MANAGE', 'Manage Employees', 'Employee', 'Add, edit, delete employees', true, true, false, false, false, false, false],
+    ['EMPLOYEE_TIMECLOCK', 'Time Clock Access', 'Employee', 'Clock in/out and view time records', true, true, true, true, true, true, true],
+    ['EMPLOYEE_PAYROLL', 'Payroll Access', 'Employee', 'View and manage payroll data', true, true, false, false, false, false, false],
+    
+    ['REPORTS_SALES', 'Sales Reports', 'Reports', 'View sales reports and analytics', true, true, true, false, false, false, false],
+    ['REPORTS_INVENTORY', 'Inventory Reports', 'Reports', 'View inventory reports', true, true, true, false, false, false, false],
+    ['REPORTS_EMPLOYEE', 'Employee Reports', 'Reports', 'View employee performance reports', true, true, true, false, false, false, false],
+    ['REPORTS_FINANCIAL', 'Financial Reports', 'Reports', 'View financial and P&L reports', true, true, false, false, false, false, false],
+    
+    ['SETTINGS_SYSTEM', 'System Settings', 'Settings', 'Modify system settings', true, false, false, false, false, false, false],
+    ['SETTINGS_COMPANY', 'Company Settings', 'Settings', 'Modify company information', true, true, false, false, false, false, false],
+    ['SETTINGS_TAX', 'Tax Settings', 'Settings', 'Modify tax rates and rules', true, true, false, false, false, false, false],
+    ['SETTINGS_PROMOTIONS', 'Promotion Settings', 'Settings', 'Create and manage promotions', true, true, false, false, false, false, false],
+    
+    ['TABLE_MANAGE', 'Table Management', 'Restaurant', 'Open, close, and manage tables', true, true, true, false, true, false, true],
+    ['KITCHEN_DISPLAY', 'Kitchen Display', 'Restaurant', 'Access kitchen display system', true, true, true, false, false, true, false],
+    ['MENU_MANAGE', 'Menu Management', 'Restaurant', 'Manage menu items and categories', true, true, false, false, false, false, false],
+    ['FLOOR_PLAN', 'Floor Plan', 'Restaurant', 'View and modify floor plan', true, true, true, false, false, false, true],
+    
+    ['BACKUP_CREATE', 'Create Backups', 'System', 'Create system backups', true, false, false, false, false, false, false],
+    ['LOGS_VIEW', 'View System Logs', 'System', 'View system activity logs', true, true, false, false, false, false, false],
+    ['CASH_DRAWER', 'Cash Drawer', 'Cash', 'Open cash drawer', true, true, true, true, false, false, false],
+    ['CASH_COUNT', 'Cash Count', 'Cash', 'Perform cash counts and reconciliation', true, true, true, false, false, false, false]
+  ];
+  
+  defaultPermissions.forEach((permission, index) => {
+    sheet.getRange(index + 2, 1, 1, permission.length).setValues([permission]);
+  });
+  
+  return sheet;
+}
+
+/**
+ * Create Roles sheet for custom role management
+ */
+function createRolesSheet(ss) {
+  let sheet = ss.getSheetByName('Roles');
+  if (!sheet) {
+    sheet = ss.insertSheet('Roles');
+  }
+  
+  sheet.clear();
+  
+  const headers = [
+    'Role ID', 'Role Name', 'Description', 'Hourly Rate Min', 'Hourly Rate Max', 
+    'Can Override Prices', 'Max Discount %', 'Active', 'Created Date', 'Color Code'
+  ];
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  
+  const headerRange = sheet.getRange(1, 1, 1, headers.length);
+  headerRange.setBackground('#4caf50');
+  headerRange.setFontColor('white');
+  headerRange.setFontWeight('bold');
+  
+  sheet.setFrozenRows(1);
+  sheet.autoResizeColumns(1, headers.length);
+  
+  // Add default roles
+  const defaultRoles = [
+    ['ADMIN', 'Administrator', 'Full system access', 0, 0, true, 100, true, new Date(), '#f44336'],
+    ['MANAGER', 'Manager', 'Management level access', 20, 35, true, 50, true, new Date(), '#ff9800'],
+    ['SUPERVISOR', 'Supervisor', 'Supervisory access', 15, 25, true, 25, true, new Date(), '#2196f3'],
+    ['CASHIER', 'Cashier', 'POS and basic functions', 12, 18, false, 10, true, new Date(), '#4caf50'],
+    ['SERVER', 'Server', 'Table service and POS', 8, 15, false, 5, true, new Date(), '#9c27b0'],
+    ['KITCHEN', 'Kitchen Staff', 'Kitchen display and prep', 14, 22, false, 0, true, new Date(), '#795548'],
+    ['HOST', 'Host/Hostess', 'Seating and basic functions', 10, 16, false, 0, true, new Date(), '#607d8b']
+  ];
+  
+  defaultRoles.forEach((role, index) => {
+    sheet.getRange(index + 2, 1, 1, role.length).setValues([role]);
+  });
+  
+  return sheet;
+}
+
+/**
+ * Get user permissions based on role
+ */
+function getUserPermissions(userRole) {
+  try {
+    const permissionsSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Permissions');
+    const data = permissionsSheet.getDataRange().getValues();
+    const headers = data[0];
+    
+    // Find the role column
+    const roleColumnIndex = headers.findIndex(header => header.toLowerCase() === userRole.toLowerCase());
+    if (roleColumnIndex === -1) {
+      console.error('Role not found:', userRole);
+      return [];
+    }
+    
+    const permissions = [];
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][roleColumnIndex] === true) {
+        permissions.push({
+          id: data[i][0],
+          name: data[i][1],
+          category: data[i][2],
+          description: data[i][3]
+        });
+      }
+    }
+    
+    return permissions;
+    
+  } catch (error) {
+    console.error('Get user permissions error:', error);
+    return [];
+  }
+}
+
+/**
+ * Check if user has specific permission
+ */
+function hasPermission(userRole, permissionID) {
+  try {
+    const permissions = getUserPermissions(userRole);
+    return permissions.some(permission => permission.id === permissionID);
+  } catch (error) {
+    console.error('Check permission error:', error);
+    return false;
+  }
+}
+
+/**
+ * Update permission for a role
+ */
+function updateRolePermission(role, permissionID, hasAccess) {
+  try {
+    const permissionsSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Permissions');
+    const data = permissionsSheet.getDataRange().getValues();
+    const headers = data[0];
+    
+    // Find the role column and permission row
+    const roleColumnIndex = headers.findIndex(header => header.toLowerCase() === role.toLowerCase());
+    if (roleColumnIndex === -1) {
+      return { success: false, error: 'Role not found' };
+    }
+    
+    let permissionRowIndex = -1;
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === permissionID) {
+        permissionRowIndex = i;
+        break;
+      }
+    }
+    
+    if (permissionRowIndex === -1) {
+      return { success: false, error: 'Permission not found' };
+    }
+    
+    // Update the permission
+    permissionsSheet.getRange(permissionRowIndex + 1, roleColumnIndex + 1).setValue(hasAccess);
+    
+    logAction('Permission Updated', 'Admin', `${role} - ${permissionID}: ${hasAccess}`, currentSessionId);
+    
+    return { success: true };
+    
+  } catch (error) {
+    console.error('Update role permission error:', error);
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * Get all permissions matrix for admin panel
+ */
+function getPermissionsMatrix() {
+  try {
+    const permissionsSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Permissions');
+    const data = permissionsSheet.getDataRange().getValues();
+    
+    if (data.length === 0) {
+      return { success: false, error: 'No permissions data found' };
+    }
+    
+    const headers = data[0];
+    const roleColumns = headers.slice(4); // Skip first 4 columns (ID, Name, Category, Description)
+    
+    const permissions = [];
+    for (let i = 1; i < data.length; i++) {
+      const permission = {
+        id: data[i][0],
+        name: data[i][1],
+        category: data[i][2],
+        description: data[i][3],
+        roles: {}
+      };
+      
+      // Map role permissions
+      roleColumns.forEach((role, index) => {
+        permission.roles[role] = data[i][4 + index];
+      });
+      
+      permissions.push(permission);
+    }
+    
+    return {
+      success: true,
+      permissions: permissions,
+      roles: roleColumns
+    };
+    
+  } catch (error) {
+    console.error('Get permissions matrix error:', error);
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * Get role information
+ */
+function getRoleInfo(roleID) {
+  try {
+    const rolesSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Roles');
+    const data = rolesSheet.getDataRange().getValues();
+    
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === roleID) {
+        return {
+          success: true,
+          role: {
+            id: data[i][0],
+            name: data[i][1],
+            description: data[i][2],
+            hourlyRateMin: data[i][3],
+            hourlyRateMax: data[i][4],
+            canOverridePrices: data[i][5],
+            maxDiscountPercent: data[i][6],
+            active: data[i][7],
+            createdDate: data[i][8],
+            colorCode: data[i][9]
+          }
+        };
+      }
+    }
+    
+    return { success: false, error: 'Role not found' };
+    
+  } catch (error) {
+    console.error('Get role info error:', error);
+    return { success: false, error: error.toString() };
+  }
 }
 
 /**

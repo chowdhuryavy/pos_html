@@ -19,12 +19,62 @@ let loginModal, mainContainer, loading;
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM fully loaded, starting POS initialization...');
     
+    // Force hide loading overlay immediately
+    const loadingOverlay = document.getElementById('loading');
+    if (loadingOverlay) {
+        loadingOverlay.style.display = 'none';
+        console.log('Loading overlay hidden on DOM ready');
+    }
+    
     // Small delay to ensure all elements are properly rendered
     setTimeout(() => {
-        initializeApp();
-        setupEventListeners();
-    }, 100);
+        try {
+            initializeApp();
+            setupEventListeners();
+        } catch (error) {
+            console.error('Error during app initialization:', error);
+            // Show error message
+            showDeploymentError();
+        }
+    }, 200);
 });
+
+/**
+ * Show deployment error fallback
+ */
+function showDeploymentError() {
+    const errorDiv = document.createElement('div');
+    errorDiv.innerHTML = `
+        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                    display: flex; justify-content: center; align-items: center; z-index: 10000;">
+            <div style="background: white; padding: 40px; border-radius: 12px; 
+                        box-shadow: 0 10px 30px rgba(0,0,0,0.3); text-align: center; max-width: 500px;">
+                <div style="font-size: 48px; margin-bottom: 20px;">🔧</div>
+                <h2 style="margin: 0 0 15px 0; color: #333;">POS System Loading</h2>
+                <p style="color: #666; margin-bottom: 25px;">
+                    The system is initializing. If this persists, try:
+                </p>
+                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                    <button onclick="location.reload()" 
+                            style="background: #667eea; color: white; border: none; padding: 12px 24px; 
+                                   border-radius: 6px; cursor: pointer; font-weight: 500;">
+                        🔄 Refresh Page
+                    </button>
+                    <button onclick="window.open(window.location.href, '_blank')" 
+                            style="background: #28a745; color: white; border: none; padding: 12px 24px; 
+                                   border-radius: 6px; cursor: pointer; font-weight: 500;">
+                        🔗 Open in New Tab
+                    </button>
+                </div>
+                <p style="font-size: 12px; color: #999; margin-top: 20px;">
+                    This may be due to CSP restrictions in the current frame.
+                </p>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(errorDiv);
+}
 
 /**
  * Initialize the application
@@ -32,7 +82,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function initializeApp() {
     console.log('Initializing POS application...');
     
-    // Initialize DOM elements
+    // Initialize DOM elements with better error handling
     loginModal = document.getElementById('loginModal');
     mainContainer = document.getElementById('mainContainer');
     loading = document.getElementById('loading');
@@ -42,6 +92,29 @@ function initializeApp() {
         mainContainer: !!mainContainer,
         loading: !!loading
     });
+    
+    // Force proper initial state
+    if (loading) {
+        loading.style.display = 'none';
+        console.log('Loading forced hidden in initializeApp');
+    }
+    
+    if (loginModal) {
+        loginModal.style.display = 'flex';
+        console.log('Login modal forced visible in initializeApp');
+    }
+    
+    if (mainContainer) {
+        mainContainer.style.display = 'none';
+        console.log('Main container forced hidden in initializeApp');
+    }
+    
+    // If critical elements are missing, show error
+    if (!loginModal || !mainContainer) {
+        console.error('Critical DOM elements missing!');
+        showDeploymentError();
+        return;
+    }
     
     // Check if user is already logged in
     const savedUser = sessionStorage.getItem('posUser') || localStorage.getItem('posUser');
@@ -644,6 +717,17 @@ function showSection(sectionName) {
             break;
         case 'employees':
             loadEmployeesTable();
+            break;
+        case 'admin':
+            // Check if user has admin permissions
+            if (currentUser && currentUser.role === 'Admin') {
+                // Load default admin tab (permissions)
+                switchAdminTab('permissions');
+            } else {
+                showAlert('Access denied. Admin privileges required.', 'error');
+                showSection('dashboard');
+                return;
+            }
             break;
         case 'settings':
             loadSettings();
@@ -1852,6 +1936,342 @@ function findPeakHour(hourlyData) {
 
 function exportReport() {
     showAlert('Report export functionality coming soon!', 'warning');
+}
+
+/**
+ * Admin Panel Functions
+ */
+
+// Switch admin tabs
+function switchAdminTab(tabName) {
+    // Update tab buttons
+    document.querySelectorAll('.admin-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+    
+    // Update tab content
+    document.querySelectorAll('.admin-tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    document.getElementById(`${tabName}-tab`).classList.add('active');
+    
+    // Load content based on tab
+    switch(tabName) {
+        case 'permissions':
+            loadPermissionsMatrix();
+            break;
+        case 'roles':
+            loadRolesGrid();
+            break;
+        case 'audit':
+            loadAuditTrail();
+            break;
+    }
+}
+
+// Load permissions matrix
+async function loadPermissionsMatrix() {
+    try {
+        const matrixContainer = document.getElementById('permissionsMatrix');
+        matrixContainer.innerHTML = '<div class="loading-permissions"><i class="fas fa-spinner fa-spin"></i> Loading permissions...</div>';
+        
+        const result = await callServerFunction('getPermissionsMatrix');
+        
+        if (result.success) {
+            renderPermissionsMatrix(result.permissions, result.roles);
+        } else {
+            matrixContainer.innerHTML = `<div class="error-message">Error loading permissions: ${result.error}</div>`;
+        }
+    } catch (error) {
+        console.error('Error loading permissions matrix:', error);
+        document.getElementById('permissionsMatrix').innerHTML = '<div class="error-message">Failed to load permissions matrix</div>';
+    }
+}
+
+// Render permissions matrix table
+function renderPermissionsMatrix(permissions, roles) {
+    const matrixContainer = document.getElementById('permissionsMatrix');
+    
+    let html = `
+        <table class="permissions-table">
+            <thead>
+                <tr>
+                    <th>Permission</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    ${roles.map(role => `<th>${role}</th>`).join('')}
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    let currentCategory = '';
+    permissions.forEach(permission => {
+        // Add category header if changed
+        if (permission.category !== currentCategory) {
+            currentCategory = permission.category;
+            html += `
+                <tr class="permission-category">
+                    <td colspan="${3 + roles.length}"><strong>${currentCategory}</strong></td>
+                </tr>
+            `;
+        }
+        
+        html += `
+            <tr>
+                <td><strong>${permission.name}</strong></td>
+                <td>${permission.category}</td>
+                <td>${permission.description}</td>
+                ${roles.map(role => `
+                    <td>
+                        <div class="permission-toggle ${permission.roles[role] ? 'enabled' : ''}" 
+                             onclick="togglePermission('${role}', '${permission.id}', ${!permission.roles[role]})">
+                        </div>
+                    </td>
+                `).join('')}
+            </tr>
+        `;
+    });
+    
+    html += `
+            </tbody>
+        </table>
+    `;
+    
+    matrixContainer.innerHTML = html;
+}
+
+// Toggle permission for role
+async function togglePermission(role, permissionID, hasAccess) {
+    try {
+        const result = await callServerFunction('updateRolePermission', role, permissionID, hasAccess);
+        
+        if (result.success) {
+            showAlert(`Permission updated for ${role}`, 'success');
+            // Refresh the matrix
+            loadPermissionsMatrix();
+        } else {
+            showAlert(`Failed to update permission: ${result.error}`, 'error');
+        }
+    } catch (error) {
+        console.error('Error updating permission:', error);
+        showAlert('Failed to update permission', 'error');
+    }
+}
+
+// Load roles grid
+async function loadRolesGrid() {
+    // Placeholder for role management
+    const rolesGrid = document.getElementById('rolesGrid');
+    rolesGrid.innerHTML = `
+        <div class="role-card">
+            <div class="role-header">
+                <h4 class="role-name">Administrator</h4>
+                <div class="role-color" style="background: #f44336;"></div>
+            </div>
+            <p class="role-description">Full system access with all permissions</p>
+            <div class="role-stats">
+                <div class="role-stat">
+                    <i class="fas fa-users"></i>
+                    <span>2 Users</span>
+                </div>
+                <div class="role-stat">
+                    <i class="fas fa-key"></i>
+                    <span>28 Permissions</span>
+                </div>
+            </div>
+            <div class="role-actions">
+                <button class="btn btn-primary btn-sm">Edit</button>
+                <button class="btn btn-secondary btn-sm">View</button>
+            </div>
+        </div>
+        
+        <div class="role-card">
+            <div class="role-header">
+                <h4 class="role-name">Manager</h4>
+                <div class="role-color" style="background: #ff9800;"></div>
+            </div>
+            <p class="role-description">Management level access for operations</p>
+            <div class="role-stats">
+                <div class="role-stat">
+                    <i class="fas fa-users"></i>
+                    <span>3 Users</span>
+                </div>
+                <div class="role-stat">
+                    <i class="fas fa-key"></i>
+                    <span>18 Permissions</span>
+                </div>
+            </div>
+            <div class="role-actions">
+                <button class="btn btn-primary btn-sm">Edit</button>
+                <button class="btn btn-secondary btn-sm">View</button>
+            </div>
+        </div>
+        
+        <div class="role-card">
+            <div class="role-header">
+                <h4 class="role-name">Cashier</h4>
+                <div class="role-color" style="background: #4caf50;"></div>
+            </div>
+            <p class="role-description">POS and basic functions only</p>
+            <div class="role-stats">
+                <div class="role-stat">
+                    <i class="fas fa-users"></i>
+                    <span>5 Users</span>
+                </div>
+                <div class="role-stat">
+                    <i class="fas fa-key"></i>
+                    <span>8 Permissions</span>
+                </div>
+            </div>
+            <div class="role-actions">
+                <button class="btn btn-primary btn-sm">Edit</button>
+                <button class="btn btn-secondary btn-sm">View</button>
+            </div>
+        </div>
+    `;
+}
+
+// System control functions
+async function createSystemBackup() {
+    try {
+        showLoading('Creating backup...');
+        const result = await callServerFunction('createDailyBackup');
+        hideLoading();
+        
+        if (result.success) {
+            showAlert(`Backup created successfully: ${result.backupName}`, 'success');
+        } else {
+            showAlert(`Backup failed: ${result.error}`, 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        console.error('Error creating backup:', error);
+        showAlert('Failed to create backup', 'error');
+    }
+}
+
+async function scheduleBackups() {
+    try {
+        const result = await callServerFunction('scheduleDailyBackup');
+        if (result) {
+            showAlert('Daily backup scheduled successfully at 2:00 AM', 'success');
+        } else {
+            showAlert('Failed to schedule backups', 'error');
+        }
+    } catch (error) {
+        console.error('Error scheduling backups:', error);
+        showAlert('Failed to schedule backups', 'error');
+    }
+}
+
+function confirmSystemReset() {
+    if (confirm('⚠️ WARNING: This will reset the entire system to default state. All data will be lost. Are you sure?')) {
+        if (confirm('This action cannot be undone. Type "RESET" to confirm:') && prompt('Type RESET to confirm:') === 'RESET') {
+            performSystemReset();
+        }
+    }
+}
+
+async function performSystemReset() {
+    try {
+        showLoading('Resetting system...');
+        const result = await callServerFunction('resetPOSSystem');
+        hideLoading();
+        
+        if (result) {
+            showAlert('System reset successfully. Please refresh the page.', 'success');
+            setTimeout(() => location.reload(), 3000);
+        } else {
+            showAlert('System reset failed', 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        console.error('Error resetting system:', error);
+        showAlert('Failed to reset system', 'error');
+    }
+}
+
+// Load audit trail
+async function loadAuditTrail() {
+    try {
+        const auditResults = document.getElementById('auditResults');
+        auditResults.innerHTML = '<div class="loading-audit"><i class="fas fa-spinner fa-spin"></i> Loading audit trail...</div>';
+        
+        // Set default dates
+        const today = new Date();
+        const weekAgo = new Date(today.getTime() - (7 * 24 * 60 * 60 * 1000));
+        
+        document.getElementById('auditStartDate').value = weekAgo.toISOString().split('T')[0];
+        document.getElementById('auditEndDate').value = today.toISOString().split('T')[0];
+        
+        const result = await callServerFunction('getTransactionLog', weekAgo, today);
+        
+        if (result.success) {
+            renderAuditTrail(result.transactions);
+        } else {
+            auditResults.innerHTML = `<div class="error-message">Error loading audit trail: ${result.error}</div>`;
+        }
+    } catch (error) {
+        console.error('Error loading audit trail:', error);
+        document.getElementById('auditResults').innerHTML = '<div class="error-message">Failed to load audit trail</div>';
+    }
+}
+
+// Render audit trail table
+function renderAuditTrail(transactions) {
+    const auditResults = document.getElementById('auditResults');
+    
+    if (!transactions || transactions.length === 0) {
+        auditResults.innerHTML = '<div class="no-data">No audit records found for the selected criteria.</div>';
+        return;
+    }
+    
+    let html = `
+        <table class="audit-table">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Action</th>
+                    <th>User</th>
+                    <th>Session</th>
+                    <th>Details</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    transactions.forEach(transaction => {
+        const actionClass = transaction.action.toLowerCase().replace(' ', '');
+        html += `
+            <tr>
+                <td>${new Date(transaction.timestamp).toLocaleString()}</td>
+                <td><span class="audit-action ${actionClass}">${transaction.action}</span></td>
+                <td>${transaction.user}</td>
+                <td>${transaction.sessionId || '-'}</td>
+                <td>${transaction.details || '-'}</td>
+                <td>${transaction.amount ? '$' + parseFloat(transaction.amount).toFixed(2) : '-'}</td>
+            </tr>
+        `;
+    });
+    
+    html += `
+            </tbody>
+        </table>
+    `;
+    
+    auditResults.innerHTML = html;
+}
+
+// Export functions
+function exportPermissions() {
+    showAlert('Permission export functionality coming soon!', 'info');
+}
+
+function showAddRoleModal() {
+    showAlert('Add role functionality coming soon!', 'info');
 }
 
 /**

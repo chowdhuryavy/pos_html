@@ -1861,6 +1861,236 @@
                 border: 1px solid #ddd;
             }
         }
+        
+        /* Admin Panel Styles */
+        .admin-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .admin-header {
+            background: linear-gradient(135deg, #2196f3, #1976d2);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .admin-header h2 {
+            margin: 0 0 10px 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        .admin-header p {
+            margin: 0;
+            opacity: 0.9;
+        }
+        
+        .admin-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .admin-tab {
+            flex: 1;
+            padding: 15px 20px;
+            border: none;
+            background: none;
+            color: #666;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .admin-tab:hover {
+            background: #e9ecef;
+            color: #333;
+        }
+        
+        .admin-tab.active {
+            background: white;
+            color: #2196f3;
+            border-bottom: 3px solid #2196f3;
+        }
+        
+        .admin-tab-content {
+            display: none;
+            padding: 30px;
+        }
+        
+        .admin-tab-content.active {
+            display: block;
+        }
+        
+        /* Permissions Matrix */
+        .permissions-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .permissions-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .permissions-matrix {
+            overflow-x: auto;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .permissions-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1000px;
+        }
+        
+        .permissions-table th,
+        .permissions-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .permissions-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .permission-category {
+            background: #e3f2fd !important;
+            font-weight: 600;
+            color: #1976d2;
+        }
+        
+        .permission-toggle {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 2px solid #ddd;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .permission-toggle.enabled {
+            background: #4caf50;
+            border-color: #4caf50;
+        }
+        
+        .permission-toggle.enabled::after {
+            content: '✓';
+            color: white;
+            font-size: 12px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        /* System Control */
+        .system-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .system-action {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .action-info h4 {
+            margin: 0 0 5px 0;
+            color: #333;
+        }
+        
+        .action-info p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        /* Audit Trail */
+        .audit-header {
+            margin-bottom: 25px;
+        }
+        
+        .audit-filters {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        
+        .audit-filters .form-control {
+            max-width: 200px;
+        }
+        
+        .audit-results {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            overflow: hidden;
+        }
+        
+        .audit-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .audit-table th,
+        .audit-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .audit-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        .audit-action {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .audit-action.login { background: #e3f2fd; color: #1976d2; }
+        .audit-action.sale { background: #e8f5e8; color: #388e3c; }
+        .audit-action.system { background: #fff3e0; color: #f57c00; }
+        .audit-action.permission { background: #fce4ec; color: #c2185b; }
+        
+        .loading-permissions,
+        .loading-roles,
+        .loading-audit {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
@@ -2082,6 +2312,10 @@
                 <div class="nav-item admin-only" onclick="showSection('settings')" data-section="settings">
                     <i class="fas fa-cog"></i>
                     <span>Settings</span>
+                </div>
+                <div class="nav-item admin-only" onclick="showSection('admin')" data-section="admin">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Admin Panel</span>
                 </div>
             </nav>
 
@@ -2543,6 +2777,134 @@
                         </button>
                     </div>
                 </section>
+                
+                <!-- Admin Panel Section -->
+                <section id="admin" class="content-section">
+                    <div class="admin-panel">
+                        <div class="admin-header">
+                            <h2><i class="fas fa-shield-alt"></i> System Administration</h2>
+                            <p>Manage permissions, roles, and system settings</p>
+                        </div>
+
+                        <div class="admin-tabs">
+                            <button class="admin-tab active" onclick="switchAdminTab('permissions')" data-tab="permissions">
+                                <i class="fas fa-key"></i> Permissions Matrix
+                            </button>
+                            <button class="admin-tab" onclick="switchAdminTab('roles')" data-tab="roles">
+                                <i class="fas fa-users-cog"></i> Role Management
+                            </button>
+                            <button class="admin-tab" onclick="switchAdminTab('system')" data-tab="system">
+                                <i class="fas fa-server"></i> System Control
+                            </button>
+                            <button class="admin-tab" onclick="switchAdminTab('audit')" data-tab="audit">
+                                <i class="fas fa-search"></i> Audit Trail
+                            </button>
+                        </div>
+
+                        <!-- Permissions Matrix Tab -->
+                        <div id="permissions-tab" class="admin-tab-content active">
+                            <div class="permissions-header">
+                                <h3>Permission Matrix</h3>
+                                <div class="permissions-controls">
+                                    <button onclick="loadPermissionsMatrix()" class="btn btn-primary">
+                                        <i class="fas fa-sync"></i> Refresh
+                                    </button>
+                                    <button onclick="exportPermissions()" class="btn btn-secondary">
+                                        <i class="fas fa-download"></i> Export
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="permissions-matrix" id="permissionsMatrix">
+                                <div class="loading-permissions">
+                                    <i class="fas fa-spinner fa-spin"></i> Loading permissions...
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Role Management Tab -->
+                        <div id="roles-tab" class="admin-tab-content">
+                            <div class="roles-header">
+                                <h3>Role Management</h3>
+                                <button onclick="showAddRoleModal()" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Add Role
+                                </button>
+                            </div>
+                            
+                            <div class="roles-grid" id="rolesGrid">
+                                <div class="loading-roles">
+                                    <i class="fas fa-spinner fa-spin"></i> Loading roles...
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- System Control Tab -->
+                        <div id="system-tab" class="admin-tab-content">
+                            <div class="system-controls">
+                                <h3>System Operations</h3>
+                                
+                                <div class="system-actions">
+                                    <div class="system-action">
+                                        <div class="action-info">
+                                            <h4><i class="fas fa-download"></i> Create Backup</h4>
+                                            <p>Create a complete system backup</p>
+                                        </div>
+                                        <button onclick="createSystemBackup()" class="btn btn-primary">
+                                            Create Backup
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="system-action">
+                                        <div class="action-info">
+                                            <h4><i class="fas fa-clock"></i> Schedule Backup</h4>
+                                            <p>Set up automatic daily backups</p>
+                                        </div>
+                                        <button onclick="scheduleBackups()" class="btn btn-secondary">
+                                            Schedule Backups
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="system-action">
+                                        <div class="action-info">
+                                            <h4><i class="fas fa-database"></i> System Reset</h4>
+                                            <p>Reset system to default state (DANGER)</p>
+                                        </div>
+                                        <button onclick="confirmSystemReset()" class="btn btn-danger">
+                                            Reset System
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Audit Trail Tab -->
+                        <div id="audit-tab" class="admin-tab-content">
+                            <div class="audit-header">
+                                <h3>System Audit Trail</h3>
+                                <div class="audit-filters">
+                                    <input type="date" id="auditStartDate" class="form-control">
+                                    <input type="date" id="auditEndDate" class="form-control">
+                                    <select id="auditAction" class="form-control">
+                                        <option value="">All Actions</option>
+                                        <option value="Login">Logins</option>
+                                        <option value="Sale">Sales</option>
+                                        <option value="Permission">Permissions</option>
+                                        <option value="System">System</option>
+                                    </select>
+                                    <button onclick="loadAuditTrail()" class="btn btn-primary">
+                                        <i class="fas fa-search"></i> Search
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="audit-results" id="auditResults">
+                                <div class="loading-audit">
+                                    <i class="fas fa-spinner fa-spin"></i> Loading audit trail...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </main>
         </div>
     </div>
@@ -2764,16 +3126,53 @@
                         reportDateInput.value = today;
                     }
                     
-                    // Handle CSP frame restriction by checking if we're in the right context
+                                // Handle CSP frame restriction - improved approach
+            try {
+                // Check if we're in a sandboxed frame
+                if (window.parent !== window.self) {
+                    console.log('Running in iframe, checking for CSP restrictions...');
+                    
+                    // Try to access parent - if blocked, we're sandboxed
                     try {
-                        if (window.parent !== window.self && window.location.hostname.includes('googleusercontent.com')) {
-                            // We're in a frame, redirect to direct URL
-                            window.parent.location = window.location.href;
-                        }
+                        const parentLocation = window.parent.location.href;
+                        console.log('Parent access allowed');
                     } catch (e) {
-                        // CSP might block this, which is fine
-                        console.log('Frame context check completed');
+                        console.log('Sandboxed iframe detected, showing direct link option');
+                        
+                        // Show a message to open in new tab instead of trying to redirect
+                        const currentUrl = window.location.href.replace('/userCodeAppPanel', '');
+                        const message = document.createElement('div');
+                        message.style.cssText = `
+                            position: fixed; top: 10px; right: 10px; 
+                            background: #ff5722; color: white; padding: 15px; 
+                            border-radius: 8px; z-index: 10001; font-size: 14px;
+                            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                        `;
+                        message.innerHTML = `
+                            <div style="margin-bottom: 8px;"><strong>⚠️ Frame Restriction</strong></div>
+                            <div style="margin-bottom: 10px;">For best experience, open in new tab:</div>
+                            <button onclick="window.open('${currentUrl}', '_blank')" 
+                                    style="background: white; color: #ff5722; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
+                                Open in New Tab
+                            </button>
+                            <button onclick="this.parentElement.remove()" 
+                                    style="background: transparent; color: white; border: 1px solid white; padding: 6px 10px; border-radius: 4px; cursor: pointer; margin-left: 8px;">
+                                Continue Here
+                            </button>
+                        `;
+                        document.body.appendChild(message);
+                        
+                        // Auto-remove after 10 seconds
+                        setTimeout(() => {
+                            if (message.parentElement) {
+                                message.remove();
+                            }
+                        }, 10000);
                     }
+                }
+            } catch (e) {
+                console.log('Frame context check completed:', e.message);
+            }
                 });
                 </script>
 
