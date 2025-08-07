@@ -2449,7 +2449,99 @@
         </div>
     </div>
 
-    <?= include('pos-script'); ?>
-    <?= include('charts'); ?>
-</body>
-</html>
+                    <script>
+                // Essential functions that need to be available immediately
+                function switchAuthType(type) {
+                    // Update tab appearance
+                    document.querySelectorAll('.switch-tab').forEach(tab => {
+                        tab.classList.remove('active');
+                    });
+                    document.querySelector(`[data-auth="${type}"]`).classList.add('active');
+                    
+                    // Show/hide appropriate fields
+                    document.getElementById('pinField').classList.toggle('hidden', type !== 'pin');
+                    document.getElementById('passwordField').classList.toggle('hidden', type !== 'password');
+                    
+                    // Clear the inactive field
+                    if (type === 'pin') {
+                        document.getElementById('password').value = '';
+                    } else {
+                        document.getElementById('pin').value = '';
+                    }
+                    
+                    // Focus the active field
+                    setTimeout(() => {
+                        const activeField = type === 'pin' ? 'pin' : 'password';
+                        document.getElementById(activeField).focus();
+                    }, 100);
+                }
+
+                function togglePinPad() {
+                    const pinPad = document.getElementById('pinPad');
+                    pinPad.classList.toggle('hidden');
+                    
+                    if (!pinPad.classList.contains('hidden')) {
+                        document.getElementById('pinPadDisplay').value = '';
+                    }
+                }
+
+                function closePinPad() {
+                    document.getElementById('pinPad').classList.add('hidden');
+                }
+
+                function addPinDigit(digit) {
+                    const display = document.getElementById('pinPadDisplay');
+                    if (display.value.length < 6) {
+                        display.value += digit;
+                    }
+                }
+
+                function clearPin() {
+                    document.getElementById('pinPadDisplay').value = '';
+                }
+
+                function backspacePin() {
+                    const display = document.getElementById('pinPadDisplay');
+                    display.value = display.value.slice(0, -1);
+                }
+
+                function usePinPadValue() {
+                    const pinValue = document.getElementById('pinPadDisplay').value;
+                    if (pinValue) {
+                        document.getElementById('pin').value = pinValue;
+                        closePinPad();
+                    }
+                }
+
+                function togglePasswordVisibility() {
+                    const passwordField = document.getElementById('password');
+                    const toggleBtn = document.querySelector('.show-password-btn i');
+                    
+                    if (passwordField.type === 'password') {
+                        passwordField.type = 'text';
+                        toggleBtn.className = 'fas fa-eye-slash';
+                    } else {
+                        passwordField.type = 'password';
+                        toggleBtn.className = 'fas fa-eye';
+                    }
+                }
+
+                function showForgotModal() {
+                    alert('Please contact your system administrator to reset your credentials.');
+                }
+
+                // Set default date when DOM is ready
+                document.addEventListener('DOMContentLoaded', function() {
+                    console.log('Setting default report date...');
+                    const today = new Date().toISOString().split('T')[0];
+                    const reportDateInput = document.getElementById('reportDate');
+                    if (reportDateInput) {
+                        reportDateInput.value = today;
+                    }
+                });
+                </script>
+
+                <?= include('pos-script'); ?>
+                <?= include('charts'); ?>
+            </body>
+            </html>

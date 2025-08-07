@@ -11,51 +11,87 @@ let cart = [];
 let currentTaxRate = 0.0875; // Default 8.75%
 let currentSettings = {};
 
-// DOM Elements
-const loginModal = document.getElementById('loginModal');
-const mainContainer = document.getElementById('mainContainer');
-const loading = document.getElementById('loading');
+// DOM Elements (will be set when DOM is ready)
+let loginModal, mainContainer, loading;
 
 // Initialize Application
 document.addEventListener('DOMContentLoaded', function() {
-    initializeApp();
-    setupEventListeners();
+    console.log('DOM fully loaded, starting POS initialization...');
+    
+    // Small delay to ensure all elements are properly rendered
+    setTimeout(() => {
+        initializeApp();
+        setupEventListeners();
+    }, 100);
 });
 
 /**
  * Initialize the application
  */
 function initializeApp() {
-    showLoading();
+    console.log('Initializing POS application...');
     
-    // Check if user is already logged in (using sessionStorage)
-    const savedUser = sessionStorage.getItem('posUser');
+    // Initialize DOM elements
+    loginModal = document.getElementById('loginModal');
+    mainContainer = document.getElementById('mainContainer');
+    loading = document.getElementById('loading');
+    
+    console.log('DOM elements found:', {
+        loginModal: !!loginModal,
+        mainContainer: !!mainContainer,
+        loading: !!loading
+    });
+    
+    // Check if user is already logged in
+    const savedUser = sessionStorage.getItem('posUser') || localStorage.getItem('posUser');
     if (savedUser) {
-        currentUser = JSON.parse(savedUser);
-        showMainApp();
-        loadDashboardData();
+        console.log('Found saved user, loading main app...');
+        try {
+            currentUser = JSON.parse(savedUser);
+            showMainApp();
+            loadDashboardData();
+            loadCompanyBranding();
+        } catch (error) {
+            console.error('Error parsing saved user:', error);
+            showLoginModal();
+            loadCompanyBranding();
+        }
     } else {
+        console.log('No saved user, showing login modal...');
         showLoginModal();
+        loadCompanyBranding();
     }
-    
-    hideLoading();
 }
 
 /**
  * Setup event listeners
  */
 function setupEventListeners() {
+    console.log('Setting up event listeners...');
+    
     // Login form
-    document.getElementById('loginForm').addEventListener('submit', handleLogin);
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleLogin);
+    }
     
     // Product search
-    document.getElementById('productSearch').addEventListener('input', handleProductSearch);
+    const productSearch = document.getElementById('productSearch');
+    if (productSearch) {
+        productSearch.addEventListener('input', handleProductSearch);
+    }
     
     // Product form
-    document.getElementById('addProductForm').addEventListener('submit', handleAddProduct);
+    const addProductForm = document.getElementById('addProductForm');
+    if (addProductForm) {
+        addProductForm.addEventListener('submit', handleAddProduct);
+    }
     
     // Employee form
-    document.getElementById('addEmployeeForm').addEventListener('submit', handleAddEmployee);
+    const addEmployeeForm = document.getElementById('addEmployeeForm');
+    if (addEmployeeForm) {
+        addEmployeeForm.addEventListener('submit', handleAddEmployee);
+    }
     
     // Close modals on clicking outside
     document.querySelectorAll('.modal').forEach(modal => {
@@ -275,15 +311,17 @@ async function loadCompanyBranding() {
         const companyName = await callServerFunction('getSetting', 'COMPANY_NAME');
         const companyTagline = await callServerFunction('getSetting', 'COMPANY_TAGLINE');
         
-        if (companyName) {
-            document.getElementById('companyName').textContent = companyName;
+        const companyNameEl = document.getElementById('companyName');
+        if (companyName && companyNameEl) {
+            companyNameEl.textContent = companyName;
         }
         
-        if (companyTagline) {
-            document.querySelector('.company-tagline').textContent = companyTagline;
+        const companyTaglineEl = document.querySelector('.company-tagline');
+        if (companyTagline && companyTaglineEl) {
+            companyTaglineEl.textContent = companyTagline;
         }
     } catch (error) {
-        console.log('Using default branding');
+        console.log('Using default branding:', error);
     }
 }
 
@@ -306,32 +344,50 @@ function logout() {
  * Show login modal
  */
 function showLoginModal() {
-    loginModal.style.display = 'flex';
-    mainContainer.style.display = 'none';
-    document.getElementById('username').focus();
+    console.log('Showing login modal...');
+    if (loginModal) loginModal.style.display = 'flex';
+    if (mainContainer) mainContainer.style.display = 'none';
+    if (loading) loading.style.display = 'none';
+    
+    // Focus on username field after a short delay
+    setTimeout(() => {
+        const usernameField = document.getElementById('username');
+        if (usernameField) usernameField.focus();
+    }, 100);
 }
 
 /**
  * Show main application
  */
 function showMainApp() {
-    loginModal.style.display = 'none';
-    mainContainer.style.display = 'block';
+    console.log('Showing main application...');
+    if (loginModal) loginModal.style.display = 'none';
+    if (mainContainer) mainContainer.style.display = 'block';
+    if (loading) loading.style.display = 'none';
     
     // Update user info
     const userName = document.getElementById('userName');
     const userAvatar = document.getElementById('userAvatar');
     
-    userName.textContent = currentUser.name;
-    userAvatar.textContent = currentUser.name.charAt(0).toUpperCase();
+    if (currentUser && userName) {
+        userName.textContent = currentUser.name;
+    }
+    if (currentUser && userAvatar) {
+        userAvatar.textContent = currentUser.name.charAt(0).toUpperCase();
+    }
     
     // Hide admin-only elements based on role
     const adminElements = document.querySelectorAll('.admin-only');
     adminElements.forEach(element => {
-        if (currentUser.role !== 'Admin') {
+        if (currentUser && currentUser.role !== 'Admin') {
             element.style.display = 'none';
+        } else {
+            element.style.display = '';
         }
     });
+    
+    // Show dashboard by default
+    showSection('dashboard');
     
     // Load initial data
     loadProducts();
@@ -1619,29 +1675,28 @@ function createEmployeeStatsTable(employees) {
  * Helper Functions
  */
 function findPeakHour(hourlyData) {
+    if (!hourlyData || hourlyData.length === 0) {
+        return '9:00-10:00';
+    }
     let peakHour = hourlyData.reduce((max, hour) => 
         hour.revenue > max.revenue ? hour : max, hourlyData[0]);
-    return peakHour.hour;
+    return peakHour ? peakHour.hour : '9:00-10:00';
 }
 
 function exportReport() {
     showAlert('Report export functionality coming soon!', 'warning');
 }
 
-/**
- * Initialize reports with default date
- */
+// This function was moved above
+
+// Initialize reports with default date (this will be called separately)
 function initializeReports() {
     const today = new Date().toISOString().split('T')[0];
-    document.getElementById('reportDate').value = today;
+    const reportDateInput = document.getElementById('reportDate');
+    if (reportDateInput) {
+        reportDateInput.value = today;
+    }
     loadReportData('daily-rvc', today);
-}
-
-// Update the original initializeApp function to load branding
-const originalInitializeApp = initializeApp;
-function initializeApp() {
-    originalInitializeApp();
-    loadCompanyBranding();
 }
 
 // Auto-save cart to localStorage
