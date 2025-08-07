@@ -21,29 +21,130 @@ const CONFIG = {
 
 /**
  * Initialize the POS system by creating necessary sheets
+ * Run this function ONCE after setting up your Google Apps Script project
  */
 function initializePOSSystem() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  try {
+    console.log('🚀 Starting POS System initialization...');
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    
+    // Create Products sheet
+    console.log('📦 Creating Products sheet...');
+    createProductsSheet(ss);
+    
+    // Create Sales sheet
+    console.log('💰 Creating Sales sheet...');
+    createSalesSheet(ss);
+    
+    // Create Employees sheet
+    console.log('👥 Creating Employees sheet...');
+    createEmployeesSheet(ss);
+    
+    // Create Settings sheet
+    console.log('⚙️ Creating Settings sheet...');
+    createSettingsSheet(ss);
+    
+    // Create Logs sheet
+    console.log('📋 Creating Logs sheet...');
+    createLogsSheet(ss);
+    
+    // Initialize default data
+    console.log('🔧 Adding default data...');
+    initializeDefaultData();
+    
+    console.log('✅ POS system initialized successfully!');
+    logAction('System Initialization', 'System', 'POS system initialized successfully');
+    
+    return '✅ SUCCESS: POS System initialized! Your database is ready. You can now deploy the web app.';
+    
+  } catch (error) {
+    console.error('❌ Error initializing POS System:', error);
+    return '❌ ERROR: Failed to initialize POS System: ' + error.toString();
+  }
+}
+
+/**
+ * Test function to verify system setup
+ * Run this after initialization to verify everything works
+ */
+function testSystemSetup() {
+  try {
+    console.log('🔍 Testing system setup...');
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheets = ss.getSheets();
+    const sheetNames = sheets.map(sheet => sheet.getName());
+    
+    console.log('📊 Found sheets:', sheetNames);
+    
+    const requiredSheets = ['Products', 'Sales', 'Employees', 'Settings', 'Logs'];
+    const missingSheets = requiredSheets.filter(name => !sheetNames.includes(name));
+    
+    if (missingSheets.length > 0) {
+      return '❌ Missing sheets: ' + missingSheets.join(', ') + '. Please run initializePOSSystem() first.';
+    }
+    
+    // Test user count
+    const employeeSheet = ss.getSheetByName('Employees');
+    const employeeCount = employeeSheet.getLastRow() - 1; // Subtract header row
+    console.log('👥 Employee count:', employeeCount);
+    
+    // Test product count
+    const productSheet = ss.getSheetByName('Products');
+    const productCount = productSheet.getLastRow() - 1; // Subtract header row
+    console.log('📦 Product count:', productCount);
+    
+    // Test authentication
+    console.log('🔐 Testing authentication...');
+    const authResult = authenticateUser('admin', '1234', 'pin');
+    if (authResult.success) {
+      console.log('✅ Authentication successful!');
+      return `✅ SUCCESS: System setup complete!\n\n📊 Database Summary:\n- ${employeeCount} employees created\n- ${productCount} products added\n- All sheets configured\n- Admin authentication working\n\n🚀 Ready to deploy web app!`;
+    } else {
+      return '❌ Authentication failed: ' + authResult.message + '. Check employee data.';
+    }
+    
+  } catch (error) {
+    console.error('❌ Error testing system:', error);
+    return '❌ ERROR: System test failed: ' + error.toString();
+  }
+}
+
+/**
+ * Reset the entire system (WARNING: This will delete all data!)
+ */
+function resetPOSSystem() {
+  const ui = SpreadsheetApp.getUi();
+  const response = ui.alert(
+    'Reset POS System',
+    'This will DELETE ALL DATA and reinitialize the system. Are you sure?',
+    ui.ButtonSet.YES_NO
+  );
   
-  // Create Products sheet
-  createProductsSheet(ss);
-  
-  // Create Sales sheet
-  createSalesSheet(ss);
-  
-  // Create Employees sheet
-  createEmployeesSheet(ss);
-  
-  // Create Settings sheet
-  createSettingsSheet(ss);
-  
-  // Create Logs sheet
-  createLogsSheet(ss);
-  
-  // Initialize default data
-  initializeDefaultData();
-  
-  logAction('System Initialization', 'System', 'POS system initialized successfully');
+  if (response === ui.Button.YES) {
+    try {
+      const ss = SpreadsheetApp.getActiveSpreadsheet();
+      const sheets = ss.getSheets();
+      
+      // Delete all sheets except the first one
+      for (let i = sheets.length - 1; i > 0; i--) {
+        ss.deleteSheet(sheets[i]);
+      }
+      
+      // Clear and rename the first sheet
+      const firstSheet = sheets[0];
+      firstSheet.clear();
+      firstSheet.setName('Sheet1');
+      
+      // Reinitialize
+      initializePOSSystem();
+      
+      return '✅ System reset and reinitialized successfully!';
+    } catch (error) {
+      return '❌ Error resetting system: ' + error.toString();
+    }
+  } else {
+    return 'Reset cancelled.';
+  }
 }
 
 /**
