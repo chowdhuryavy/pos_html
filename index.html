@@ -3314,11 +3314,58 @@
             
             console.log('🔄 Starting authentication...');
             
-            // Test with hardcoded credentials first
+            // Try Google Sheets authentication first
+            console.log('🔄 Attempting Google Sheets authentication...');
+            
+            // Use google.script.run to call backend
+            if (typeof google !== 'undefined' && google.script && google.script.run) {
+                google.script.run
+                    .withSuccessHandler(function(result) {
+                        console.log('📡 Backend response:', result);
+                        if (result && result.success) {
+                            console.log('✅ Google Sheets login successful');
+                            showMainPOSInterface(result.user);
+                        } else {
+                            console.log('❌ Google Sheets login failed, trying hardcoded...');
+                            tryHardcodedLogin(username, credential);
+                        }
+                    })
+                    .withFailureHandler(function(error) {
+                        console.log('❌ Backend call failed:', error);
+                        console.log('🔄 Falling back to hardcoded login...');
+                        tryHardcodedLogin(username, credential);
+                    })
+                    .authenticateUser(username, credential, currentAuthType);
+            } else {
+                console.log('❌ Google Apps Script not available, using hardcoded login...');
+                tryHardcodedLogin(username, credential);
+            }
+        }
+        
+        function tryHardcodedLogin(username, credential) {
+            // Test with hardcoded credentials as fallback
             if (username === 'admin' && credential === '1234') {
                 console.log('✅ Hardcoded login successful');
-                
-                setTimeout(() => {
+                showMainPOSInterface({name: 'Admin User', role: 'Admin', username: 'admin'});
+            } else {
+                console.log('❌ Invalid credentials');
+                alert('Invalid credentials. Try: admin / 1234 or check your Google Sheets users');
+                resetLoginButton();
+            }
+        }
+        
+        function resetLoginButton() {
+            const btn = document.getElementById('loginBtn');
+            const btnContent = document.getElementById('btnContent');
+            const btnLoader = document.getElementById('btnLoader');
+            
+            if (btnContent) btnContent.style.display = 'flex';
+            if (btnLoader) btnLoader.style.display = 'none';
+            if (btn) btn.disabled = false;
+        }
+        
+        function showMainPOSInterface(user) {
+            setTimeout(() => {
                     // Hide login, show success
                     const login = document.getElementById('loginModal');
                     const loading = document.getElementById('loading');
@@ -3336,54 +3383,163 @@
                                        text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3); 
                                        max-width: 600px; margin: 20px;">
                                 <div style="font-size: 80px; margin-bottom: 20px;">🎉</div>
-                                <h1 style="margin: 0 0 15px 0; color: #333; font-size: 32px;">Login Successful!</h1>
-                                <p style="color: #666; margin-bottom: 30px; font-size: 18px;">
-                                    Welcome to the POS System, ${username}!
-                                </p>
+                                                                 <h1 style="margin: 0 0 15px 0; color: #333; font-size: 32px;">Login Successful!</h1>
+                                 <p style="color: #666; margin-bottom: 30px; font-size: 18px;">
+                                     Welcome to the POS System, ${user.name || username}!<br>
+                                     Role: ${user.role || 'User'} | Session Active
+                                 </p>
+                                 
+                                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 30px;">
+                                     <div onclick="openPOSModule()" style="background: #e3f2fd; padding: 25px; border-radius: 12px; cursor: pointer; 
+                                          transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 25px rgba(25,118,210,0.3)'" 
+                                          onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                                         <div style="font-size: 40px; margin-bottom: 10px;">💰</div>
+                                         <h3 style="margin: 0; color: #1976d2;">Point of Sale</h3>
+                                         <p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">Process transactions</p>
+                                     </div>
+                                     <div onclick="openInventoryModule()" style="background: #e8f5e8; padding: 25px; border-radius: 12px; cursor: pointer;
+                                          transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 25px rgba(56,142,60,0.3)'" 
+                                          onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                                         <div style="font-size: 40px; margin-bottom: 10px;">📦</div>
+                                         <h3 style="margin: 0; color: #388e3c;">Inventory</h3>
+                                         <p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">Manage products</p>
+                                     </div>
+                                     <div onclick="openReportsModule()" style="background: #fff3e0; padding: 25px; border-radius: 12px; cursor: pointer;
+                                          transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 25px rgba(245,124,0,0.3)'" 
+                                          onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                                         <div style="font-size: 40px; margin-bottom: 10px;">📊</div>
+                                         <h3 style="margin: 0; color: #f57c00;">Reports</h3>
+                                         <p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">View analytics</p>
+                                     </div>
+                                     <div onclick="openSettingsModule()" style="background: #fce4ec; padding: 25px; border-radius: 12px; cursor: pointer;
+                                          transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 25px rgba(194,24,91,0.3)'" 
+                                          onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                                         <div style="font-size: 40px; margin-bottom: 10px;">⚙️</div>
+                                         <h3 style="margin: 0; color: #c2185b;">Settings</h3>
+                                         <p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">Configure system</p>
+                                     </div>
+                                 </div>
                                 
-                                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 30px;">
-                                    <div style="background: #e3f2fd; padding: 25px; border-radius: 12px; cursor: pointer;">
-                                        <div style="font-size: 40px; margin-bottom: 10px;">💰</div>
-                                        <h3 style="margin: 0; color: #1976d2;">Point of Sale</h3>
-                                    </div>
-                                    <div style="background: #e8f5e8; padding: 25px; border-radius: 12px; cursor: pointer;">
-                                        <div style="font-size: 40px; margin-bottom: 10px;">📦</div>
-                                        <h3 style="margin: 0; color: #388e3c;">Inventory</h3>
-                                    </div>
-                                    <div style="background: #fff3e0; padding: 25px; border-radius: 12px; cursor: pointer;">
-                                        <div style="font-size: 40px; margin-bottom: 10px;">📊</div>
-                                        <h3 style="margin: 0; color: #f57c00;">Reports</h3>
-                                    </div>
-                                    <div style="background: #fce4ec; padding: 25px; border-radius: 12px; cursor: pointer;">
-                                        <div style="font-size: 40px; margin-bottom: 10px;">⚙️</div>
-                                        <h3 style="margin: 0; color: #c2185b;">Settings</h3>
-                                    </div>
-                                </div>
-                                
-                                <div style="margin-top: 30px;">
-                                    <button onclick="location.reload()" 
-                                            style="background: #667eea; color: white; border: none; padding: 15px 30px; 
-                                                   border-radius: 8px; font-size: 16px; font-weight: 500; cursor: pointer;">
-                                        🔄 Refresh to Test Again
-                                    </button>
-                                </div>
+                                                                 <div style="margin-top: 30px; display: flex; gap: 10px; justify-content: center;">
+                                     <button onclick="showDashboard()" 
+                                             style="background: #667eea; color: white; border: none; padding: 12px 24px; 
+                                                    border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer;">
+                                         📊 Dashboard
+                                     </button>
+                                     <button onclick="logout()" 
+                                             style="background: #dc3545; color: white; border: none; padding: 12px 24px; 
+                                                    border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer;">
+                                         🚪 Logout
+                                     </button>
+                                     <button onclick="location.reload()" 
+                                             style="background: #6c757d; color: white; border: none; padding: 12px 24px; 
+                                                    border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer;">
+                                         🔄 Refresh
+                                     </button>
+                                 </div>
                             </div>
                         </div>
                     `;
                     
-                    console.log('✅ SUCCESS: Main interface displayed!');
-                }, 1500);
-                
-            } else {
-                console.log('❌ Invalid credentials');
-                alert('Invalid credentials. Try: admin / 1234');
-                
-                // Reset button
-                if (btnContent) btnContent.style.display = 'flex';
-                if (btnLoader) btnLoader.style.display = 'none';
-                if (btn) btn.disabled = false;
-            }
+                                    console.log('✅ SUCCESS: Main interface displayed!');
+            }, 1500);
         }
+        
+        // Module navigation functions
+        window.openPOSModule = function() {
+            console.log('💰 Opening POS Module...');
+            showModuleInterface('Point of Sale', '💰', [
+                {name: 'New Sale', action: 'alert("New Sale feature coming soon!")', color: '#4caf50'},
+                {name: 'Search Products', action: 'alert("Search Products feature coming soon!")', color: '#2196f3'},
+                {name: 'Quick Sale', action: 'alert("Quick Sale feature coming soon!")', color: '#ff9800'},
+                {name: 'Transaction History', action: 'alert("Transaction History feature coming soon!")', color: '#9c27b0'}
+            ]);
+        };
+        
+        window.openInventoryModule = function() {
+            console.log('📦 Opening Inventory Module...');
+            showModuleInterface('Inventory Management', '📦', [
+                {name: 'View Products', action: 'alert("View Products feature coming soon!")', color: '#4caf50'},
+                {name: 'Add Product', action: 'alert("Add Product feature coming soon!")', color: '#2196f3'},
+                {name: 'Stock Adjustment', action: 'alert("Stock Adjustment feature coming soon!")', color: '#ff9800'},
+                {name: 'Low Stock Alert', action: 'alert("Low Stock Alert feature coming soon!")', color: '#f44336'}
+            ]);
+        };
+        
+        window.openReportsModule = function() {
+            console.log('📊 Opening Reports Module...');
+            showModuleInterface('Reports & Analytics', '📊', [
+                {name: 'Sales Report', action: 'alert("Sales Report feature coming soon!")', color: '#4caf50'},
+                {name: 'Daily Summary', action: 'alert("Daily Summary feature coming soon!")', color: '#2196f3'},
+                {name: 'Product Analysis', action: 'alert("Product Analysis feature coming soon!")', color: '#ff9800'},
+                {name: 'Export Data', action: 'alert("Export Data feature coming soon!")', color: '#9c27b0'}
+            ]);
+        };
+        
+        window.openSettingsModule = function() {
+            console.log('⚙️ Opening Settings Module...');
+            showModuleInterface('System Settings', '⚙️', [
+                {name: 'General Settings', action: 'alert("General Settings feature coming soon!")', color: '#4caf50'},
+                {name: 'User Management', action: 'alert("User Management feature coming soon!")', color: '#2196f3'},
+                {name: 'Tax Settings', action: 'alert("Tax Settings feature coming soon!")', color: '#ff9800'},
+                {name: 'Backup & Restore', action: 'alert("Backup & Restore feature coming soon!")', color: '#9c27b0'}
+            ]);
+        };
+        
+        window.showModuleInterface = function(title, icon, actions) {
+            document.body.innerHTML = `
+                <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                           background: #f5f5f5; display: flex; flex-direction: column; font-family: Arial, sans-serif;">
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px 30px; 
+                               display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <span style="font-size: 32px;">${icon}</span>
+                            <h1 style="margin: 0; font-size: 24px;">${title}</h1>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="location.reload()" 
+                                    style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 10px 15px; 
+                                           border-radius: 5px; cursor: pointer; font-size: 14px;">
+                                ← Back to Dashboard
+                            </button>
+                            <button onclick="location.reload()" 
+                                    style="background: #dc3545; color: white; border: none; padding: 10px 15px; 
+                                           border-radius: 5px; cursor: pointer; font-size: 14px;">
+                                Logout
+                            </button>
+                        </div>
+                    </div>
+                    <div style="flex: 1; padding: 30px; overflow: auto;">
+                        <div style="max-width: 1000px; margin: 0 auto;">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                                ${actions.map(action => `
+                                    <div onclick="${action.action}" style="background: white; padding: 30px; border-radius: 10px; 
+                                         box-shadow: 0 2px 10px rgba(0,0,0,0.1); cursor: pointer; text-align: center;
+                                         transition: all 0.3s ease; border-left: 4px solid ${action.color};"
+                                         onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 5px 20px rgba(0,0,0,0.15)'" 
+                                         onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 10px rgba(0,0,0,0.1)'">
+                                        <div style="font-size: 48px; margin-bottom: 15px; color: ${action.color};">${icon}</div>
+                                        <h3 style="margin: 0; color: #333; font-size: 18px;">${action.name}</h3>
+                                        <p style="margin: 10px 0 0 0; color: #666; font-size: 14px;">Click to access</p>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        };
+        
+        window.logout = function() {
+            console.log('🚪 Logging out...');
+            alert('Logout successful! Refreshing page...');
+            location.reload();
+        };
+        
+                 window.showDashboard = function() {
+             console.log('📊 Showing dashboard...');
+             location.reload();
+         };
 
                                         // Simple, clean app initialization
             document.addEventListener('DOMContentLoaded', function() {
