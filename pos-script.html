@@ -101,22 +101,32 @@ async function handleLogin(e) {
     e.preventDefault();
     
     const username = document.getElementById('username').value;
-    const pin = document.getElementById('pin').value;
-    const errorMessage = document.getElementById('errorMessage');
+    const currentAuthType = document.querySelector('.switch-tab.active').dataset.auth;
+    const credential = currentAuthType === 'pin' ? 
+        document.getElementById('pin').value : 
+        document.getElementById('password').value;
     
-    if (!username || !pin) {
-        showError('Please enter both username and PIN');
+    if (!username || !credential) {
+        showError(`Please enter both username and ${currentAuthType.toUpperCase()}`);
         return;
     }
     
-    showLoading();
+    // Show loading state
+    showLoginLoading(true);
     
     try {
-        const result = await callServerFunction('authenticateUser', username, pin);
+        const result = await callServerFunction('authenticateUser', username, credential, currentAuthType);
         
         if (result.success) {
             currentUser = result.user;
-            sessionStorage.setItem('posUser', JSON.stringify(currentUser));
+            
+            // Handle remember me
+            if (document.getElementById('rememberMe').checked) {
+                localStorage.setItem('posUser', JSON.stringify(currentUser));
+                localStorage.setItem('rememberAuth', 'true');
+            } else {
+                sessionStorage.setItem('posUser', JSON.stringify(currentUser));
+            }
             
             showMainApp();
             loadDashboardData();
@@ -129,7 +139,152 @@ async function handleLogin(e) {
         showError('Login failed. Please try again.');
     }
     
-    hideLoading();
+    showLoginLoading(false);
+}
+
+/**
+ * Switch between PIN and Password authentication
+ */
+function switchAuthType(type) {
+    // Update tab appearance
+    document.querySelectorAll('.switch-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelector(`[data-auth="${type}"]`).classList.add('active');
+    
+    // Show/hide appropriate fields
+    document.getElementById('pinField').classList.toggle('hidden', type !== 'pin');
+    document.getElementById('passwordField').classList.toggle('hidden', type !== 'password');
+    
+    // Clear the inactive field
+    if (type === 'pin') {
+        document.getElementById('password').value = '';
+    } else {
+        document.getElementById('pin').value = '';
+    }
+    
+    // Focus the active field
+    setTimeout(() => {
+        const activeField = type === 'pin' ? 'pin' : 'password';
+        document.getElementById(activeField).focus();
+    }, 100);
+}
+
+/**
+ * Toggle PIN pad visibility
+ */
+function togglePinPad() {
+    const pinPad = document.getElementById('pinPad');
+    pinPad.classList.toggle('hidden');
+    
+    if (!pinPad.classList.contains('hidden')) {
+        document.getElementById('pinPadDisplay').value = '';
+    }
+}
+
+/**
+ * Close PIN pad
+ */
+function closePinPad() {
+    document.getElementById('pinPad').classList.add('hidden');
+}
+
+/**
+ * Add digit to PIN pad
+ */
+function addPinDigit(digit) {
+    const display = document.getElementById('pinPadDisplay');
+    if (display.value.length < 6) {
+        display.value += digit;
+    }
+}
+
+/**
+ * Clear PIN pad
+ */
+function clearPin() {
+    document.getElementById('pinPadDisplay').value = '';
+}
+
+/**
+ * Backspace on PIN pad
+ */
+function backspacePin() {
+    const display = document.getElementById('pinPadDisplay');
+    display.value = display.value.slice(0, -1);
+}
+
+/**
+ * Use PIN pad value
+ */
+function usePinPadValue() {
+    const pinValue = document.getElementById('pinPadDisplay').value;
+    if (pinValue) {
+        document.getElementById('pin').value = pinValue;
+        closePinPad();
+    }
+}
+
+/**
+ * Toggle password visibility
+ */
+function togglePasswordVisibility() {
+    const passwordField = document.getElementById('password');
+    const toggleBtn = document.querySelector('.show-password-btn i');
+    
+    if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        toggleBtn.className = 'fas fa-eye-slash';
+    } else {
+        passwordField.type = 'password';
+        toggleBtn.className = 'fas fa-eye';
+    }
+}
+
+/**
+ * Show forgot credentials modal
+ */
+function showForgotModal() {
+    showAlert('Please contact your system administrator to reset your credentials.', 'warning');
+}
+
+/**
+ * Show/hide login loading state
+ */
+function showLoginLoading(show) {
+    const btn = document.querySelector('.login-btn');
+    const btnText = btn.querySelector('.btn-text');
+    const btnLoader = btn.querySelector('.btn-loader');
+    
+    if (show) {
+        btnText.classList.add('hidden');
+        btnLoader.classList.remove('hidden');
+        btn.disabled = true;
+    } else {
+        btnText.classList.remove('hidden');
+        btnLoader.classList.add('hidden');
+        btn.disabled = false;
+    }
+}
+
+/**
+ * Load company branding from settings
+ */
+async function loadCompanyBranding() {
+    try {
+        const companyName = await callServerFunction('getSetting', 'COMPANY_NAME');
+        const companyTagline = await callServerFunction('getSetting', 'COMPANY_TAGLINE');
+        
+        if (companyName) {
+            document.getElementById('companyName').textContent = companyName;
+        }
+        
+        if (companyTagline) {
+            document.querySelector('.company-tagline').textContent = companyTagline;
+        }
+    } catch (error) {
+        console.log('Using default branding');
+    }
 }
 
 /**
@@ -267,6 +422,9 @@ function showSection(sectionName) {
             break;
         case 'sales':
             loadSalesData();
+            break;
+        case 'reports':
+            initializeReports();
             break;
         case 'employees':
             loadEmployeesTable();
@@ -991,6 +1149,500 @@ document.addEventListener('DOMContentLoaded', function() {
         header.innerHTML += ' <button class="btn btn-secondary" onclick="initializeSampleData()" style="font-size: 12px; padding: 5px 10px; margin-left: 10px;">Init Demo Data</button>';
     }
 });
+
+/**
+ * Enhanced Reporting Functions
+ */
+
+/**
+ * Switch report tabs
+ */
+function switchReportTab(reportType) {
+    // Update tab appearance
+    document.querySelectorAll('.report-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelector(`[data-report="${reportType}"]`).classList.add('active');
+    
+    // Show/hide report content
+    document.querySelectorAll('.report-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    document.getElementById(`${reportType}-report`).classList.add('active');
+    
+    // Update report type selector
+    document.getElementById('reportType').value = reportType;
+    
+    // Load data for the selected report
+    loadReportData(reportType);
+}
+
+/**
+ * Handle report type change from dropdown
+ */
+function handleReportTypeChange() {
+    const reportType = document.getElementById('reportType').value;
+    switchReportTab(reportType);
+}
+
+/**
+ * Generate selected report
+ */
+function generateSelectedReport() {
+    const reportType = document.getElementById('reportType').value;
+    const reportDate = document.getElementById('reportDate').value || new Date().toISOString().split('T')[0];
+    
+    showLoading();
+    loadReportData(reportType, reportDate);
+}
+
+/**
+ * Load report data based on type
+ */
+async function loadReportData(reportType, date = null) {
+    const targetDate = date || new Date().toISOString().split('T')[0];
+    
+    try {
+        switch (reportType) {
+            case 'daily-rvc':
+                await loadDailyRVCReport(targetDate);
+                break;
+            case 'weekly-sales':
+                await loadWeeklySalesReport(targetDate);
+                break;
+            case 'monthly-performance':
+                await loadMonthlyPerformanceReport(targetDate);
+                break;
+            case 'product-performance':
+                await loadProductPerformanceReport(targetDate);
+                break;
+            case 'employee-performance':
+                await loadEmployeePerformanceReport(targetDate);
+                break;
+            case 'analytics':
+                await loadChartsData();
+                break;
+        }
+    } catch (error) {
+        console.error('Error loading report data:', error);
+        showAlert('Error loading report data', 'error');
+    }
+}
+
+/**
+ * Load Daily RVC Report
+ */
+async function loadDailyRVCReport(date) {
+    try {
+        showLoading();
+        
+        const result = await callServerFunction('getDailyRVCReport', date);
+        
+        if (result.success) {
+            const { report } = result;
+            
+            // Update RVC summary cards
+            document.getElementById('rvcRevenue').textContent = `$${report.summary.totalRevenue.toFixed(2)}`;
+            document.getElementById('rvcVolume').textContent = report.summary.totalVolume;
+            document.getElementById('rvcCost').textContent = `$${report.summary.totalCost.toFixed(2)}`;
+            document.getElementById('rvcProfit').textContent = `$${report.summary.totalProfit.toFixed(2)}`;
+            document.getElementById('rvcMargin').textContent = `${report.summary.profitMargin.toFixed(1)}%`;
+            document.getElementById('rvcTransactions').textContent = report.summary.totalTransactions;
+            
+            // Create hourly revenue chart
+            createHourlyRevenueChart(report.hourlyBreakdown);
+            
+            // Create top products chart
+            createTopProductsChart(report.topProductsByRevenue);
+            
+            showAlert('Daily RVC report loaded successfully', 'success');
+        } else {
+            showAlert('Error loading Daily RVC report', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading Daily RVC report:', error);
+        showAlert('Error loading Daily RVC report', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+/**
+ * Load Weekly Sales Report
+ */
+async function loadWeeklySalesReport(date) {
+    try {
+        showLoading();
+        
+        // Calculate week start date (Monday)
+        const targetDate = new Date(date);
+        const dayOfWeek = targetDate.getDay();
+        const weekStartDate = new Date(targetDate);
+        weekStartDate.setDate(targetDate.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+        
+        const result = await callServerFunction('getWeeklySalesReport', weekStartDate);
+        
+        if (result.success) {
+            const { report } = result;
+            
+            // Create weekly trend chart
+            createWeeklyTrendChart(report.dailyBreakdown);
+            
+            // Create weekly stats table
+            createWeeklyStatsTable(report.dailyBreakdown);
+            
+            showAlert('Weekly sales report loaded successfully', 'success');
+        } else {
+            showAlert('Error loading weekly sales report', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading weekly sales report:', error);
+        showAlert('Error loading weekly sales report', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+/**
+ * Load Monthly Performance Report
+ */
+async function loadMonthlyPerformanceReport(date) {
+    try {
+        showLoading();
+        
+        const targetDate = new Date(date);
+        const year = targetDate.getFullYear();
+        const month = targetDate.getMonth() + 1;
+        
+        const result = await callServerFunction('getMonthlyPerformanceReport', year, month);
+        
+        if (result.success) {
+            const { report } = result;
+            
+            // Create monthly overview cards
+            createMonthlyOverview(report);
+            
+            // Create monthly trend chart
+            createMonthlyTrendChart(report.weeklyBreakdown);
+            
+            // Create category breakdown chart
+            createCategoryBreakdownChart(report.summary.categoryBreakdown);
+            
+            showAlert('Monthly performance report loaded successfully', 'success');
+        } else {
+            showAlert('Error loading monthly performance report', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading monthly performance report:', error);
+        showAlert('Error loading monthly performance report', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+/**
+ * Load Product Performance Report
+ */
+async function loadProductPerformanceReport(date) {
+    try {
+        showLoading();
+        
+        const endDate = new Date(date);
+        const startDate = new Date(endDate);
+        startDate.setDate(endDate.getDate() - 30); // Last 30 days
+        
+        const result = await callServerFunction('getProductPerformanceReport', startDate, endDate);
+        
+        if (result.success) {
+            const { report } = result;
+            
+            // Create product performance table
+            createProductPerformanceTable(report.products);
+            
+            showAlert('Product performance report loaded successfully', 'success');
+        } else {
+            showAlert('Error loading product performance report', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading product performance report:', error);
+        showAlert('Error loading product performance report', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+/**
+ * Load Employee Performance Report
+ */
+async function loadEmployeePerformanceReport(date) {
+    try {
+        showLoading();
+        
+        const endDate = new Date(date);
+        const startDate = new Date(endDate);
+        startDate.setDate(endDate.getDate() - 30); // Last 30 days
+        
+        const result = await callServerFunction('getEmployeePerformanceReport', startDate, endDate);
+        
+        if (result.success) {
+            const { report } = result;
+            
+            // Create employee performance chart
+            createEmployeePerformanceChart(report.employees);
+            
+            // Create employee stats table
+            createEmployeeStatsTable(report.employees);
+            
+            showAlert('Employee performance report loaded successfully', 'success');
+        } else {
+            showAlert('Error loading employee performance report', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading employee performance report:', error);
+        showAlert('Error loading employee performance report', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+/**
+ * Chart Creation Functions
+ */
+
+function createHourlyRevenueChart(hourlyData) {
+    const container = document.getElementById('hourlyRevenueChart');
+    container.innerHTML = `
+        <h4>Hourly Revenue Breakdown</h4>
+        <div style="height: 300px; display: flex; align-items: center; justify-content: center; color: #666;">
+            <div>
+                <i class="fas fa-chart-bar" style="font-size: 48px; opacity: 0.3; margin-bottom: 15px; display: block;"></i>
+                <p>Peak Hours: ${findPeakHour(hourlyData)}</p>
+                <p>Total Revenue: $${hourlyData.reduce((sum, hour) => sum + hour.revenue, 0).toFixed(2)}</p>
+            </div>
+        </div>
+    `;
+}
+
+function createTopProductsChart(topProducts) {
+    const container = document.getElementById('topProductsRevenueChart');
+    container.innerHTML = `
+        <h4>Top Products by Revenue</h4>
+        <div style="height: 300px; padding: 20px;">
+            ${topProducts.slice(0, 5).map((product, index) => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee;">
+                    <span style="font-weight: 500;">${index + 1}. ${product.name}</span>
+                    <span style="font-weight: 600; color: #28a745;">$${product.revenue.toFixed(2)}</span>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function createWeeklyTrendChart(dailyBreakdown) {
+    const container = document.getElementById('weeklyTrendChart');
+    const days = Object.keys(dailyBreakdown).sort();
+    
+    container.innerHTML = `
+        <h4>Daily Sales Trend</h4>
+        <div style="height: 300px; padding: 20px;">
+            ${days.map(day => {
+                const data = dailyBreakdown[day];
+                const dayName = new Date(day).toLocaleDateString('en-US', { weekday: 'short' });
+                return `
+                    <div style="display: flex; justify-content: between; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee;">
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600;">${dayName}</div>
+                            <div style="font-size: 12px; color: #666;">${new Date(day).toLocaleDateString()}</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-weight: 600; color: #28a745;">$${data.revenue.toFixed(2)}</div>
+                            <div style="font-size: 12px; color: #666;">${data.transactions} transactions</div>
+                        </div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
+}
+
+function createWeeklyStatsTable(dailyBreakdown) {
+    const container = document.getElementById('weeklyStatsTable');
+    const days = Object.keys(dailyBreakdown).sort();
+    
+    let totalRevenue = 0;
+    let totalTransactions = 0;
+    let totalItems = 0;
+    
+    const tableRows = days.map(day => {
+        const data = dailyBreakdown[day];
+        totalRevenue += data.revenue;
+        totalTransactions += data.transactions;
+        totalItems += data.items;
+        
+        return `
+            <tr>
+                <td>${new Date(day).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</td>
+                <td>$${data.revenue.toFixed(2)}</td>
+                <td>${data.transactions}</td>
+                <td>${data.items}</td>
+                <td>$${data.transactions > 0 ? (data.revenue / data.transactions).toFixed(2) : '0.00'}</td>
+            </tr>
+        `;
+    }).join('');
+    
+    container.innerHTML = `
+        <table>
+            <thead>
+                <tr>
+                    <th>Day</th>
+                    <th>Revenue</th>
+                    <th>Transactions</th>
+                    <th>Items Sold</th>
+                    <th>Avg Transaction</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${tableRows}
+                <tr style="background: #f8f9fa; font-weight: 600;">
+                    <td>TOTAL</td>
+                    <td>$${totalRevenue.toFixed(2)}</td>
+                    <td>${totalTransactions}</td>
+                    <td>${totalItems}</td>
+                    <td>$${totalTransactions > 0 ? (totalRevenue / totalTransactions).toFixed(2) : '0.00'}</td>
+                </tr>
+            </tbody>
+        </table>
+    `;
+}
+
+function createMonthlyOverview(report) {
+    const container = document.getElementById('monthlyOverview');
+    const { summary, trends } = report;
+    
+    container.innerHTML = `
+        <div class="monthly-card">
+            <div class="metric-value">$${summary.totalSales.toFixed(2)}</div>
+            <div class="metric-label">Total Revenue</div>
+            <div class="metric-change ${trends.revenue >= 0 ? 'positive' : 'negative'}">
+                <i class="fas fa-arrow-${trends.revenue >= 0 ? 'up' : 'down'}"></i>
+                ${Math.abs(trends.revenue).toFixed(1)}%
+            </div>
+        </div>
+        <div class="monthly-card">
+            <div class="metric-value">${summary.totalItems}</div>
+            <div class="metric-label">Items Sold</div>
+            <div class="metric-change ${trends.items >= 0 ? 'positive' : 'negative'}">
+                <i class="fas fa-arrow-${trends.items >= 0 ? 'up' : 'down'}"></i>
+                ${Math.abs(trends.items).toFixed(1)}%
+            </div>
+        </div>
+        <div class="monthly-card">
+            <div class="metric-value">${summary.totalSales > 0 ? Math.round(summary.totalSales / summary.totalItems * 100) / 100 : 0}</div>
+            <div class="metric-label">Avg Transaction</div>
+            <div class="metric-change ${trends.transactions >= 0 ? 'positive' : 'negative'}">
+                <i class="fas fa-arrow-${trends.transactions >= 0 ? 'up' : 'down'}"></i>
+                ${Math.abs(trends.transactions).toFixed(1)}%
+            </div>
+        </div>
+    `;
+}
+
+function createProductPerformanceTable(products) {
+    const container = document.getElementById('productPerformanceTable');
+    
+    const tableRows = products.slice(0, 20).map(product => `
+        <tr>
+            <td>${product.name}</td>
+            <td>$${product.totalRevenue.toFixed(2)}</td>
+            <td>${product.totalQuantity}</td>
+            <td>$${product.totalProfit.toFixed(2)}</td>
+            <td>${product.profitMargin.toFixed(1)}%</td>
+            <td>$${product.avgSellingPrice.toFixed(2)}</td>
+            <td>${product.transactions}</td>
+        </tr>
+    `).join('');
+    
+    container.innerHTML = `
+        <table>
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Revenue</th>
+                    <th>Quantity</th>
+                    <th>Profit</th>
+                    <th>Margin</th>
+                    <th>Avg Price</th>
+                    <th>Transactions</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${tableRows}
+            </tbody>
+        </table>
+    `;
+}
+
+function createEmployeeStatsTable(employees) {
+    const container = document.getElementById('employeeStatsTable');
+    
+    const tableRows = employees.map(employee => `
+        <tr>
+            <td>${employee.employee}</td>
+            <td>$${employee.totalSales.toFixed(2)}</td>
+            <td>${employee.totalTransactions}</td>
+            <td>${employee.totalItems}</td>
+            <td>$${employee.avgTransactionValue.toFixed(2)}</td>
+            <td>${employee.avgItemsPerTransaction.toFixed(1)}</td>
+        </tr>
+    `).join('');
+    
+    container.innerHTML = `
+        <table>
+            <thead>
+                <tr>
+                    <th>Employee</th>
+                    <th>Total Sales</th>
+                    <th>Transactions</th>
+                    <th>Items Sold</th>
+                    <th>Avg Transaction</th>
+                    <th>Items/Transaction</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${tableRows}
+            </tbody>
+        </table>
+    `;
+}
+
+/**
+ * Helper Functions
+ */
+function findPeakHour(hourlyData) {
+    let peakHour = hourlyData.reduce((max, hour) => 
+        hour.revenue > max.revenue ? hour : max, hourlyData[0]);
+    return peakHour.hour;
+}
+
+function exportReport() {
+    showAlert('Report export functionality coming soon!', 'warning');
+}
+
+/**
+ * Initialize reports with default date
+ */
+function initializeReports() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('reportDate').value = today;
+    loadReportData('daily-rvc', today);
+}
+
+// Update the original initializeApp function to load branding
+const originalInitializeApp = initializeApp;
+function initializeApp() {
+    originalInitializeApp();
+    loadCompanyBranding();
+}
 
 // Auto-save cart to localStorage
 setInterval(() => {

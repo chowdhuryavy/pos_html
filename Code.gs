@@ -105,7 +105,7 @@ function createEmployeesSheet(ss) {
   
   sheet.clear();
   
-  const headers = ['ID', 'Name', 'Role', 'Username', 'PIN Hash', 'Active', 'Created', 'Last Login'];
+  const headers = ['ID', 'Name', 'Role', 'Username', 'PIN Hash', 'Active', 'Created', 'Last Login', 'Password Hash'];
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
   
   const headerRange = sheet.getRange(1, 1, 1, headers.length);
@@ -164,19 +164,27 @@ function createLogsSheet(ss) {
  * Initialize default data for the system
  */
 function initializeDefaultData() {
-  // Add default admin user
-  addEmployee('Admin User', CONFIG.ROLES.ADMIN, 'admin', '1234');
+  // Add default admin user with both PIN and password
+  addEmployee('Admin User', CONFIG.ROLES.ADMIN, 'admin', '1234', 'admin123');
+  
+  // Add sample employees
+  addEmployee('John Manager', CONFIG.ROLES.MANAGER, 'john', '5678', 'john123');
+  addEmployee('Sarah Cashier', CONFIG.ROLES.CASHIER, 'sarah', '9999', 'sarah123');
   
   // Add default settings
   updateSetting('TAX_RATE', '0.0875', 'Default tax rate (8.75%)');
   updateSetting('CURRENCY', 'USD', 'Currency symbol');
   updateSetting('LOW_STOCK_THRESHOLD', '10', 'Alert when stock falls below this number');
   updateSetting('RECEIPT_FOOTER', 'Thank you for your business!', 'Footer text for receipts');
+  updateSetting('COMPANY_NAME', 'RetailPro', 'Company name for branding');
+  updateSetting('COMPANY_TAGLINE', 'Modern Point of Sale System', 'Company tagline');
   
   // Add sample products
   addProduct('Coffee', 3.50, 1.20, 50, 'Beverages', '1234567890123');
   addProduct('Sandwich', 8.99, 4.50, 25, 'Food', '2345678901234');
   addProduct('Chips', 1.99, 0.75, 100, 'Snacks', '3456789012345');
+  addProduct('Soda', 2.25, 0.90, 75, 'Beverages', '4567890123456');
+  addProduct('Candy Bar', 1.50, 0.50, 200, 'Snacks', '5678901234567');
 }
 
 /**
@@ -184,25 +192,34 @@ function initializeDefaultData() {
  */
 
 /**
- * Authenticate user login
+ * Authenticate user login with PIN or Password
  */
-function authenticateUser(username, pin) {
+function authenticateUser(username, credential, authType = 'pin') {
   try {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.SHEETS.EMPLOYEES);
     const data = sheet.getDataRange().getValues();
     
     for (let i = 1; i < data.length; i++) {
-      const [id, name, role, user, pinHash, active] = data[i];
+      const [id, name, role, user, pinHash, active, created, lastLogin, passwordHash] = data[i];
       
       if (user === username && active === true) {
-        // For demo purposes, we'll use simple hash comparison
-        const hashedPin = Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, pin).toString();
+        let isValidCredential = false;
         
-        if (pinHash === hashedPin) {
+        if (authType === 'pin') {
+          // PIN authentication
+          const hashedPin = Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, credential).toString();
+          isValidCredential = (pinHash === hashedPin);
+        } else if (authType === 'password') {
+          // Password authentication
+          const hashedPassword = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA256, credential).toString();
+          isValidCredential = (passwordHash === hashedPassword);
+        }
+        
+        if (isValidCredential) {
           // Update last login
           sheet.getRange(i + 1, 8).setValue(new Date());
           
-          logAction('User Login', username, `User ${name} logged in successfully`);
+          logAction('User Login', username, `User ${name} logged in successfully using ${authType.toUpperCase()}`);
           
           return {
             success: true,
@@ -217,8 +234,8 @@ function authenticateUser(username, pin) {
       }
     }
     
-    logAction('Failed Login', username, 'Invalid username or PIN');
-    return { success: false, message: 'Invalid username or PIN' };
+    logAction('Failed Login', username, `Invalid username or ${authType.toUpperCase()}`);
+    return { success: false, message: `Invalid username or ${authType.toUpperCase()}` };
     
   } catch (error) {
     console.error('Authentication error:', error);
@@ -379,17 +396,18 @@ function processSale(saleData) {
  */
 
 /**
- * Add a new employee
+ * Add a new employee with PIN and optional password
  */
-function addEmployee(name, role, username, pin) {
+function addEmployee(name, role, username, pin, password = '') {
   try {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.SHEETS.EMPLOYEES);
     const lastRow = sheet.getLastRow();
     const id = generateEmployeeId();
     const pinHash = Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, pin).toString();
+    const passwordHash = password ? Utilities.computeDigest(Utilities.DigestAlgorithm.SHA256, password).toString() : '';
     const now = new Date();
     
-    const newEmployee = [id, name, role, username, pinHash, true, now, null];
+    const newEmployee = [id, name, role, username, pinHash, true, now, null, passwordHash];
     sheet.getRange(lastRow + 1, 1, 1, newEmployee.length).setValues([newEmployee]);
     
     logAction('Employee Added', getCurrentUser(), `Added employee: ${name}`);
@@ -548,7 +566,7 @@ function getCurrentUser() {
 }
 
 /**
- * Get sales reports
+ * Get comprehensive sales reports
  */
 function getSalesReports(startDate, endDate) {
   try {
@@ -561,8 +579,13 @@ function getSalesReports(startDate, endDate) {
       totalItems: 0,
       totalTax: 0,
       totalDiscount: 0,
+      totalCost: 0,
+      totalProfit: 0,
       paymentMethods: {},
-      topProducts: {}
+      topProducts: {},
+      employeePerformance: {},
+      hourlyBreakdown: {},
+      categoryBreakdown: {}
     };
     
     for (let i = 1; i < data.length; i++) {
@@ -570,17 +593,45 @@ function getSalesReports(startDate, endDate) {
       
       const saleDate = new Date(date);
       if ((!startDate || saleDate >= startDate) && (!endDate || saleDate <= endDate)) {
+        // Get product cost for profit calculation
+        const productCost = getProductCost(productId) || 0;
+        const itemCost = productCost * quantity;
+        const itemProfit = (unitPrice - productCost) * quantity;
+        
         sales.push({
-          saleId, date, productId, productName, quantity, unitPrice, total, tax, discount, employee, paymentMethod
+          saleId, date, productId, productName, quantity, unitPrice, total, tax, discount, employee, paymentMethod,
+          cost: itemCost, profit: itemProfit
         });
         
         summary.totalSales += total;
         summary.totalItems += quantity;
         summary.totalTax += tax;
         summary.totalDiscount += discount;
+        summary.totalCost += itemCost;
+        summary.totalProfit += itemProfit;
         
+        // Payment methods breakdown
         summary.paymentMethods[paymentMethod] = (summary.paymentMethods[paymentMethod] || 0) + total;
+        
+        // Top products by quantity
         summary.topProducts[productName] = (summary.topProducts[productName] || 0) + quantity;
+        
+        // Employee performance
+        if (!summary.employeePerformance[employee]) {
+          summary.employeePerformance[employee] = { sales: 0, items: 0, transactions: 0 };
+        }
+        summary.employeePerformance[employee].sales += total;
+        summary.employeePerformance[employee].items += quantity;
+        summary.employeePerformance[employee].transactions += 1;
+        
+        // Hourly breakdown
+        const hour = saleDate.getHours();
+        const hourKey = `${hour}:00-${hour + 1}:00`;
+        summary.hourlyBreakdown[hourKey] = (summary.hourlyBreakdown[hourKey] || 0) + total;
+        
+        // Category breakdown
+        const category = getProductCategory(productId) || 'Unknown';
+        summary.categoryBreakdown[category] = (summary.categoryBreakdown[category] || 0) + total;
       }
     }
     
@@ -590,6 +641,391 @@ function getSalesReports(startDate, endDate) {
     console.error('Get sales reports error:', error);
     return { success: false, message: 'Failed to get sales reports' };
   }
+}
+
+/**
+ * Get Daily RVC (Revenue, Volume, Cost) Report
+ */
+function getDailyRVCReport(targetDate) {
+  try {
+    const startDate = new Date(targetDate);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date(targetDate);
+    endDate.setHours(23, 59, 59, 999);
+    
+    const salesResult = getSalesReports(startDate, endDate);
+    if (!salesResult.success) return salesResult;
+    
+    const { sales, summary } = salesResult;
+    
+    // Calculate additional metrics
+    const totalRevenue = summary.totalSales;
+    const totalVolume = summary.totalItems;
+    const totalCost = summary.totalCost;
+    const totalProfit = summary.totalProfit;
+    const profitMargin = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
+    const avgTransactionValue = sales.length > 0 ? totalRevenue / getUniqueTransactions(sales) : 0;
+    
+    // Hourly breakdown
+    const hourlyData = Array.from({ length: 24 }, (_, i) => {
+      const hourKey = `${i}:00-${i + 1}:00`;
+      return {
+        hour: hourKey,
+        revenue: summary.hourlyBreakdown[hourKey] || 0,
+        transactions: getHourlyTransactions(sales, i)
+      };
+    });
+    
+    // Top performing products
+    const topProductsByRevenue = getTopProductsByRevenue(sales);
+    const topProductsByVolume = Object.entries(summary.topProducts)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 10)
+      .map(([name, quantity]) => ({ name, quantity }));
+    
+    return {
+      success: true,
+      report: {
+        date: targetDate,
+        summary: {
+          totalRevenue,
+          totalVolume,
+          totalCost,
+          totalProfit,
+          profitMargin,
+          avgTransactionValue,
+          totalTransactions: getUniqueTransactions(sales),
+          totalTax: summary.totalTax,
+          totalDiscount: summary.totalDiscount
+        },
+        hourlyBreakdown: hourlyData,
+        topProductsByRevenue,
+        topProductsByVolume,
+        paymentMethods: summary.paymentMethods,
+        employeePerformance: summary.employeePerformance,
+        categoryBreakdown: summary.categoryBreakdown
+      }
+    };
+    
+  } catch (error) {
+    console.error('Daily RVC report error:', error);
+    return { success: false, message: 'Failed to generate daily RVC report' };
+  }
+}
+
+/**
+ * Get Weekly Sales Summary Report
+ */
+function getWeeklySalesReport(weekStartDate) {
+  try {
+    const startDate = new Date(weekStartDate);
+    const endDate = new Date(weekStartDate);
+    endDate.setDate(endDate.getDate() + 6);
+    endDate.setHours(23, 59, 59, 999);
+    
+    const salesResult = getSalesReports(startDate, endDate);
+    if (!salesResult.success) return salesResult;
+    
+    // Group by days
+    const dailyBreakdown = {};
+    const { sales } = salesResult;
+    
+    sales.forEach(sale => {
+      const dateKey = new Date(sale.date).toDateString();
+      if (!dailyBreakdown[dateKey]) {
+        dailyBreakdown[dateKey] = { revenue: 0, transactions: 0, items: 0 };
+      }
+      dailyBreakdown[dateKey].revenue += sale.total;
+      dailyBreakdown[dateKey].items += sale.quantity;
+    });
+    
+    // Count unique transactions per day
+    const transactionsByDay = {};
+    sales.forEach(sale => {
+      const dateKey = new Date(sale.date).toDateString();
+      if (!transactionsByDay[dateKey]) {
+        transactionsByDay[dateKey] = new Set();
+      }
+      transactionsByDay[dateKey].add(sale.saleId.split('_')[0]); // Get session ID
+    });
+    
+    Object.keys(transactionsByDay).forEach(dateKey => {
+      if (dailyBreakdown[dateKey]) {
+        dailyBreakdown[dateKey].transactions = transactionsByDay[dateKey].size;
+      }
+    });
+    
+    return {
+      success: true,
+      report: {
+        weekStart: weekStartDate,
+        weekEnd: endDate,
+        dailyBreakdown,
+        summary: salesResult.summary
+      }
+    };
+    
+  } catch (error) {
+    console.error('Weekly sales report error:', error);
+    return { success: false, message: 'Failed to generate weekly sales report' };
+  }
+}
+
+/**
+ * Get Monthly Performance Report
+ */
+function getMonthlyPerformanceReport(year, month) {
+  try {
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+    
+    const salesResult = getSalesReports(startDate, endDate);
+    if (!salesResult.success) return salesResult;
+    
+    const { sales, summary } = salesResult;
+    
+    // Weekly breakdown
+    const weeklyData = [];
+    let currentWeekStart = new Date(startDate);
+    
+    while (currentWeekStart <= endDate) {
+      const weekEnd = new Date(currentWeekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      if (weekEnd > endDate) weekEnd.setTime(endDate.getTime());
+      
+      const weekSales = sales.filter(sale => {
+        const saleDate = new Date(sale.date);
+        return saleDate >= currentWeekStart && saleDate <= weekEnd;
+      });
+      
+      const weekRevenue = weekSales.reduce((sum, sale) => sum + sale.total, 0);
+      const weekItems = weekSales.reduce((sum, sale) => sum + sale.quantity, 0);
+      
+      weeklyData.push({
+        weekStart: new Date(currentWeekStart),
+        weekEnd: new Date(weekEnd),
+        revenue: weekRevenue,
+        items: weekItems,
+        transactions: getUniqueTransactions(weekSales)
+      });
+      
+      currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+    }
+    
+    return {
+      success: true,
+      report: {
+        year,
+        month,
+        monthName: new Date(year, month - 1).toLocaleString('default', { month: 'long' }),
+        weeklyBreakdown: weeklyData,
+        summary: summary,
+        trends: calculateTrends(weeklyData)
+      }
+    };
+    
+  } catch (error) {
+    console.error('Monthly performance report error:', error);
+    return { success: false, message: 'Failed to generate monthly performance report' };
+  }
+}
+
+/**
+ * Get Product Performance Report
+ */
+function getProductPerformanceReport(startDate, endDate) {
+  try {
+    const salesResult = getSalesReports(startDate, endDate);
+    if (!salesResult.success) return salesResult;
+    
+    const { sales } = salesResult;
+    const productStats = {};
+    
+    sales.forEach(sale => {
+      if (!productStats[sale.productId]) {
+        productStats[sale.productId] = {
+          id: sale.productId,
+          name: sale.productName,
+          totalRevenue: 0,
+          totalQuantity: 0,
+          totalCost: 0,
+          totalProfit: 0,
+          transactions: new Set()
+        };
+      }
+      
+      const stats = productStats[sale.productId];
+      stats.totalRevenue += sale.total;
+      stats.totalQuantity += sale.quantity;
+      stats.totalCost += sale.cost || 0;
+      stats.totalProfit += sale.profit || 0;
+      stats.transactions.add(sale.saleId.split('_')[0]);
+    });
+    
+    // Convert to array and add calculated metrics
+    const productPerformance = Object.values(productStats).map(product => ({
+      ...product,
+      avgSellingPrice: product.totalQuantity > 0 ? product.totalRevenue / product.totalQuantity : 0,
+      profitMargin: product.totalRevenue > 0 ? (product.totalProfit / product.totalRevenue) * 100 : 0,
+      transactions: product.transactions.size
+    }));
+    
+    // Sort by revenue
+    productPerformance.sort((a, b) => b.totalRevenue - a.totalRevenue);
+    
+    return {
+      success: true,
+      report: {
+        startDate,
+        endDate,
+        products: productPerformance,
+        topByRevenue: productPerformance.slice(0, 10),
+        topByQuantity: [...productPerformance].sort((a, b) => b.totalQuantity - a.totalQuantity).slice(0, 10),
+        topByProfit: [...productPerformance].sort((a, b) => b.totalProfit - a.totalProfit).slice(0, 10)
+      }
+    };
+    
+  } catch (error) {
+    console.error('Product performance report error:', error);
+    return { success: false, message: 'Failed to generate product performance report' };
+  }
+}
+
+/**
+ * Get Employee Performance Report
+ */
+function getEmployeePerformanceReport(startDate, endDate) {
+  try {
+    const salesResult = getSalesReports(startDate, endDate);
+    if (!salesResult.success) return salesResult;
+    
+    const { summary } = salesResult;
+    const employeeStats = [];
+    
+    Object.entries(summary.employeePerformance).forEach(([employee, stats]) => {
+      employeeStats.push({
+        employee,
+        totalSales: stats.sales,
+        totalItems: stats.items,
+        totalTransactions: stats.transactions,
+        avgTransactionValue: stats.transactions > 0 ? stats.sales / stats.transactions : 0,
+        avgItemsPerTransaction: stats.transactions > 0 ? stats.items / stats.transactions : 0
+      });
+    });
+    
+    // Sort by total sales
+    employeeStats.sort((a, b) => b.totalSales - a.totalSales);
+    
+    return {
+      success: true,
+      report: {
+        startDate,
+        endDate,
+        employees: employeeStats,
+        topPerformers: employeeStats.slice(0, 5)
+      }
+    };
+    
+  } catch (error) {
+    console.error('Employee performance report error:', error);
+    return { success: false, message: 'Failed to generate employee performance report' };
+  }
+}
+
+/**
+ * Helper function to get product cost
+ */
+function getProductCost(productId) {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.SHEETS.PRODUCTS);
+    const data = sheet.getDataRange().getValues();
+    
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === productId) {
+        return data[i][3]; // Cost column
+      }
+    }
+    return 0;
+  } catch (error) {
+    return 0;
+  }
+}
+
+/**
+ * Helper function to get product category
+ */
+function getProductCategory(productId) {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.SHEETS.PRODUCTS);
+    const data = sheet.getDataRange().getValues();
+    
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === productId) {
+        return data[i][5]; // Category column
+      }
+    }
+    return 'Unknown';
+  } catch (error) {
+    return 'Unknown';
+  }
+}
+
+/**
+ * Helper function to get unique transactions count
+ */
+function getUniqueTransactions(sales) {
+  const sessions = new Set();
+  sales.forEach(sale => {
+    const sessionId = sale.saleId.split('_')[0];
+    sessions.add(sessionId);
+  });
+  return sessions.size;
+}
+
+/**
+ * Helper function to get hourly transactions
+ */
+function getHourlyTransactions(sales, hour) {
+  const hourSales = sales.filter(sale => {
+    const saleHour = new Date(sale.date).getHours();
+    return saleHour === hour;
+  });
+  return getUniqueTransactions(hourSales);
+}
+
+/**
+ * Helper function to get top products by revenue
+ */
+function getTopProductsByRevenue(sales) {
+  const productRevenue = {};
+  
+  sales.forEach(sale => {
+    if (!productRevenue[sale.productName]) {
+      productRevenue[sale.productName] = 0;
+    }
+    productRevenue[sale.productName] += sale.total;
+  });
+  
+  return Object.entries(productRevenue)
+    .sort(([,a], [,b]) => b - a)
+    .slice(0, 10)
+    .map(([name, revenue]) => ({ name, revenue }));
+}
+
+/**
+ * Helper function to calculate trends
+ */
+function calculateTrends(weeklyData) {
+  if (weeklyData.length < 2) return { revenue: 0, items: 0, transactions: 0 };
+  
+  const current = weeklyData[weeklyData.length - 1];
+  const previous = weeklyData[weeklyData.length - 2];
+  
+  return {
+    revenue: previous.revenue > 0 ? ((current.revenue - previous.revenue) / previous.revenue) * 100 : 0,
+    items: previous.items > 0 ? ((current.items - previous.items) / previous.items) * 100 : 0,
+    transactions: previous.transactions > 0 ? ((current.transactions - previous.transactions) / previous.transactions) * 100 : 0
+  };
 }
 
 /**

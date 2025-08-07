@@ -53,14 +53,14 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Login Modal */
+        /* Enhanced Login Modal */
         .login-modal {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -68,25 +68,199 @@
             animation: fadeIn 0.3s ease;
         }
 
-        .login-form {
+        .login-container {
+            display: flex;
             background: white;
-            padding: 40px;
             border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-            width: 400px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            width: 900px;
+            max-width: 95vw;
+            min-height: 600px;
+            animation: slideUp 0.5s ease;
+        }
+
+        /* Left Side - Branding */
+        .login-branding {
+            flex: 1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 60px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             text-align: center;
-            animation: slideUp 0.4s ease;
-        }
-
-        .login-form h2 {
-            margin-bottom: 30px;
-            color: #333;
-            font-weight: 600;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
+            color: white;
             position: relative;
+            overflow: hidden;
+        }
+
+        .login-branding::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><polygon fill="rgba(255,255,255,0.05)" points="0,1000 1000,0 1000,1000"/></svg>');
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(2deg); }
+        }
+
+        .company-logo {
+            position: relative;
+            z-index: 2;
+            margin-bottom: 30px;
+        }
+
+        .logo-circle {
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: white;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .company-name {
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .company-tagline {
+            font-size: 18px;
+            opacity: 0.9;
+            margin-bottom: 40px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .login-features {
+            position: relative;
+            z-index: 2;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            opacity: 0.9;
+            transition: all 0.3s ease;
+        }
+
+        .feature-item:hover {
+            opacity: 1;
+            transform: translateX(5px);
+        }
+
+        .feature-item i {
+            font-size: 20px;
+            margin-right: 15px;
+            width: 25px;
+        }
+
+        /* Right Side - Login Form */
+        .login-form-section {
+            flex: 1;
+            padding: 60px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .login-header h2 {
+            font-size: 32px;
+            color: #333;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .login-header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        /* Authentication Switcher */
+        .auth-switcher {
+            margin-bottom: 30px;
+        }
+
+        .switch-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 4px;
+            gap: 4px;
+        }
+
+        .switch-tab {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: #666;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .switch-tab.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .switch-tab:hover:not(.active) {
+            color: #333;
+        }
+
+        /* Form Groups */
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group label i {
+            margin-right: 8px;
+            color: #667eea;
         }
 
         .form-group input {
@@ -96,7 +270,7 @@
             border-radius: 12px;
             font-size: 16px;
             transition: all 0.3s ease;
-            background: #f8f9fa;
+            background: #fafbfc;
         }
 
         .form-group input:focus {
@@ -106,20 +280,115 @@
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
-        .form-group label {
-            position: absolute;
-            top: -8px;
-            left: 15px;
-            background: white;
-            padding: 0 8px;
-            font-size: 12px;
-            color: #667eea;
-            font-weight: 500;
+        .auth-field.hidden {
+            display: none;
         }
 
+        /* PIN Pad Toggle */
+        .pin-pad-toggle {
+            margin-top: 10px;
+        }
+
+        .pin-pad-btn {
+            background: #f8f9fa;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 12px;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pin-pad-btn:hover {
+            background: #e9ecef;
+            color: #333;
+        }
+
+        /* Password Toggle */
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .show-password-btn {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .show-password-btn:hover {
+            color: #333;
+            background: #f8f9fa;
+        }
+
+        /* Login Options */
+        .login-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .remember-me input {
+            display: none;
+        }
+
+        .checkmark {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #e1e5e9;
+            border-radius: 4px;
+            margin-right: 10px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .remember-me input:checked + .checkmark {
+            background: #667eea;
+            border-color: #667eea;
+        }
+
+        .remember-me input:checked + .checkmark::after {
+            content: '✓';
+            position: absolute;
+            top: -2px;
+            left: 2px;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .forgot-link {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .forgot-link:hover {
+            color: #5a6fd8;
+            text-decoration: underline;
+        }
+
+        /* Enhanced Login Button */
         .login-btn {
             width: 100%;
-            padding: 15px;
+            padding: 16px 24px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
@@ -128,25 +397,230 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .login-btn:hover::before {
+            left: 100%;
         }
 
         .login-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
         }
 
         .login-btn:active {
             transform: translateY(0);
         }
 
+        .btn-loader {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .spinner-small {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Error Message */
         .error-message {
             color: #e74c3c;
             margin-top: 15px;
-            padding: 10px;
+            padding: 12px 16px;
             background: #ffeaea;
             border-radius: 8px;
+            border-left: 4px solid #e74c3c;
             display: none;
+            font-size: 14px;
+        }
+
+        /* Demo Credentials */
+        .demo-credentials {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 1px solid #e1e5e9;
+        }
+
+        .demo-credentials p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .demo-creds {
+            display: flex;
+            gap: 20px;
+            font-size: 12px;
+        }
+
+        .demo-creds span {
+            color: #333;
+        }
+
+        /* Virtual PIN Pad */
+        .pin-pad {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            width: 300px;
+            z-index: 10;
+        }
+
+        .pin-pad-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .pin-pad-header h3 {
+            color: #333;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .close-pin-pad {
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .close-pin-pad:hover {
+            background: #f8f9fa;
+            color: #333;
+        }
+
+        .pin-display {
+            margin-bottom: 20px;
+        }
+
+        .pin-display input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 4px;
+        }
+
+        .pin-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .pin-buttons button {
+            aspect-ratio: 1;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            background: white;
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pin-buttons button:hover {
+            border-color: #667eea;
+            background: #f8f9fa;
+        }
+
+        .pin-buttons button:active {
+            transform: scale(0.95);
+        }
+
+        .pin-buttons .clear-btn,
+        .pin-buttons .backspace-btn {
+            background: #f8f9fa;
+            color: #666;
+        }
+
+        .use-pin-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .use-pin-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .login-container {
+                flex-direction: column;
+                width: 95vw;
+                min-height: auto;
+            }
+
+            .login-branding {
+                padding: 40px 20px;
+            }
+
+            .login-form-section {
+                padding: 40px 20px;
+            }
+
+            .company-name {
+                font-size: 28px;
+            }
+
+            .login-header h2 {
+                font-size: 24px;
+            }
+
+            .pin-pad {
+                width: 280px;
+                padding: 20px;
+            }
         }
 
         /* Main Container */
@@ -804,6 +1278,393 @@
         .hidden {
             display: none !important;
         }
+
+        /* Enhanced Reports Styles */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .report-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .reports-nav {
+            margin-bottom: 30px;
+        }
+
+        .report-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 4px;
+            gap: 4px;
+            overflow-x: auto;
+        }
+
+        .report-tab {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: #666;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .report-tab.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .report-tab:hover:not(.active) {
+            color: #333;
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .report-content {
+            display: none;
+            animation: fadeInUp 0.4s ease;
+        }
+
+        .report-content.active {
+            display: block;
+        }
+
+        .card-header {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eef2f5;
+        }
+
+        .card-header h3 {
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .card-header p {
+            color: #666;
+            margin: 0;
+            font-size: 14px;
+        }
+
+        /* RVC Summary Grid */
+        .rvc-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .rvc-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 4px solid;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .rvc-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .rvc-card.revenue {
+            border-left-color: #28a745;
+        }
+
+        .rvc-card.volume {
+            border-left-color: #667eea;
+        }
+
+        .rvc-card.cost {
+            border-left-color: #ffc107;
+        }
+
+        .rvc-card.profit {
+            border-left-color: #20c997;
+        }
+
+        .rvc-card.margin {
+            border-left-color: #6f42c1;
+        }
+
+        .rvc-card.transactions {
+            border-left-color: #fd7e14;
+        }
+
+        .rvc-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+        }
+
+        .revenue .rvc-icon {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+
+        .volume .rvc-icon {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .cost .rvc-icon {
+            background: linear-gradient(135deg, #ffc107, #ffab00);
+        }
+
+        .profit .rvc-icon {
+            background: linear-gradient(135deg, #20c997, #17a2b8);
+        }
+
+        .margin .rvc-icon {
+            background: linear-gradient(135deg, #6f42c1, #6610f2);
+        }
+
+        .transactions .rvc-icon {
+            background: linear-gradient(135deg, #fd7e14, #e83e8c);
+        }
+
+        .rvc-details {
+            flex: 1;
+        }
+
+        .rvc-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .rvc-label {
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Charts Layout */
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            min-height: 400px;
+        }
+
+        .chart-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #666;
+            text-align: center;
+        }
+
+        .chart-placeholder h4 {
+            margin: 0;
+            font-weight: 600;
+        }
+
+        /* Filters */
+        .product-filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .product-filters select {
+            min-width: 200px;
+        }
+
+        /* Performance Tables */
+        .performance-table, .stats-table {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .performance-table table,
+        .stats-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .performance-table th,
+        .performance-table td,
+        .stats-table th,
+        .stats-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eef2f5;
+        }
+
+        .performance-table th,
+        .stats-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .performance-table tr:hover,
+        .stats-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* Monthly Overview */
+        .monthly-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .monthly-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .monthly-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .monthly-card .metric-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .monthly-card .metric-label {
+            color: #666;
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+
+        .monthly-card .metric-change {
+            font-size: 14px;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .metric-change.positive {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .metric-change.negative {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .metric-change.neutral {
+            background: #e2e3e5;
+            color: #495057;
+        }
+
+        /* Weekly Chart */
+        .weekly-chart {
+            margin-bottom: 30px;
+        }
+
+        /* Responsive Design for Reports */
+        @media (max-width: 768px) {
+            .section-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .report-controls {
+                justify-content: center;
+            }
+
+            .report-tabs {
+                justify-content: center;
+            }
+
+            .rvc-summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-row {
+                grid-template-columns: 1fr;
+            }
+
+            .product-filters {
+                flex-direction: column;
+            }
+
+            .product-filters select {
+                min-width: auto;
+            }
+
+            .monthly-overview {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Print Styles for Reports */
+        @media print {
+            .report-controls,
+            .reports-nav,
+            .sidebar,
+            .header {
+                display: none !important;
+            }
+
+            .main-content {
+                padding: 0;
+            }
+
+            .card {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+
+            .rvc-card {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+        }
     </style>
 </head>
 <body>
@@ -814,22 +1675,143 @@
 
     <!-- Login Modal -->
     <div class="login-modal" id="loginModal">
-        <div class="login-form">
-            <h2><i class="fas fa-store"></i> POS System Login</h2>
-            <form id="loginForm">
-                <div class="form-group">
-                    <label>Username</label>
-                    <input type="text" id="username" required>
+        <div class="login-container">
+            <!-- Left Side - Branding -->
+            <div class="login-branding">
+                <div class="company-logo">
+                    <div class="logo-circle">
+                        <i class="fas fa-store"></i>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>PIN</label>
-                    <input type="password" id="pin" required>
+                <h1 class="company-name" id="companyName">RetailPro</h1>
+                <p class="company-tagline">Modern Point of Sale System</p>
+                <div class="login-features">
+                    <div class="feature-item">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span>Complete POS Solution</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Real-time Analytics</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-mobile-alt"></i>
+                        <span>Mobile Optimized</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Secure & Reliable</span>
+                    </div>
                 </div>
-                <button type="submit" class="login-btn">
-                    <i class="fas fa-sign-in-alt"></i> Login
-                </button>
-                <div class="error-message" id="errorMessage"></div>
-            </form>
+            </div>
+            
+            <!-- Right Side - Login Form -->
+            <div class="login-form-section">
+                <div class="login-form">
+                    <div class="login-header">
+                        <h2>Welcome Back</h2>
+                        <p>Sign in to your account</p>
+                    </div>
+                    
+                    <!-- Authentication Type Switcher -->
+                    <div class="auth-switcher">
+                        <div class="switch-tabs">
+                            <button type="button" class="switch-tab active" data-auth="pin" onclick="switchAuthType('pin')">
+                                <i class="fas fa-key"></i> PIN Login
+                            </button>
+                            <button type="button" class="switch-tab" data-auth="password" onclick="switchAuthType('password')">
+                                <i class="fas fa-lock"></i> Password Login
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <label><i class="fas fa-user"></i> Username</label>
+                            <input type="text" id="username" required placeholder="Enter your username">
+                        </div>
+                        
+                        <!-- PIN Input -->
+                        <div class="form-group auth-field" id="pinField">
+                            <label><i class="fas fa-key"></i> PIN</label>
+                            <input type="password" id="pin" placeholder="Enter your 4-digit PIN" maxlength="6">
+                            <div class="pin-pad-toggle">
+                                <button type="button" onclick="togglePinPad()" class="pin-pad-btn">
+                                    <i class="fas fa-calculator"></i> Use PIN Pad
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Password Input -->
+                        <div class="form-group auth-field hidden" id="passwordField">
+                            <label><i class="fas fa-lock"></i> Password</label>
+                            <input type="password" id="password" placeholder="Enter your password">
+                            <div class="password-toggle">
+                                <button type="button" onclick="togglePasswordVisibility()" class="show-password-btn">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="login-options">
+                            <label class="remember-me">
+                                <input type="checkbox" id="rememberMe">
+                                <span class="checkmark"></span>
+                                Remember me
+                            </label>
+                            <a href="#" class="forgot-link" onclick="showForgotModal()">Forgot credentials?</a>
+                        </div>
+                        
+                        <button type="submit" class="login-btn">
+                            <i class="fas fa-sign-in-alt"></i> 
+                            <span class="btn-text">Sign In</span>
+                            <div class="btn-loader hidden">
+                                <div class="spinner-small"></div>
+                            </div>
+                        </button>
+                        
+                        <div class="error-message" id="errorMessage"></div>
+                        
+                        <div class="demo-credentials">
+                            <p><i class="fas fa-info-circle"></i> Demo Credentials:</p>
+                            <div class="demo-creds">
+                                <span><strong>Username:</strong> admin</span>
+                                <span><strong>PIN:</strong> 1234</span>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Virtual PIN Pad -->
+                <div class="pin-pad hidden" id="pinPad">
+                    <div class="pin-pad-header">
+                        <h3>Enter PIN</h3>
+                        <button onclick="closePinPad()" class="close-pin-pad">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="pin-display">
+                        <input type="password" id="pinPadDisplay" readonly placeholder="Enter PIN">
+                    </div>
+                    <div class="pin-buttons">
+                        <button onclick="addPinDigit('1')">1</button>
+                        <button onclick="addPinDigit('2')">2</button>
+                        <button onclick="addPinDigit('3')">3</button>
+                        <button onclick="addPinDigit('4')">4</button>
+                        <button onclick="addPinDigit('5')">5</button>
+                        <button onclick="addPinDigit('6')">6</button>
+                        <button onclick="addPinDigit('7')">7</button>
+                        <button onclick="addPinDigit('8')">8</button>
+                        <button onclick="addPinDigit('9')">9</button>
+                        <button onclick="clearPin()" class="clear-btn">Clear</button>
+                        <button onclick="addPinDigit('0')">0</button>
+                        <button onclick="backspacePin()" class="backspace-btn">
+                            <i class="fas fa-backspace"></i>
+                        </button>
+                    </div>
+                    <button onclick="usePinPadValue()" class="use-pin-btn">Use PIN</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1058,12 +2040,218 @@
                 <section class="content-section" id="reports">
                     <div class="section-header">
                         <h2 class="section-title">Reports & Analytics</h2>
+                        <div class="report-controls">
+                            <select class="form-control" id="reportType" onchange="handleReportTypeChange()" style="width: auto; margin-right: 15px;">
+                                <option value="daily-rvc">Daily RVC Report</option>
+                                <option value="weekly-sales">Weekly Sales Summary</option>
+                                <option value="monthly-performance">Monthly Performance</option>
+                                <option value="product-performance">Product Performance</option>
+                                <option value="employee-performance">Employee Performance</option>
+                                <option value="custom-analytics">Custom Analytics</option>
+                            </select>
+                            <input type="date" class="form-control" id="reportDate" style="width: auto; margin-right: 15px;">
+                            <button class="btn btn-primary" onclick="generateSelectedReport()">
+                                <i class="fas fa-chart-bar"></i> Generate Report
+                            </button>
+                            <button class="btn btn-secondary" onclick="exportReport()">
+                                <i class="fas fa-download"></i> Export
+                            </button>
+                        </div>
                     </div>
                     
-                    <div class="card">
-                        <h3>Sales Analytics</h3>
-                        <div id="chartsContainer">
-                            <p>Charts and analytics will be displayed here...</p>
+                    <!-- Report Navigation Tabs -->
+                    <div class="reports-nav">
+                        <div class="report-tabs">
+                            <button class="report-tab active" data-report="daily-rvc" onclick="switchReportTab('daily-rvc')">
+                                <i class="fas fa-calendar-day"></i> Daily RVC
+                            </button>
+                            <button class="report-tab" data-report="weekly-sales" onclick="switchReportTab('weekly-sales')">
+                                <i class="fas fa-calendar-week"></i> Weekly Sales
+                            </button>
+                            <button class="report-tab" data-report="monthly-performance" onclick="switchReportTab('monthly-performance')">
+                                <i class="fas fa-calendar-alt"></i> Monthly Performance
+                            </button>
+                            <button class="report-tab" data-report="product-performance" onclick="switchReportTab('product-performance')">
+                                <i class="fas fa-box"></i> Product Performance
+                            </button>
+                            <button class="report-tab" data-report="employee-performance" onclick="switchReportTab('employee-performance')">
+                                <i class="fas fa-users"></i> Employee Performance
+                            </button>
+                            <button class="report-tab" data-report="analytics" onclick="switchReportTab('analytics')">
+                                <i class="fas fa-chart-pie"></i> Analytics
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Daily RVC Report -->
+                    <div class="report-content active" id="daily-rvc-report">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-calendar-day"></i> Daily RVC (Revenue, Volume, Cost) Report</h3>
+                                <p>Comprehensive daily sales analysis with revenue, volume, and cost metrics</p>
+                            </div>
+                            
+                            <div class="rvc-summary-grid" id="rvcSummaryGrid">
+                                <div class="rvc-card revenue">
+                                    <div class="rvc-icon"><i class="fas fa-dollar-sign"></i></div>
+                                    <div class="rvc-details">
+                                        <div class="rvc-value" id="rvcRevenue">$0.00</div>
+                                        <div class="rvc-label">Total Revenue</div>
+                                    </div>
+                                </div>
+                                <div class="rvc-card volume">
+                                    <div class="rvc-icon"><i class="fas fa-shopping-cart"></i></div>
+                                    <div class="rvc-details">
+                                        <div class="rvc-value" id="rvcVolume">0</div>
+                                        <div class="rvc-label">Items Sold</div>
+                                    </div>
+                                </div>
+                                <div class="rvc-card cost">
+                                    <div class="rvc-icon"><i class="fas fa-receipt"></i></div>
+                                    <div class="rvc-details">
+                                        <div class="rvc-value" id="rvcCost">$0.00</div>
+                                        <div class="rvc-label">Total Cost</div>
+                                    </div>
+                                </div>
+                                <div class="rvc-card profit">
+                                    <div class="rvc-icon"><i class="fas fa-chart-line"></i></div>
+                                    <div class="rvc-details">
+                                        <div class="rvc-value" id="rvcProfit">$0.00</div>
+                                        <div class="rvc-label">Gross Profit</div>
+                                    </div>
+                                </div>
+                                <div class="rvc-card margin">
+                                    <div class="rvc-icon"><i class="fas fa-percentage"></i></div>
+                                    <div class="rvc-details">
+                                        <div class="rvc-value" id="rvcMargin">0%</div>
+                                        <div class="rvc-label">Profit Margin</div>
+                                    </div>
+                                </div>
+                                <div class="rvc-card transactions">
+                                    <div class="rvc-icon"><i class="fas fa-exchange-alt"></i></div>
+                                    <div class="rvc-details">
+                                        <div class="rvc-value" id="rvcTransactions">0</div>
+                                        <div class="rvc-label">Transactions</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="charts-row">
+                                <div class="chart-container">
+                                    <div id="hourlyRevenueChart" class="chart-placeholder">
+                                        <h4>Hourly Revenue Breakdown</h4>
+                                    </div>
+                                </div>
+                                <div class="chart-container">
+                                    <div id="topProductsRevenueChart" class="chart-placeholder">
+                                        <h4>Top Products by Revenue</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Weekly Sales Report -->
+                    <div class="report-content" id="weekly-sales-report">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-calendar-week"></i> Weekly Sales Summary</h3>
+                                <p>Week-over-week performance analysis and daily breakdown</p>
+                            </div>
+                            <div id="weeklyReportContent">
+                                <div class="weekly-chart">
+                                    <div id="weeklyTrendChart" class="chart-placeholder">
+                                        <h4>Daily Sales Trend</h4>
+                                    </div>
+                                </div>
+                                <div id="weeklyStatsTable" class="stats-table">
+                                    <!-- Weekly stats will be populated here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Monthly Performance Report -->
+                    <div class="report-content" id="monthly-performance-report">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-calendar-alt"></i> Monthly Performance Report</h3>
+                                <p>Comprehensive monthly analysis with trends and forecasting</p>
+                            </div>
+                            <div id="monthlyReportContent">
+                                <div class="monthly-overview" id="monthlyOverview">
+                                    <!-- Monthly overview cards -->
+                                </div>
+                                <div class="charts-row">
+                                    <div class="chart-container">
+                                        <div id="monthlyTrendChart" class="chart-placeholder">
+                                            <h4>Monthly Revenue Trend</h4>
+                                        </div>
+                                    </div>
+                                    <div class="chart-container">
+                                        <div id="categoryBreakdownChart" class="chart-placeholder">
+                                            <h4>Category Performance</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Product Performance Report -->
+                    <div class="report-content" id="product-performance-report">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-box"></i> Product Performance Analysis</h3>
+                                <p>Detailed product sales analysis with profitability insights</p>
+                            </div>
+                            <div id="productReportContent">
+                                <div class="product-filters">
+                                    <select class="form-control" id="productSortBy">
+                                        <option value="revenue">Sort by Revenue</option>
+                                        <option value="quantity">Sort by Quantity</option>
+                                        <option value="profit">Sort by Profit</option>
+                                        <option value="margin">Sort by Margin</option>
+                                    </select>
+                                    <select class="form-control" id="productCategory">
+                                        <option value="all">All Categories</option>
+                                        <option value="Beverages">Beverages</option>
+                                        <option value="Food">Food</option>
+                                        <option value="Snacks">Snacks</option>
+                                    </select>
+                                </div>
+                                <div id="productPerformanceTable" class="performance-table">
+                                    <!-- Product performance table -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Employee Performance Report -->
+                    <div class="report-content" id="employee-performance-report">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-users"></i> Employee Performance Report</h3>
+                                <p>Staff performance metrics and productivity analysis</p>
+                            </div>
+                            <div id="employeeReportContent">
+                                <div id="employeePerformanceChart" class="chart-placeholder">
+                                    <h4>Employee Sales Comparison</h4>
+                                </div>
+                                <div id="employeeStatsTable" class="stats-table">
+                                    <!-- Employee stats table -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Analytics Dashboard -->
+                    <div class="report-content" id="analytics-report">
+                        <div class="card">
+                            <h3>Interactive Analytics Dashboard</h3>
+                            <div id="chartsContainer">
+                                <!-- Original charts container -->
+                            </div>
                         </div>
                     </div>
                 </section>
