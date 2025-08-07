@@ -1,7 +1,92 @@
 /**
- * Modern POS System - Google Apps Script Backend
+ * Advanced Enterprise POS System - Google Apps Script Backend
  * Handles all database operations, authentication, and business logic
+ * Features: Real-time data sync, advanced analytics, enterprise integrations
  */
+
+// Main entry point for web app
+function doGet() {
+  return HtmlService.createTemplateFromFile('index').evaluate()
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1.0')
+    .setTitle('Advanced POS System - Enterprise Edition');
+}
+
+// Include HTML files
+function include(filename) {
+  return HtmlService.createHtmlOutputFromFile(filename).getContent();
+}
+
+// Enhanced data access layer for real-time Google Sheets integration
+function getSheetData(sheetName, range = null) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName(sheetName);
+    
+    if (!sheet) {
+      throw new Error(`Sheet "${sheetName}" not found`);
+    }
+    
+    const data = range ? sheet.getRange(range).getValues() : sheet.getDataRange().getValues();
+    if (data.length === 0) return [];
+    
+    const headers = data[0];
+    const rows = data.slice(1);
+    
+    return rows.map(row => {
+      const obj = {};
+      headers.forEach((header, index) => {
+        obj[header] = row[index];
+      });
+      return obj;
+    });
+  } catch (error) {
+    console.error(`Error getting data from ${sheetName}:`, error);
+    return [];
+  }
+}
+
+function addSheetRecord(sheetName, record) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName(sheetName);
+    
+    if (!sheet) {
+      throw new Error(`Sheet "${sheetName}" not found`);
+    }
+    
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    const values = headers.map(header => record[header] || '');
+    
+    sheet.appendRow(values);
+    
+    return { success: true, id: sheet.getLastRow() - 1 };
+  } catch (error) {
+    console.error(`Error adding record to ${sheetName}:`, error);
+    return { success: false, error: error.toString() };
+  }
+}
+
+function updateSheetRecord(sheetName, rowIndex, record) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName(sheetName);
+    
+    if (!sheet) {
+      throw new Error(`Sheet "${sheetName}" not found`);
+    }
+    
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    const values = headers.map(header => record[header] !== undefined ? record[header] : '');
+    
+    sheet.getRange(rowIndex + 2, 1, 1, values.length).setValues([values]);
+    
+    return { success: true };
+  } catch (error) {
+    console.error(`Error updating record in ${sheetName}:`, error);
+    return { success: false, error: error.toString() };
+  }
+}
 
 // Configuration constants
 const CONFIG = {
@@ -10,14 +95,292 @@ const CONFIG = {
     SALES: 'Sales', 
     EMPLOYEES: 'Employees',
     SETTINGS: 'Settings',
-    LOGS: 'Logs'
+    LOGS: 'Logs',
+    CUSTOMERS: 'Customers',
+    INVENTORY: 'Inventory',
+    TRANSACTIONS: 'Transactions',
+    ANALYTICS: 'Analytics'
   },
   ROLES: {
     ADMIN: 'Admin',
     MANAGER: 'Manager', 
-    CASHIER: 'Cashier'
+    CASHIER: 'Cashier',
+    SUPERVISOR: 'Supervisor'
   }
 };
+
+// ==================== ADVANCED API FUNCTIONS ====================
+
+// Real-time product management
+function getProducts(filters = {}) {
+  try {
+    let products = getSheetData('Products');
+    
+    // Apply filters
+    if (filters.category) {
+      products = products.filter(p => p.Category === filters.category);
+    }
+    if (filters.search) {
+      const search = filters.search.toLowerCase();
+      products = products.filter(p => 
+        p.Name.toLowerCase().includes(search) || 
+        p.Barcode.toLowerCase().includes(search)
+      );
+    }
+    if (filters.inStock) {
+      products = products.filter(p => p.Stock > 0);
+    }
+    
+    return { success: true, data: products };
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  }
+}
+
+function addProduct(productData) {
+  try {
+    const product = {
+      ID: generateUniqueId(),
+      Name: productData.name,
+      Price: productData.price,
+      Cost: productData.cost || 0,
+      Stock: productData.stock || 0,
+      Category: productData.category,
+      Barcode: productData.barcode || generateBarcode(),
+      Description: productData.description || '',
+      Image: productData.image || '',
+      Active: true,
+      CreatedDate: new Date().toISOString(),
+      CreatedBy: productData.createdBy || 'System'
+    };
+    
+    const result = addSheetRecord('Products', product);
+    
+    if (result.success) {
+      logAction('Product Added', productData.createdBy || 'System', `Added product: ${product.Name}`);
+    }
+    
+    return result;
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  }
+}
+
+function updateProduct(productId, updates) {
+  try {
+    const products = getSheetData('Products');
+    const index = products.findIndex(p => p.ID === productId);
+    
+    if (index === -1) {
+      return { success: false, error: 'Product not found' };
+    }
+    
+    updates.ModifiedDate = new Date().toISOString();
+    const result = updateSheetRecord('Products', index, updates);
+    
+    if (result.success) {
+      logAction('Product Updated', updates.modifiedBy || 'System', `Updated product: ${productId}`);
+    }
+    
+    return result;
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  }
+}
+
+// Advanced sales processing
+function processSale(saleData) {
+  try {
+    const saleId = generateUniqueId();
+    const timestamp = new Date().toISOString();
+    
+    // Calculate totals
+    let subtotal = 0;
+    const items = saleData.items.map(item => {
+      const itemTotal = item.price * item.quantity;
+      subtotal += itemTotal;
+      return {
+        ...item,
+        total: itemTotal
+      };
+    });
+    
+    const tax = subtotal * (saleData.taxRate || 0.085);
+    const discount = saleData.discount || 0;
+    const total = subtotal + tax - discount;
+    
+    // Create sale record
+    const sale = {
+      ID: saleId,
+      Date: timestamp,
+      EmployeeID: saleData.employeeId,
+      CustomerID: saleData.customerId || '',
+      Items: JSON.stringify(items),
+      Subtotal: subtotal,
+      Tax: tax,
+      Discount: discount,
+      Total: total,
+      PaymentMethod: saleData.paymentMethod,
+      Status: 'Completed',
+      ReceiptNumber: generateReceiptNumber()
+    };
+    
+    // Add to Sales sheet
+    const saleResult = addSheetRecord('Sales', sale);
+    
+    if (saleResult.success) {
+      // Update inventory
+      updateInventoryAfterSale(items);
+      
+      // Log transaction
+      logAction('Sale Processed', saleData.employeeId, `Sale ${saleId} - Total: $${total.toFixed(2)}`);
+      
+      return { 
+        success: true, 
+        saleId: saleId,
+        receiptNumber: sale.ReceiptNumber,
+        total: total 
+      };
+    }
+    
+    return saleResult;
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  }
+}
+
+// Customer management
+function getCustomers(search = '') {
+  try {
+    let customers = getSheetData('Customers');
+    
+    if (search) {
+      const searchLower = search.toLowerCase();
+      customers = customers.filter(c => 
+        c.Name.toLowerCase().includes(searchLower) ||
+        c.Email.toLowerCase().includes(searchLower) ||
+        c.Phone.includes(search)
+      );
+    }
+    
+    return { success: true, data: customers };
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  }
+}
+
+function addCustomer(customerData) {
+  try {
+    const customer = {
+      ID: generateUniqueId(),
+      Name: customerData.name,
+      Email: customerData.email || '',
+      Phone: customerData.phone || '',
+      Address: customerData.address || '',
+      LoyaltyPoints: 0,
+      TotalSpent: 0,
+      CreatedDate: new Date().toISOString(),
+      LastVisit: new Date().toISOString()
+    };
+    
+    return addSheetRecord('Customers', customer);
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  }
+}
+
+// Advanced analytics
+function getDashboardData() {
+  try {
+    const today = new Date();
+    const todayStr = today.toDateString();
+    
+    // Get sales data
+    const sales = getSheetData('Sales');
+    const todaySales = sales.filter(s => new Date(s.Date).toDateString() === todayStr);
+    
+    // Calculate metrics
+    const todayRevenue = todaySales.reduce((sum, s) => sum + parseFloat(s.Total || 0), 0);
+    const todayTransactions = todaySales.length;
+    
+    // Get products data
+    const products = getSheetData('Products');
+    const lowStockProducts = products.filter(p => parseInt(p.Stock || 0) < 10);
+    
+    // Get top products
+    const productSales = {};
+    sales.forEach(sale => {
+      try {
+        const items = JSON.parse(sale.Items || '[]');
+        items.forEach(item => {
+          productSales[item.name] = (productSales[item.name] || 0) + item.quantity;
+        });
+      } catch (e) {
+        // Skip invalid JSON
+      }
+    });
+    
+    const topProducts = Object.entries(productSales)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 5)
+      .map(([name, quantity]) => ({ name, quantity }));
+    
+    return {
+      success: true,
+      data: {
+        todayRevenue,
+        todayTransactions,
+        totalProducts: products.length,
+        lowStockCount: lowStockProducts.length,
+        topProducts,
+        lowStockProducts
+      }
+    };
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  }
+}
+
+// Real-time inventory tracking
+function updateInventoryAfterSale(items) {
+  try {
+    const products = getSheetData('Products');
+    
+    items.forEach(item => {
+      const productIndex = products.findIndex(p => p.ID === item.id || p.Name === item.name);
+      if (productIndex !== -1) {
+        const currentStock = parseInt(products[productIndex].Stock || 0);
+        const newStock = Math.max(0, currentStock - item.quantity);
+        
+        updateSheetRecord('Products', productIndex, { Stock: newStock });
+        
+        // Log inventory change
+        logAction('Inventory Update', 'System', `${item.name}: ${currentStock} → ${newStock}`);
+      }
+    });
+  } catch (error) {
+    console.error('Error updating inventory:', error);
+  }
+}
+
+// Utility functions
+function generateUniqueId() {
+  return 'ID_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
+
+function generateBarcode() {
+  return Date.now().toString();
+}
+
+function generateReceiptNumber() {
+  const date = new Date();
+  const year = date.getFullYear().toString().substr(-2);
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, '0');
+  const sequence = Math.floor(Math.random() * 9999).toString().padStart(4, '0');
+  
+  return `R${year}${month}${day}${sequence}`;
+}
 
 /**
  * Initialize the POS system by creating necessary sheets
