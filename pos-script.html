@@ -573,16 +573,44 @@ function showLoginLoading(show) {
     const btnContent = document.getElementById('btnContent');
     const btnLoader = document.getElementById('btnLoader');
     
+    console.log('Login loading state:', show, { 
+        btn: !!btn, 
+        btnContent: !!btnContent, 
+        btnLoader: !!btnLoader 
+    });
+    
     if (btn && btnContent && btnLoader) {
         if (show) {
+            // Hide content, show loader
+            btnContent.style.display = 'none';
             btnContent.classList.add('hidden');
+            
+            btnLoader.style.display = 'flex';
             btnLoader.classList.remove('hidden');
+            
             btn.disabled = true;
+            btn.style.pointerEvents = 'none';
+            
+            console.log('Login spinner activated');
         } else {
+            // Show content, hide loader
+            btnContent.style.display = 'flex';
             btnContent.classList.remove('hidden');
+            
+            btnLoader.style.display = 'none';
             btnLoader.classList.add('hidden');
+            
             btn.disabled = false;
+            btn.style.pointerEvents = 'auto';
+            
+            console.log('Login spinner deactivated');
         }
+    } else {
+        console.error('Login button elements not found:', {
+            btn: !!btn,
+            btnContent: !!btnContent,
+            btnLoader: !!btnLoader
+        });
     }
 }
 
@@ -598,38 +626,53 @@ async function loadCompanyBranding() {
         console.log('Company settings loaded:', companySettings);
         
         if (companySettings) {
-            // Update login page branding
-            const companyNameEl = document.getElementById('companyName');
-            const companyTaglineEl = document.querySelector('.company-tagline');
-            const companyLogoEl = document.querySelector('.company-logo i');
+            // Update all company name elements
+            const companyNameElements = document.querySelectorAll('#companyName, .company-name, .company-name-receipt');
+            companyNameElements.forEach(el => {
+                if (el && companySettings.name) {
+                    el.textContent = companySettings.name;
+                    console.log('Updated company name element to:', companySettings.name);
+                }
+            });
             
-            if (companyNameEl && companySettings.name) {
-                companyNameEl.textContent = companySettings.name;
-                console.log('Updated company name to:', companySettings.name);
-            }
+            // Update all tagline elements
+            const taglineElements = document.querySelectorAll('.company-tagline, .company-tagline-receipt');
+            taglineElements.forEach(el => {
+                if (el && companySettings.tagline) {
+                    el.textContent = companySettings.tagline;
+                    console.log('Updated tagline element to:', companySettings.tagline);
+                }
+            });
             
-            if (companyTaglineEl && companySettings.tagline) {
-                companyTaglineEl.textContent = companySettings.tagline;
-                console.log('Updated company tagline to:', companySettings.tagline);
-            }
-            
-            if (companyLogoEl && companySettings.logo) {
-                companyLogoEl.className = companySettings.logo;
-                console.log('Updated company logo to:', companySettings.logo);
-            }
-            
-            // Update all logo elements throughout the app
-            const allLogoElements = document.querySelectorAll('.logo-circle i, .company-logo i');
-            allLogoElements.forEach(logo => {
-                if (companySettings.logo) {
+            // Update all logo elements
+            const logoElements = document.querySelectorAll('.logo-circle i, .company-logo i, .company-logo-receipt i');
+            logoElements.forEach(logo => {
+                if (logo && companySettings.logo) {
                     logo.className = companySettings.logo;
+                    console.log('Updated logo element to:', companySettings.logo);
+                }
+            });
+            
+            // Update page title
+            if (companySettings.name) {
+                document.title = `${companySettings.name} - POS System`;
+            }
+            
+            // Update any hardcoded text in fallback interfaces
+            const fallbackElements = document.querySelectorAll('[data-company-name]');
+            fallbackElements.forEach(el => {
+                if (companySettings.name) {
+                    el.textContent = el.textContent.replace('RetailPro', companySettings.name);
                 }
             });
             
             // Store settings globally for use throughout the app
             window.companySettings = companySettings;
             
-            console.log('Company branding updated successfully');
+            console.log('Company branding updated successfully across all elements');
+            
+            // Update branding in any existing modals or dynamic content
+            updateDynamicBranding(companySettings);
         }
         
     } catch (error) {
@@ -638,9 +681,35 @@ async function loadCompanyBranding() {
         window.companySettings = {
             name: 'RetailPro',
             tagline: 'Modern Point of Sale System',
-            logo: 'fas fa-store'
+            logo: 'fas fa-store',
+            address: '123 Business St, City, State 12345',
+            phone: '(555) 123-4567',
+            email: 'info@retailpro.com'
         };
     }
+}
+
+/**
+ * Update branding in dynamic content
+ */
+function updateDynamicBranding(settings) {
+    // Update any receipt templates that might be in memory
+    if (window.receiptTemplate) {
+        window.receiptTemplate = window.receiptTemplate
+            .replace(/RetailPro/g, settings.name)
+            .replace(/Modern Point of Sale System/g, settings.tagline);
+    }
+    
+    // Update any fallback apps that might exist
+    const fallbackApps = document.querySelectorAll('#fallbackMainApp, #fallbackLogin');
+    fallbackApps.forEach(app => {
+        if (app.innerHTML) {
+            app.innerHTML = app.innerHTML
+                .replace(/RetailPro/g, settings.name)
+                .replace(/Modern Point of Sale System/g, settings.tagline)
+                .replace(/POS System/g, `${settings.name} POS`);
+        }
+    });
 }
 
 /**
@@ -2305,6 +2374,119 @@ function exportReport() {
  * Admin Panel Functions
  */
 
+/**
+ * Advanced Customization Functions
+ */
+async function saveBrandingSettings() {
+    try {
+        const brandingData = {
+            companyName: document.getElementById('brandingCompanyName').value,
+            tagline: document.getElementById('brandingTagline').value,
+            logo: document.getElementById('brandingLogo').value,
+            primaryColor: document.getElementById('brandingPrimaryColor').value
+        };
+        
+        // Save to backend
+        const result = await callServerFunction('saveBrandingSettings', brandingData);
+        
+        if (result.success) {
+            showAlert('Branding settings saved successfully!', 'success');
+            // Reload company branding
+            loadCompanyBranding();
+        } else {
+            showAlert('Failed to save branding settings: ' + result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Save branding error:', error);
+        showAlert('Error saving branding settings', 'error');
+    }
+}
+
+async function savePOSConfiguration() {
+    try {
+        const configData = {
+            taxRate: parseFloat(document.getElementById('configTaxRate').value) || 0,
+            currency: document.getElementById('configCurrency').value,
+            receiptFooter: document.getElementById('configReceiptFooter').value
+        };
+        
+        // Save to backend
+        const result = await callServerFunction('savePOSConfiguration', configData);
+        
+        if (result.success) {
+            showAlert('POS configuration saved successfully!', 'success');
+        } else {
+            showAlert('Failed to save configuration: ' + result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Save configuration error:', error);
+        showAlert('Error saving configuration', 'error');
+    }
+}
+
+async function saveFeatureToggles() {
+    try {
+        const features = {
+            customerManagement: document.getElementById('featureCustomerManagement').checked,
+            loyaltyProgram: document.getElementById('featureLoyaltyProgram').checked,
+            splitPayments: document.getElementById('featureSplitPayments').checked,
+            advancedDiscounts: document.getElementById('featureAdvancedDiscounts').checked,
+            kitchenDisplay: document.getElementById('featureKitchenDisplay').checked,
+            tableManagement: document.getElementById('featureTableManagement').checked
+        };
+        
+        // Save to backend
+        const result = await callServerFunction('saveFeatureToggles', features);
+        
+        if (result.success) {
+            showAlert('Feature settings saved successfully!', 'success');
+        } else {
+            showAlert('Failed to save features: ' + result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Save features error:', error);
+        showAlert('Error saving feature settings', 'error');
+    }
+}
+
+/**
+ * Load customization settings
+ */
+async function loadCustomizationSettings() {
+    try {
+        const settings = await callServerFunction('getCustomizationSettings');
+        
+        if (settings.success) {
+            // Load branding settings
+            if (settings.branding) {
+                document.getElementById('brandingCompanyName').value = settings.branding.companyName || '';
+                document.getElementById('brandingTagline').value = settings.branding.tagline || '';
+                document.getElementById('brandingLogo').value = settings.branding.logo || '';
+                document.getElementById('brandingPrimaryColor').value = settings.branding.primaryColor || '#667eea';
+            }
+            
+            // Load POS configuration
+            if (settings.config) {
+                document.getElementById('configTaxRate').value = settings.config.taxRate || '';
+                document.getElementById('configCurrency').value = settings.config.currency || 'USD';
+                document.getElementById('configReceiptFooter').value = settings.config.receiptFooter || '';
+            }
+            
+            // Load feature toggles
+            if (settings.features) {
+                document.getElementById('featureCustomerManagement').checked = settings.features.customerManagement !== false;
+                document.getElementById('featureLoyaltyProgram').checked = settings.features.loyaltyProgram !== false;
+                document.getElementById('featureSplitPayments').checked = settings.features.splitPayments !== false;
+                document.getElementById('featureAdvancedDiscounts').checked = settings.features.advancedDiscounts !== false;
+                document.getElementById('featureKitchenDisplay').checked = settings.features.kitchenDisplay === true;
+                document.getElementById('featureTableManagement').checked = settings.features.tableManagement === true;
+            }
+        }
+    } catch (error) {
+        console.error('Load customization settings error:', error);
+    }
+}
+
 // Switch admin tabs
 function switchAdminTab(tabName) {
     // Update tab buttons
@@ -2326,6 +2508,12 @@ function switchAdminTab(tabName) {
             break;
         case 'roles':
             loadRolesGrid();
+            break;
+        case 'customization':
+            loadCustomizationSettings();
+            break;
+        case 'integrations':
+            loadIntegrationsStatus();
             break;
         case 'audit':
             loadAuditTrail();
@@ -2635,6 +2823,36 @@ function exportPermissions() {
 
 function showAddRoleModal() {
     showAlert('Add role functionality coming soon!', 'info');
+}
+
+/**
+ * Load integrations status
+ */
+async function loadIntegrationsStatus() {
+    try {
+        const integrations = await callServerFunction('getIntegrationsStatus');
+        
+        if (integrations && integrations.success) {
+            // Update integration status badges
+            Object.keys(integrations.data || {}).forEach(integration => {
+                const statusBadge = document.querySelector(`[data-integration="${integration}"] .status-badge`);
+                if (statusBadge) {
+                    const isConnected = integrations.data[integration].connected;
+                    statusBadge.textContent = isConnected ? 'Connected' : 'Disconnected';
+                    statusBadge.className = `status-badge ${isConnected ? 'connected' : 'disconnected'}`;
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Load integrations status error:', error);
+        // Show default disconnected status for demo
+        document.querySelectorAll('.status-badge').forEach(badge => {
+            if (!badge.textContent.includes('Connected')) {
+                badge.textContent = 'Disconnected';
+                badge.className = 'status-badge disconnected';
+            }
+        });
+    }
 }
 
 /**

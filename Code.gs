@@ -78,6 +78,19 @@ function initializePOSSystem() {
     console.log('👥 Creating Roles sheet...');
     createRolesSheet(ss);
     
+    // Create Advanced POS sheets
+    console.log('👤 Creating Customers sheet...');
+    createCustomersSheet(ss);
+    
+    console.log('💳 Creating Split Payments sheet...');
+    createSplitPaymentsSheet(ss);
+    
+    console.log('🎁 Creating Loyalty Program sheet...');
+    createLoyaltyProgramSheet(ss);
+    
+    console.log('🏷️ Creating Advanced Discounts sheet...');
+    createAdvancedDiscountsSheet(ss);
+    
     // Initialize default data
     console.log('🔧 Adding default data...');
     initializeDefaultData();
@@ -2384,4 +2397,690 @@ function calculateBuyXGetYDiscount(items, value) {
     return cheapestItem.price;
   }
   return 0;
+}
+
+/**
+ * ADVANCED POS FEATURES
+ */
+
+/**
+ * Create Customers sheet for customer management
+ */
+function createCustomersSheet(ss) {
+  let sheet = ss.getSheetByName('Customers');
+  if (!sheet) {
+    sheet = ss.insertSheet('Customers');
+  }
+  
+  sheet.clear();
+  
+  const headers = [
+    'Customer ID', 'First Name', 'Last Name', 'Email', 'Phone', 'Date of Birth',
+    'Address', 'City', 'State', 'ZIP', 'Country', 'Loyalty Points', 'Total Spent',
+    'Visit Count', 'Last Visit', 'Preferred Payment', 'Notes', 'Tags', 
+    'Discount Level', 'Created Date', 'Status', 'Marketing Consent'
+  ];
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  
+  const headerRange = sheet.getRange(1, 1, 1, headers.length);
+  headerRange.setBackground('#8e24aa');
+  headerRange.setFontColor('white');
+  headerRange.setFontWeight('bold');
+  
+  sheet.setFrozenRows(1);
+  sheet.autoResizeColumns(1, headers.length);
+  
+  return sheet;
+}
+
+/**
+ * Create Split Payments sheet
+ */
+function createSplitPaymentsSheet(ss) {
+  let sheet = ss.getSheetByName('SplitPayments');
+  if (!sheet) {
+    sheet = ss.insertSheet('SplitPayments');
+  }
+  
+  sheet.clear();
+  
+  const headers = [
+    'Transaction ID', 'Payment ID', 'Payment Method', 'Amount', 'Currency',
+    'Card Last 4', 'Auth Code', 'Reference Number', 'Status', 'Timestamp',
+    'Gateway', 'Fee Amount', 'Net Amount', 'Customer ID'
+  ];
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  
+  const headerRange = sheet.getRange(1, 1, 1, headers.length);
+  headerRange.setBackground('#00695c');
+  headerRange.setFontColor('white');
+  headerRange.setFontWeight('bold');
+  
+  sheet.setFrozenRows(1);
+  sheet.autoResizeColumns(1, headers.length);
+  
+  return sheet;
+}
+
+/**
+ * Create Loyalty Program sheet
+ */
+function createLoyaltyProgramSheet(ss) {
+  let sheet = ss.getSheetByName('LoyaltyProgram');
+  if (!sheet) {
+    sheet = ss.insertSheet('LoyaltyProgram');
+  }
+  
+  sheet.clear();
+  
+  const headers = [
+    'Program ID', 'Program Name', 'Points Per Dollar', 'Reward Threshold', 'Reward Value',
+    'Bonus Points Events', 'Expiry Days', 'Tier Requirements', 'Tier Benefits',
+    'Active', 'Start Date', 'End Date', 'Description'
+  ];
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  
+  const headerRange = sheet.getRange(1, 1, 1, headers.length);
+  headerRange.setBackground('#1565c0');
+  headerRange.setFontColor('white');
+  headerRange.setFontWeight('bold');
+  
+  sheet.setFrozenRows(1);
+  sheet.autoResizeColumns(1, headers.length);
+  
+  // Add default loyalty program
+  const defaultProgram = [
+    'BASIC_LOYALTY', 'Basic Loyalty Program', 1, 100, 5,
+    'Double points on weekends', 365, 'Bronze: 0, Silver: 500, Gold: 1000', 
+    'Bronze: 5% discount, Silver: 10% discount, Gold: 15% discount',
+    true, new Date(), null, 'Standard loyalty program with tiered benefits'
+  ];
+  sheet.appendRow(defaultProgram);
+  
+  return sheet;
+}
+
+/**
+ * Create Advanced Discounts sheet
+ */
+function createAdvancedDiscountsSheet(ss) {
+  let sheet = ss.getSheetByName('AdvancedDiscounts');
+  if (!sheet) {
+    sheet = ss.insertSheet('AdvancedDiscounts');
+  }
+  
+  sheet.clear();
+  
+  const headers = [
+    'Discount ID', 'Name', 'Type', 'Value', 'Min Quantity', 'Max Discount',
+    'Applies To', 'Customer Groups', 'Time Restrictions', 'Date Range',
+    'Usage Limit', 'Used Count', 'Stackable', 'Auto Apply', 'Priority',
+    'Conditions', 'Actions', 'Active', 'Created By', 'Created Date'
+  ];
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  
+  const headerRange = sheet.getRange(1, 1, 1, headers.length);
+  headerRange.setBackground('#d32f2f');
+  headerRange.setFontColor('white');
+  headerRange.setFontWeight('bold');
+  
+  sheet.setFrozenRows(1);
+  sheet.autoResizeColumns(1, headers.length);
+  
+  return sheet;
+}
+
+/**
+ * Customer Management Functions
+ */
+function addCustomer(customerData) {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Customers');
+    const customerId = generateCustomerId();
+    
+    const row = [
+      customerId,
+      customerData.firstName,
+      customerData.lastName,
+      customerData.email,
+      customerData.phone,
+      customerData.dateOfBirth || '',
+      customerData.address || '',
+      customerData.city || '',
+      customerData.state || '',
+      customerData.zip || '',
+      customerData.country || '',
+      0, // Loyalty points
+      0, // Total spent
+      0, // Visit count
+      '', // Last visit
+      customerData.preferredPayment || '',
+      customerData.notes || '',
+      customerData.tags || '',
+      customerData.discountLevel || 'NONE',
+      new Date(),
+      'ACTIVE',
+      customerData.marketingConsent || false
+    ];
+    
+    sheet.appendRow(row);
+    
+    logAction('Customer Added', customerData.addedBy || 'System', `Customer added: ${customerData.firstName} ${customerData.lastName}`, currentSessionId);
+    
+    return {
+      success: true,
+      customerId: customerId
+    };
+    
+  } catch (error) {
+    console.error('Add customer error:', error);
+    return { success: false, error: error.toString() };
+  }
+}
+
+function updateCustomerLoyalty(customerId, purchaseAmount) {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Customers');
+    const data = sheet.getDataRange().getValues();
+    
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === customerId) {
+        const currentPoints = data[i][11] || 0;
+        const currentSpent = data[i][12] || 0;
+        const currentVisits = data[i][13] || 0;
+        
+        // Calculate new points (1 point per dollar)
+        const newPoints = currentPoints + Math.floor(purchaseAmount);
+        const newSpent = currentSpent + purchaseAmount;
+        const newVisits = currentVisits + 1;
+        
+        // Update customer record
+        sheet.getRange(i + 1, 12).setValue(newPoints); // Loyalty points
+        sheet.getRange(i + 1, 13).setValue(newSpent); // Total spent
+        sheet.getRange(i + 1, 14).setValue(newVisits); // Visit count
+        sheet.getRange(i + 1, 15).setValue(new Date()); // Last visit
+        
+        // Check for tier upgrades
+        const newTier = calculateLoyaltyTier(newPoints);
+        
+        return {
+          success: true,
+          newPoints: newPoints,
+          newTier: newTier,
+          totalSpent: newSpent
+        };
+      }
+    }
+    
+    return { success: false, error: 'Customer not found' };
+    
+  } catch (error) {
+    console.error('Update customer loyalty error:', error);
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * Split Payment Processing
+ */
+function processSplitPayment(transactionId, payments) {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('SplitPayments');
+    const results = [];
+    
+    payments.forEach(payment => {
+      const paymentId = generatePaymentId();
+      const now = new Date();
+      
+      const paymentRow = [
+        transactionId,
+        paymentId,
+        payment.method,
+        payment.amount,
+        payment.currency || 'USD',
+        payment.cardLast4 || '',
+        payment.authCode || '',
+        payment.referenceNumber || '',
+        'COMPLETED',
+        now,
+        payment.gateway || 'INTERNAL',
+        payment.feeAmount || 0,
+        payment.amount - (payment.feeAmount || 0),
+        payment.customerId || ''
+      ];
+      
+      sheet.appendRow(paymentRow);
+      
+      results.push({
+        paymentId: paymentId,
+        method: payment.method,
+        amount: payment.amount,
+        status: 'COMPLETED'
+      });
+    });
+    
+    logAction('Split Payment', 'System', `Split payment processed: ${payments.length} methods, Total: $${payments.reduce((sum, p) => sum + p.amount, 0).toFixed(2)}`, currentSessionId);
+    
+    return {
+      success: true,
+      payments: results
+    };
+    
+  } catch (error) {
+    console.error('Process split payment error:', error);
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * Advanced Discount Engine
+ */
+function calculateAdvancedDiscounts(items, customer, promoCode) {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('AdvancedDiscounts');
+    const data = sheet.getDataRange().getValues();
+    const now = new Date();
+    
+    let applicableDiscounts = [];
+    let totalDiscount = 0;
+    
+    for (let i = 1; i < data.length; i++) {
+      const [discountId, name, type, value, minQty, maxDiscount, appliesTo, customerGroups, timeRestrictions, dateRange, usageLimit, usedCount, stackable, autoApply, priority, conditions, actions, active] = data[i];
+      
+      if (!active) continue;
+      
+      // Check if discount applies
+      if (autoApply || promoCode === discountId) {
+        let discount = 0;
+        
+        switch (type) {
+          case 'PERCENTAGE':
+            discount = calculatePercentageDiscount(items, value, appliesTo);
+            break;
+          case 'FIXED':
+            discount = Math.min(value, items.reduce((sum, item) => sum + (item.price * item.quantity), 0));
+            break;
+          case 'BUY_X_GET_Y':
+            discount = calculateBuyXGetYDiscount(items, conditions);
+            break;
+          case 'LOYALTY':
+            if (customer && customer.loyaltyPoints) {
+              discount = calculateLoyaltyDiscount(customer, value);
+            }
+            break;
+        }
+        
+        if (maxDiscount > 0) {
+          discount = Math.min(discount, maxDiscount);
+        }
+        
+        if (discount > 0) {
+          applicableDiscounts.push({
+            id: discountId,
+            name: name,
+            type: type,
+            discount: discount,
+            priority: priority || 0
+          });
+        }
+      }
+    }
+    
+    // Sort by priority and apply
+    applicableDiscounts.sort((a, b) => b.priority - a.priority);
+    
+    return {
+      success: true,
+      discounts: applicableDiscounts,
+      totalDiscount: applicableDiscounts.reduce((sum, d) => sum + d.discount, 0)
+    };
+    
+  } catch (error) {
+    console.error('Calculate advanced discounts error:', error);
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * Helper Functions
+ */
+function generateCustomerId() {
+  return 'CUST' + new Date().getTime() + Math.floor(Math.random() * 100);
+}
+
+function generatePaymentId() {
+  return 'PAY' + new Date().getTime() + Math.floor(Math.random() * 100);
+}
+
+function calculateLoyaltyTier(points) {
+  if (points >= 1000) return 'GOLD';
+  if (points >= 500) return 'SILVER';
+  return 'BRONZE';
+}
+
+function calculatePercentageDiscount(items, percentage, appliesTo) {
+  let applicableAmount = 0;
+  
+  items.forEach(item => {
+    if (appliesTo === 'ALL' || appliesTo.includes(item.category)) {
+      applicableAmount += item.price * item.quantity;
+    }
+  });
+  
+  return applicableAmount * (percentage / 100);
+}
+
+function calculateBuyXGetYDiscount(items, conditions) {
+  // Simplified implementation
+  // In real scenario, this would parse complex conditions
+  return 0;
+}
+
+function calculateLoyaltyDiscount(customer, discountRate) {
+  const tier = calculateLoyaltyTier(customer.loyaltyPoints);
+  
+  switch (tier) {
+    case 'GOLD': return discountRate * 1.5;
+    case 'SILVER': return discountRate * 1.2;
+    default: return discountRate;
+  }
+}
+
+/**
+ * CUSTOMIZATION & SETTINGS MANAGEMENT
+ */
+
+/**
+ * Save branding settings to Google Sheets
+ */
+function saveBrandingSettings(brandingData) {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Settings');
+    
+    // Update or add branding settings
+    const settingsToUpdate = [
+      ['COMPANY_NAME', brandingData.companyName],
+      ['COMPANY_TAGLINE', brandingData.tagline],
+      ['COMPANY_LOGO', brandingData.logo],
+      ['PRIMARY_COLOR', brandingData.primaryColor]
+    ];
+    
+    settingsToUpdate.forEach(([key, value]) => {
+      updateSetting(key, value);
+    });
+    
+    logAction('Branding Updated', currentUser?.username || 'Admin', 'Branding settings updated', currentSessionId);
+    
+    return { success: true };
+    
+  } catch (error) {
+    console.error('Save branding settings error:', error);
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * Save POS configuration
+ */
+function savePOSConfiguration(configData) {
+  try {
+    const settingsToUpdate = [
+      ['TAX_RATE', configData.taxRate],
+      ['CURRENCY', configData.currency],
+      ['RECEIPT_FOOTER', configData.receiptFooter]
+    ];
+    
+    settingsToUpdate.forEach(([key, value]) => {
+      updateSetting(key, value);
+    });
+    
+    logAction('Configuration Updated', currentUser?.username || 'Admin', 'POS configuration updated', currentSessionId);
+    
+    return { success: true };
+    
+  } catch (error) {
+    console.error('Save POS configuration error:', error);
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * Save feature toggles
+ */
+function saveFeatureToggles(features) {
+  try {
+    Object.keys(features).forEach(feature => {
+      const settingKey = `FEATURE_${feature.toUpperCase()}`;
+      updateSetting(settingKey, features[feature]);
+    });
+    
+    logAction('Features Updated', currentUser?.username || 'Admin', 'Feature toggles updated', currentSessionId);
+    
+    return { success: true };
+    
+  } catch (error) {
+    console.error('Save feature toggles error:', error);
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * Get all customization settings
+ */
+function getCustomizationSettings() {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Settings');
+    const data = sheet.getDataRange().getValues();
+    
+    const settings = {
+      branding: {},
+      config: {},
+      features: {}
+    };
+    
+    for (let i = 1; i < data.length; i++) {
+      const [key, value] = data[i];
+      
+      // Categorize settings
+      if (key.startsWith('COMPANY_') || key === 'PRIMARY_COLOR') {
+        const brandingKey = key.replace('COMPANY_', '').toLowerCase();
+        if (brandingKey === 'name') settings.branding.companyName = value;
+        else if (brandingKey === 'tagline') settings.branding.tagline = value;
+        else if (brandingKey === 'logo') settings.branding.logo = value;
+        else if (key === 'PRIMARY_COLOR') settings.branding.primaryColor = value;
+      } else if (['TAX_RATE', 'CURRENCY', 'RECEIPT_FOOTER'].includes(key)) {
+        const configKey = key.toLowerCase().replace('_', '');
+        if (key === 'TAX_RATE') settings.config.taxRate = value;
+        else if (key === 'CURRENCY') settings.config.currency = value;
+        else if (key === 'RECEIPT_FOOTER') settings.config.receiptFooter = value;
+      } else if (key.startsWith('FEATURE_')) {
+        const featureKey = key.replace('FEATURE_', '').toLowerCase();
+        settings.features[featureKey] = value;
+      }
+    }
+    
+    return {
+      success: true,
+      ...settings
+    };
+    
+  } catch (error) {
+    console.error('Get customization settings error:', error);
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * Get integrations status (placeholder)
+ */
+function getIntegrationsStatus() {
+  try {
+    // This would normally check actual integration statuses
+    // For demo purposes, showing some connected/disconnected states
+    const integrations = {
+      stripe: { connected: false, lastSync: null },
+      square: { connected: false, lastSync: null },
+      quickbooks: { connected: true, lastSync: new Date() },
+      mailchimp: { connected: false, lastSync: null },
+      twilio: { connected: false, lastSync: null },
+      analytics: { connected: true, lastSync: new Date() }
+    };
+    
+    return {
+      success: true,
+      data: integrations
+    };
+    
+  } catch (error) {
+    console.error('Get integrations status error:', error);
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * Helper function to update a setting
+ */
+function updateSetting(key, value) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Settings');
+  const data = sheet.getDataRange().getValues();
+  
+  let found = false;
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0] === key) {
+      sheet.getRange(i + 1, 2).setValue(value);
+      found = true;
+      break;
+    }
+  }
+  
+  if (!found) {
+    sheet.appendRow([key, value]);
+  }
+}
+
+/**
+ * ENHANCED CUSTOMER FUNCTIONS
+ */
+
+/**
+ * Search customers by various criteria
+ */
+function searchCustomers(searchTerm, searchType = 'all') {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Customers');
+    const data = sheet.getDataRange().getValues();
+    const customers = [];
+    
+    for (let i = 1; i < data.length; i++) {
+      const [customerId, firstName, lastName, email, phone, , address, city, state, zip, country, loyaltyPoints, totalSpent, visitCount, lastVisit, preferredPayment, notes, tags, discountLevel, createdDate, status] = data[i];
+      
+      let matches = false;
+      const searchLower = searchTerm.toLowerCase();
+      
+      switch (searchType) {
+        case 'name':
+          matches = firstName.toLowerCase().includes(searchLower) || lastName.toLowerCase().includes(searchLower);
+          break;
+        case 'email':
+          matches = email.toLowerCase().includes(searchLower);
+          break;
+        case 'phone':
+          matches = phone.includes(searchTerm);
+          break;
+        case 'id':
+          matches = customerId.toLowerCase().includes(searchLower);
+          break;
+        default:
+          matches = firstName.toLowerCase().includes(searchLower) || 
+                   lastName.toLowerCase().includes(searchLower) ||
+                   email.toLowerCase().includes(searchLower) ||
+                   phone.includes(searchTerm) ||
+                   customerId.toLowerCase().includes(searchLower);
+      }
+      
+      if (matches && status === 'ACTIVE') {
+        customers.push({
+          customerId,
+          firstName,
+          lastName,
+          email,
+          phone,
+          address,
+          city,
+          state,
+          zip,
+          country,
+          loyaltyPoints,
+          totalSpent,
+          visitCount,
+          lastVisit,
+          preferredPayment,
+          notes,
+          tags,
+          discountLevel,
+          createdDate,
+          status
+        });
+      }
+    }
+    
+    return {
+      success: true,
+      customers: customers
+    };
+    
+  } catch (error) {
+    console.error('Search customers error:', error);
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * Get customer details by ID
+ */
+function getCustomerById(customerId) {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Customers');
+    const data = sheet.getDataRange().getValues();
+    
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === customerId) {
+        const [, firstName, lastName, email, phone, dateOfBirth, address, city, state, zip, country, loyaltyPoints, totalSpent, visitCount, lastVisit, preferredPayment, notes, tags, discountLevel, createdDate, status] = data[i];
+        
+        return {
+          success: true,
+          customer: {
+            customerId,
+            firstName,
+            lastName,
+            email,
+            phone,
+            dateOfBirth,
+            address,
+            city,
+            state,
+            zip,
+            country,
+            loyaltyPoints,
+            totalSpent,
+            visitCount,
+            lastVisit,
+            preferredPayment,
+            notes,
+            tags,
+            discountLevel,
+            createdDate,
+            status,
+            tier: calculateLoyaltyTier(loyaltyPoints)
+          }
+        };
+      }
+    }
+    
+    return { success: false, error: 'Customer not found' };
+    
+  } catch (error) {
+    console.error('Get customer by ID error:', error);
+    return { success: false, error: error.toString() };
+  }
 }
