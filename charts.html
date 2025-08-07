@@ -1,0 +1,383 @@
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+<script>
+/**
+ * Charts and Analytics Module
+ * Provides interactive charts and reports for the POS system
+ */
+
+// Load Google Charts
+google.charts.load('current', {
+    'packages': ['corechart', 'bar', 'line', 'table']
+});
+
+/**
+ * Initialize charts when Google Charts is loaded
+ */
+function initializeCharts() {
+    google.charts.setOnLoadCallback(loadChartsData);
+}
+
+/**
+ * Load and display all charts
+ */
+async function loadChartsData() {
+    try {
+        showLoading();
+        
+        // Get sales data for the last 30 days
+        const endDate = new Date();
+        const startDate = new Date(Date.now() - 30*24*60*60*1000);
+        
+        const result = await callServerFunction('getSalesReports', startDate, endDate);
+        
+        if (result.success) {
+            createSalesOverTimeChart(result.sales);
+            createTopProductsChart(result.summary.topProducts);
+            createPaymentMethodsChart(result.summary.paymentMethods);
+            createSalesTable(result.sales);
+            displayKeyMetrics(result.sales, result.summary);
+        }
+        
+    } catch (error) {
+        console.error('Error loading charts data:', error);
+        showAlert('Error loading analytics data', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+/**
+ * Create sales over time chart
+ */
+function createSalesOverTimeChart(salesData) {
+    const dailySales = {};
+    
+    // Group sales by date
+    salesData.forEach(sale => {
+        const date = new Date(sale.date).toDateString();
+        if (!dailySales[date]) {
+            dailySales[date] = 0;
+        }
+        dailySales[date] += sale.total;
+    });
+    
+    // Prepare data for chart
+    const data = new google.visualization.DataTable();
+    data.addColumn('string', 'Date');
+    data.addColumn('number', 'Sales ($)');
+    
+    Object.keys(dailySales).sort().forEach(date => {
+        data.addRow([new Date(date).toLocaleDateString(), dailySales[date]]);
+    });
+    
+    const options = {
+        title: 'Daily Sales Overview',
+        titleTextStyle: {
+            fontSize: 18,
+            fontName: 'Inter'
+        },
+        curveType: 'function',
+        legend: { position: 'bottom' },
+        backgroundColor: 'transparent',
+        hAxis: {
+            title: 'Date',
+            titleTextStyle: { fontName: 'Inter' },
+            textStyle: { fontName: 'Inter' }
+        },
+        vAxis: {
+            title: 'Sales Amount ($)',
+            titleTextStyle: { fontName: 'Inter' },
+            textStyle: { fontName: 'Inter' },
+            format: 'currency'
+        },
+        colors: ['#667eea'],
+        animation: {
+            startup: true,
+            duration: 1000,
+            easing: 'inAndOut'
+        }
+    };
+    
+    const chart = new google.visualization.LineChart(document.getElementById('salesOverTimeChart'));
+    chart.draw(data, options);
+}
+
+/**
+ * Create top products chart
+ */
+function createTopProductsChart(topProducts) {
+    const data = new google.visualization.DataTable();
+    data.addColumn('string', 'Product');
+    data.addColumn('number', 'Quantity Sold');
+    
+    // Sort and take top 10 products
+    const sortedProducts = Object.entries(topProducts)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 10);
+    
+    sortedProducts.forEach(([product, quantity]) => {
+        data.addRow([product, quantity]);
+    });
+    
+    const options = {
+        title: 'Top Selling Products',
+        titleTextStyle: {
+            fontSize: 18,
+            fontName: 'Inter'
+        },
+        backgroundColor: 'transparent',
+        hAxis: {
+            title: 'Quantity Sold',
+            titleTextStyle: { fontName: 'Inter' },
+            textStyle: { fontName: 'Inter' }
+        },
+        vAxis: {
+            title: 'Products',
+            titleTextStyle: { fontName: 'Inter' },
+            textStyle: { fontName: 'Inter' }
+        },
+        colors: ['#28a745'],
+        animation: {
+            startup: true,
+            duration: 1000,
+            easing: 'inAndOut'
+        }
+    };
+    
+    const chart = new google.visualization.BarChart(document.getElementById('topProductsChart'));
+    chart.draw(data, options);
+}
+
+/**
+ * Create payment methods pie chart
+ */
+function createPaymentMethodsChart(paymentMethods) {
+    const data = new google.visualization.DataTable();
+    data.addColumn('string', 'Payment Method');
+    data.addColumn('number', 'Amount ($)');
+    
+    Object.entries(paymentMethods).forEach(([method, amount]) => {
+        data.addRow([method, amount]);
+    });
+    
+    const options = {
+        title: 'Payment Methods Distribution',
+        titleTextStyle: {
+            fontSize: 18,
+            fontName: 'Inter'
+        },
+        backgroundColor: 'transparent',
+        pieHole: 0.4,
+        colors: ['#667eea', '#764ba2', '#28a745', '#ffc107', '#dc3545'],
+        animation: {
+            startup: true,
+            duration: 1000,
+            easing: 'inAndOut'
+        },
+        legend: {
+            position: 'bottom',
+            textStyle: { fontName: 'Inter' }
+        }
+    };
+    
+    const chart = new google.visualization.PieChart(document.getElementById('paymentMethodsChart'));
+    chart.draw(data, options);
+}
+
+/**
+ * Create sales table
+ */
+function createSalesTable(salesData) {
+    const data = new google.visualization.DataTable();
+    data.addColumn('string', 'Date');
+    data.addColumn('string', 'Product');
+    data.addColumn('number', 'Quantity');
+    data.addColumn('number', 'Total ($)');
+    data.addColumn('string', 'Payment Method');
+    
+    // Take the most recent 50 sales
+    const recentSales = salesData.slice(-50).reverse();
+    
+    recentSales.forEach(sale => {
+        data.addRow([
+            new Date(sale.date).toLocaleDateString(),
+            sale.productName,
+            sale.quantity,
+            sale.total,
+            sale.paymentMethod
+        ]);
+    });
+    
+    const options = {
+        title: 'Recent Sales',
+        titleTextStyle: {
+            fontSize: 18,
+            fontName: 'Inter'
+        },
+        backgroundColor: 'transparent',
+        alternatingRowStyle: false,
+        animation: {
+            startup: true,
+            duration: 1000,
+            easing: 'inAndOut'
+        }
+    };
+    
+    const chart = new google.visualization.Table(document.getElementById('salesTableChart'));
+    chart.draw(data, options);
+}
+
+/**
+ * Update charts container with chart elements
+ */
+function setupChartsContainer() {
+    const container = document.getElementById('chartsContainer');
+    container.innerHTML = `
+        <div class="charts-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
+            <div class="chart-card" style="background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.08);">
+                <div id="salesOverTimeChart" style="width: 100%; height: 300px;"></div>
+            </div>
+            <div class="chart-card" style="background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.08);">
+                <div id="paymentMethodsChart" style="width: 100%; height: 300px;"></div>
+            </div>
+        </div>
+        <div class="charts-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
+            <div class="chart-card" style="background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.08);">
+                <div id="topProductsChart" style="width: 100%; height: 400px;"></div>
+            </div>
+            <div class="chart-card" style="background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.08);">
+                <div id="salesTableChart" style="width: 100%; height: 400px;"></div>
+            </div>
+        </div>
+        
+        <div class="analytics-summary" style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); margin-top: 30px;">
+            <h3 style="margin-bottom: 20px; color: #333;">Key Metrics</h3>
+            <div id="keyMetrics" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                <!-- Metrics will be populated here -->
+            </div>
+        </div>
+        
+        <div class="export-section" style="margin-top: 30px; text-align: center;">
+            <button class="btn btn-primary" onclick="exportChartsAsPDF()" style="margin-right: 15px;">
+                <i class="fas fa-file-pdf"></i> Export as PDF
+            </button>
+            <button class="btn btn-secondary" onclick="exportDataAsCSV()">
+                <i class="fas fa-file-csv"></i> Export Data as CSV
+            </button>
+        </div>
+    `;
+}
+
+/**
+ * Calculate and display key metrics
+ */
+function displayKeyMetrics(salesData, summary) {
+    const totalRevenue = summary.totalSales || 0;
+    const totalItems = summary.totalItems || 0;
+    const avgOrderValue = totalItems > 0 ? totalRevenue / totalItems : 0;
+    const salesCount = salesData.length;
+    
+    const metricsContainer = document.getElementById('keyMetrics');
+    metricsContainer.innerHTML = `
+        <div class="metric-item" style="text-align: center; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+            <div style="font-size: 24px; font-weight: 700; color: #667eea;">$${totalRevenue.toFixed(2)}</div>
+            <div style="color: #666; margin-top: 5px;">Total Revenue</div>
+        </div>
+        <div class="metric-item" style="text-align: center; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+            <div style="font-size: 24px; font-weight: 700; color: #28a745;">${totalItems}</div>
+            <div style="color: #666; margin-top: 5px;">Items Sold</div>
+        </div>
+        <div class="metric-item" style="text-align: center; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+            <div style="font-size: 24px; font-weight: 700; color: #ffc107;">$${avgOrderValue.toFixed(2)}</div>
+            <div style="color: #666; margin-top: 5px;">Avg Order Value</div>
+        </div>
+        <div class="metric-item" style="text-align: center; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+            <div style="font-size: 24px; font-weight: 700; color: #dc3545;">${salesCount}</div>
+            <div style="color: #666; margin-top: 5px;">Total Transactions</div>
+        </div>
+    `;
+}
+
+/**
+ * Export charts as PDF (placeholder)
+ */
+function exportChartsAsPDF() {
+    showAlert('PDF export functionality coming soon!', 'warning');
+}
+
+/**
+ * Export data as CSV (placeholder)
+ */
+function exportDataAsCSV() {
+    showAlert('CSV export functionality coming soon!', 'warning');
+}
+
+/**
+ * Handle window resize to redraw charts
+ */
+window.addEventListener('resize', function() {
+    if (document.getElementById('reports').classList.contains('active')) {
+        setTimeout(() => {
+            loadChartsData();
+        }, 300);
+    }
+});
+
+// Initialize charts when the reports section is shown
+const originalShowSection = window.showSection;
+window.showSection = function(sectionName) {
+    originalShowSection(sectionName);
+    
+    if (sectionName === 'reports') {
+        setupChartsContainer();
+        if (typeof google !== 'undefined' && google.charts) {
+            loadChartsData();
+        } else {
+            initializeCharts();
+        }
+    }
+};
+</script>
+
+<style>
+/* Additional styles for charts */
+.charts-grid {
+    animation: fadeInUp 0.6s ease;
+}
+
+.chart-card {
+    transition: all 0.3s ease;
+}
+
+.chart-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.12) !important;
+}
+
+.metric-item {
+    transition: all 0.3s ease;
+}
+
+.metric-item:hover {
+    transform: translateY(-2px);
+    background: #e9ecef !important;
+}
+
+/* Responsive design for charts */
+@media (max-width: 768px) {
+    .charts-grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    #keyMetrics {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+@media (max-width: 480px) {
+    #keyMetrics {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
