@@ -3442,32 +3442,622 @@
             event.target.classList.add('active');
         }
 
-        // ==================== RESTAURANT POS FUNCTIONS ==================== 
-        let currentTable = null;
-        let currentOrder = [];
-        let guestCount = 2;
-        let guestName = '';
-        let tables = [];
-        let menuItems = [];
-        let currentCategory = 'food';
-        let currentSubcategory = null;
+        // ==================== MICROS POS SYSTEM ==================== 
+        let microsSystem = {
+            currentTable: null,
+            currentOrder: [],
+            selectedOrderItem: null,
+            tables: [],
+            menuItems: {},
+            currentCategory: 'appetizers',
+            orderNumber: 1001,
+            kitchenOrders: [],
+            employeeClockStatus: {
+                clockedIn: true,
+                clockInTime: new Date(),
+                onBreak: false,
+                breakStartTime: null
+            },
+            shiftStartTime: new Date()
+        };
 
         async function initializeRestaurantPOS() {
-            console.log('🍽️ Initializing Restaurant POS...');
+            console.log('🏪 Initializing Micros POS System...');
             
-            // Start date/time updates
-            updateDateTime();
-            setInterval(updateDateTime, 1000);
+            // Initialize Micros system
+            await initializeMicrosSystem();
             
-            // Load restaurant data
-            await loadTables();
-            await loadMenuItems();
-            
-            // Show table selection initially
-            showTableSelection();
-            
-            console.log('✅ Restaurant POS initialized');
+            console.log('✅ Micros POS System initialized');
         }
+
+        async function initializeMicrosSystem() {
+            // Start time updates
+            updateMicrosTime();
+            setInterval(updateMicrosTime, 1000);
+            
+            // Load system data
+            await loadMicrosTables();
+            await loadMicrosMenu();
+            
+            // Initialize interface
+            displayMicrosTables();
+            displayMicrosMenu('appetizers');
+            updateShiftInfo();
+            updateTimeClock();
+            
+            // Set default state
+            resetMicrosInterface();
+        }
+
+        function updateMicrosTime() {
+            const now = new Date();
+            const timeElement = document.getElementById('microsTime');
+            if (timeElement) {
+                timeElement.textContent = now.toLocaleTimeString('en-US', { 
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+        }
+
+        function updateShiftInfo() {
+            const shiftElement = document.getElementById('shiftStartTime');
+            if (shiftElement) {
+                shiftElement.textContent = microsSystem.shiftStartTime.toLocaleTimeString('en-US', {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                });
+            }
+        }
+
+        async function loadMicrosTables() {
+            // Generate restaurant tables (Micros style)
+            microsSystem.tables = [];
+            for (let i = 1; i <= 24; i++) {
+                microsSystem.tables.push({
+                    number: i,
+                    status: Math.random() > 0.7 ? 'occupied' : 'available',
+                    section: Math.ceil(i / 6), // Section 1-4
+                    server: Math.random() > 0.5 ? 'Server 1' : 'Server 2',
+                    guests: Math.floor(Math.random() * 8) + 1,
+                    openTime: Math.random() > 0.5 ? new Date(Date.now() - Math.random() * 7200000) : null,
+                    orderTotal: Math.random() > 0.5 ? (Math.random() * 150 + 25) : 0,
+                    hasOrder: Math.random() > 0.6,
+                    covers: Math.floor(Math.random() * 8) + 1
+                });
+            }
+        }
+
+        async function loadMicrosMenu() {
+            // Professional restaurant menu structure
+            microsSystem.menuItems = {
+                appetizers: [
+                    { id: 'app001', name: 'Calamari Rings', price: 14.95, category: 'appetizers', cookTime: 8, description: 'Fresh squid rings with marinara' },
+                    { id: 'app002', name: 'Caesar Salad', price: 12.95, category: 'appetizers', cookTime: 5, description: 'Romaine, parmesan, croutons' },
+                    { id: 'app003', name: 'Buffalo Wings', price: 16.95, category: 'appetizers', cookTime: 12, description: '10pc hot wings with blue cheese' },
+                    { id: 'app004', name: 'Spinach Artichoke Dip', price: 13.95, category: 'appetizers', cookTime: 6, description: 'Hot dip with tortilla chips' },
+                    { id: 'app005', name: 'Shrimp Cocktail', price: 18.95, category: 'appetizers', cookTime: 3, description: '6 jumbo shrimp with cocktail sauce' },
+                    { id: 'app006', name: 'Nachos Supreme', price: 15.95, category: 'appetizers', cookTime: 8, description: 'Loaded nachos with all toppings' }
+                ],
+                entrees: [
+                    { id: 'ent001', name: 'Ribeye Steak', price: 34.95, category: 'entrees', cookTime: 18, description: '12oz ribeye with mashed potatoes' },
+                    { id: 'ent002', name: 'Grilled Salmon', price: 28.95, category: 'entrees', cookTime: 15, description: 'Atlantic salmon with rice pilaf' },
+                    { id: 'ent003', name: 'Chicken Parmesan', price: 24.95, category: 'entrees', cookTime: 20, description: 'Breaded chicken with pasta' },
+                    { id: 'ent004', name: 'Lobster Tail', price: 42.95, category: 'entrees', cookTime: 16, description: '8oz lobster tail with drawn butter' },
+                    { id: 'ent005', name: 'Rack of Lamb', price: 38.95, category: 'entrees', cookTime: 22, description: 'French cut rack with rosemary' },
+                    { id: 'ent006', name: 'Fish & Chips', price: 19.95, category: 'entrees', cookTime: 12, description: 'Beer battered cod with fries' }
+                ],
+                beverages: [
+                    { id: 'bev001', name: 'Coca-Cola', price: 3.95, category: 'beverages', cookTime: 1, description: 'Classic cola' },
+                    { id: 'bev002', name: 'Fresh Squeezed Lemonade', price: 4.95, category: 'beverages', cookTime: 2, description: 'House-made lemonade' },
+                    { id: 'bev003', name: 'Coffee', price: 3.50, category: 'beverages', cookTime: 2, description: 'Fresh brewed coffee' },
+                    { id: 'bev004', name: 'Iced Tea', price: 3.95, category: 'beverages', cookTime: 1, description: 'Sweet or unsweetened' },
+                    { id: 'bev005', name: 'Sparkling Water', price: 4.50, category: 'beverages', cookTime: 1, description: 'San Pellegrino' },
+                    { id: 'bev006', name: 'Hot Chocolate', price: 4.95, category: 'beverages', cookTime: 3, description: 'Rich hot chocolate with whipped cream' }
+                ],
+                desserts: [
+                    { id: 'des001', name: 'Chocolate Lava Cake', price: 8.95, category: 'desserts', cookTime: 6, description: 'Warm chocolate cake with vanilla ice cream' },
+                    { id: 'des002', name: 'New York Cheesecake', price: 7.95, category: 'desserts', cookTime: 2, description: 'Classic cheesecake with berry compote' },
+                    { id: 'des003', name: 'Tiramisu', price: 8.50, category: 'desserts', cookTime: 2, description: 'Traditional Italian dessert' },
+                    { id: 'des004', name: 'Crème Brûlée', price: 8.95, category: 'desserts', cookTime: 4, description: 'Vanilla custard with caramelized sugar' },
+                    { id: 'des005', name: 'Apple Pie', price: 7.50, category: 'desserts', cookTime: 5, description: 'Homemade apple pie with ice cream' },
+                    { id: 'des006', name: 'Ice Cream Sundae', price: 6.95, category: 'desserts', cookTime: 3, description: '3 scoops with hot fudge and whipped cream' }
+                ],
+                wine: [
+                    { id: 'win001', name: 'House Chardonnay', price: 8.95, category: 'wine', cookTime: 1, description: 'Glass of house white wine' },
+                    { id: 'win002', name: 'House Cabernet', price: 9.95, category: 'wine', cookTime: 1, description: 'Glass of house red wine' },
+                    { id: 'win003', name: 'Champagne', price: 12.95, category: 'wine', cookTime: 1, description: 'Glass of sparkling wine' },
+                    { id: 'win004', name: 'Premium Pinot Noir', price: 14.95, category: 'wine', cookTime: 1, description: 'Oregon Pinot Noir' },
+                    { id: 'win005', name: 'Draft Beer', price: 5.95, category: 'wine', cookTime: 1, description: 'Local craft beer on tap' },
+                    { id: 'win006', name: 'Cocktail Special', price: 11.95, category: 'wine', cookTime: 3, description: 'Bartender\'s choice signature cocktail' }
+                ],
+                specials: [
+                    { id: 'spe001', name: 'Today\'s Soup', price: 6.95, category: 'specials', cookTime: 3, description: 'Ask server for today\'s selection' },
+                    { id: 'spe002', name: 'Fresh Fish Special', price: 32.95, category: 'specials', cookTime: 20, description: 'Market fresh catch of the day' },
+                    { id: 'spe003', name: 'Chef\'s Special Pasta', price: 22.95, category: 'specials', cookTime: 15, description: 'House-made pasta with seasonal sauce' },
+                    { id: 'spe004', name: 'Prime Rib (Fri-Sun)', price: 29.95, category: 'specials', cookTime: 25, description: 'Slow roasted prime rib' },
+                    { id: 'spe005', name: 'Brunch Special', price: 16.95, category: 'specials', cookTime: 12, description: 'Weekend brunch combination' },
+                    { id: 'spe006', name: 'Happy Hour Appetizer', price: 7.95, category: 'specials', cookTime: 8, description: 'Discounted appetizer selection' }
+                ]
+            };
+        }
+
+        function displayMicrosTables() {
+            const tablesGrid = document.getElementById('microsTablesGrid');
+            if (!tablesGrid) return;
+            
+            tablesGrid.innerHTML = microsSystem.tables.map(table => `
+                <div class="micros-table ${table.status}" onclick="selectMicrosTable(${table.number})" 
+                     data-table="${table.number}">
+                    <div class="table-number">${table.number}</div>
+                    <div class="table-status-indicator ${table.status}"></div>
+                    ${table.status === 'occupied' ? `
+                        <div class="table-details">
+                            <div class="table-covers">${table.covers}x</div>
+                            <div class="table-time">${table.openTime ? formatElapsedTime(table.openTime) : ''}</div>
+                            <div class="table-total">$${table.orderTotal.toFixed(2)}</div>
+                        </div>
+                    ` : `
+                        <div class="table-available">Available</div>
+                    `}
+                </div>
+            `).join('');
+        }
+
+        function formatElapsedTime(startTime) {
+            const elapsed = Date.now() - startTime.getTime();
+            const minutes = Math.floor(elapsed / 60000);
+            const hours = Math.floor(minutes / 60);
+            if (hours > 0) {
+                return `${hours}h ${minutes % 60}m`;
+            }
+            return `${minutes}m`;
+        }
+
+        function selectMicrosTable(tableNumber) {
+            const table = microsSystem.tables.find(t => t.number === tableNumber);
+            if (!table) return;
+            
+            // Clear previous selection
+            document.querySelectorAll('.micros-table').forEach(t => t.classList.remove('selected'));
+            
+            // Select new table
+            document.querySelector(`[data-table="${tableNumber}"]`).classList.add('selected');
+            
+            microsSystem.currentTable = table;
+            
+            if (table.status === 'available') {
+                // Open new check
+                openNewCheck(table);
+            } else {
+                // Load existing order
+                loadExistingOrder(table);
+            }
+            
+            updateMicrosOrderDisplay();
+        }
+
+        function openNewCheck(table) {
+            // Reset order
+            microsSystem.currentOrder = [];
+            microsSystem.orderNumber++;
+            
+            // Update table status
+            table.status = 'occupied';
+            table.openTime = new Date();
+            table.orderTotal = 0;
+            table.hasOrder = true;
+            
+            // Show guest count modal (simplified for demo)
+            const guestCount = prompt('Number of guests:', '2');
+            table.covers = parseInt(guestCount) || 2;
+            
+            // Update interface
+            updateMicrosTableInfo();
+            enableOrderActions();
+            displayMicrosTables(); // Refresh table display
+        }
+
+        function loadExistingOrder(table) {
+            // Load existing order for table (demo data)
+            microsSystem.currentOrder = [
+                { id: 'app001', name: 'Caesar Salad', price: 12.95, quantity: 2, total: 25.90, status: 'sent' },
+                { id: 'ent001', name: 'Ribeye Steak', price: 34.95, quantity: 1, total: 34.95, status: 'ordered' }
+            ];
+            
+            updateMicrosTableInfo();
+            enableOrderActions();
+        }
+
+        function updateMicrosTableInfo() {
+            if (!microsSystem.currentTable) return;
+            
+            document.getElementById('currentMicrosTable').textContent = `Table ${microsSystem.currentTable.number}`;
+            document.getElementById('currentGuestCount').textContent = `${microsSystem.currentTable.covers} Guests`;
+            document.getElementById('currentOrderNumber').textContent = microsSystem.orderNumber;
+            document.getElementById('orderStartTime').textContent = microsSystem.currentTable.openTime ? 
+                microsSystem.currentTable.openTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : '--:--';
+        }
+
+        function selectMicrosCategory(category) {
+            microsSystem.currentCategory = category;
+            
+            // Update active category button
+            document.querySelectorAll('.micros-category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-category="${category}"]`).classList.add('active');
+            
+            // Display menu items for category
+            displayMicrosMenu(category);
+        }
+
+        function displayMicrosMenu(category) {
+            const menuGrid = document.getElementById('microsMenuGrid');
+            if (!menuGrid) return;
+            
+            const items = microsSystem.menuItems[category] || [];
+            
+            menuGrid.innerHTML = items.map(item => `
+                <div class="micros-menu-item" onclick="addMicrosItem('${item.id}')" data-item="${item.id}">
+                    <div class="item-name">${item.name}</div>
+                    <div class="item-price">$${item.price.toFixed(2)}</div>
+                </div>
+            `).join('');
+        }
+
+        function addMicrosItem(itemId) {
+            if (!microsSystem.currentTable) {
+                alert('Please select a table first');
+                return;
+            }
+            
+            // Find item in menu
+            let foundItem = null;
+            Object.values(microsSystem.menuItems).forEach(category => {
+                const item = category.find(i => i.id === itemId);
+                if (item) foundItem = item;
+            });
+            
+            if (!foundItem) return;
+            
+            // Check if item already in order
+            const existingItem = microsSystem.currentOrder.find(item => item.id === itemId);
+            
+            if (existingItem) {
+                existingItem.quantity++;
+                existingItem.total = existingItem.quantity * existingItem.price;
+            } else {
+                microsSystem.currentOrder.push({
+                    ...foundItem,
+                    quantity: 1,
+                    total: foundItem.price,
+                    status: 'ordered', // ordered, sent, served
+                    orderTime: new Date()
+                });
+            }
+            
+            updateMicrosOrderDisplay();
+            enableOrderActions();
+        }
+
+        function updateMicrosOrderDisplay() {
+            const orderItems = document.getElementById('microsOrderItems');
+            if (!orderItems) return;
+            
+            if (microsSystem.currentOrder.length === 0) {
+                orderItems.innerHTML = `
+                    <div class="no-order-message">
+                        <i class="fas fa-utensils"></i>
+                        <p>Select items to add to order</p>
+                    </div>
+                `;
+            } else {
+                orderItems.innerHTML = microsSystem.currentOrder.map((item, index) => `
+                    <div class="micros-order-item ${microsSystem.selectedOrderItem === index ? 'selected' : ''}" 
+                         onclick="selectMicrosOrderItem(${index})" data-item="${index}">
+                        <div class="item-quantity">${item.quantity}</div>
+                        <div class="item-details">
+                            <div class="item-name">${item.name}</div>
+                            <div class="item-status status-${item.status}">${item.status.toUpperCase()}</div>
+                        </div>
+                        <div class="item-total">$${item.total.toFixed(2)}</div>
+                    </div>
+                `).join('');
+            }
+            
+            updateMicrosTotals();
+        }
+
+        function selectMicrosOrderItem(index) {
+            // Clear previous selection
+            document.querySelectorAll('.micros-order-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // Select new item
+            document.querySelector(`[data-item="${index}"]`)?.classList.add('selected');
+            microsSystem.selectedOrderItem = index;
+        }
+
+        function updateMicrosTotals() {
+            const subtotal = microsSystem.currentOrder.reduce((sum, item) => sum + item.total, 0);
+            const tax = subtotal * 0.085; // 8.5% tax
+            const service = subtotal * 0.18; // 18% auto-gratuity for parties of 6+
+            const total = subtotal + tax + (microsSystem.currentTable?.covers >= 6 ? service : 0);
+            
+            document.getElementById('microsSubtotal').textContent = '$' + subtotal.toFixed(2);
+            document.getElementById('microsTax').textContent = '$' + tax.toFixed(2);
+            document.getElementById('microsService').textContent = '$' + (microsSystem.currentTable?.covers >= 6 ? service.toFixed(2) : '0.00');
+            document.getElementById('microsTotal').textContent = '$' + total.toFixed(2);
+            
+            // Update table total
+            if (microsSystem.currentTable) {
+                microsSystem.currentTable.orderTotal = total;
+            }
+        }
+
+        function enableOrderActions() {
+            const hasOrder = microsSystem.currentOrder.length > 0;
+            document.querySelector('.action-btn.send-order').disabled = !hasOrder;
+            document.querySelector('.action-btn.print-check').disabled = !hasOrder;
+            document.querySelector('.action-btn.payment').disabled = !hasOrder;
+        }
+
+        function resetMicrosInterface() {
+            microsSystem.currentTable = null;
+            microsSystem.currentOrder = [];
+            microsSystem.selectedOrderItem = null;
+            
+            document.getElementById('currentMicrosTable').textContent = 'Table --';
+            document.getElementById('currentGuestCount').textContent = '-- Guests';
+            document.getElementById('currentOrderNumber').textContent = '--';
+            document.getElementById('orderStartTime').textContent = '--:--';
+            
+            updateMicrosOrderDisplay();
+            
+            // Disable action buttons
+            document.querySelector('.action-btn.send-order').disabled = true;
+            document.querySelector('.action-btn.print-check').disabled = true;
+            document.querySelector('.action-btn.payment').disabled = true;
+        }
+
+        // Time Clock Functions
+        function showTimeClockModal() {
+            document.getElementById('timeClockModal').classList.remove('hidden');
+        }
+
+        function closeTimeClockModal() {
+            document.getElementById('timeClockModal').classList.add('hidden');
+        }
+
+        function updateTimeClock() {
+            const status = microsSystem.employeeClockStatus;
+            document.getElementById('clockStatus').textContent = status.clockedIn ? 'CLOCKED IN' : 'CLOCKED OUT';
+            document.getElementById('clockStatus').className = `status-badge ${status.clockedIn ? 'clocked-in' : 'clocked-out'}`;
+            
+            if (status.clockedIn) {
+                document.getElementById('clockInTime').textContent = status.clockInTime.toLocaleTimeString('en-US', { 
+                    hour: 'numeric', minute: '2-digit', hour12: true 
+                });
+                updateElapsedTime();
+            }
+        }
+
+        function updateElapsedTime() {
+            if (microsSystem.employeeClockStatus.clockedIn) {
+                const elapsed = Date.now() - microsSystem.employeeClockStatus.clockInTime.getTime();
+                const hours = Math.floor(elapsed / 3600000);
+                const minutes = Math.floor((elapsed % 3600000) / 60000);
+                document.getElementById('elapsedTime').textContent = `${hours}h ${minutes}m`;
+            }
+        }
+
+        function clockIn() {
+            microsSystem.employeeClockStatus.clockedIn = true;
+            microsSystem.employeeClockStatus.clockInTime = new Date();
+            updateTimeClock();
+            alert('✅ Clocked in successfully');
+        }
+
+        function clockOut() {
+            if (confirm('Clock out for the day?')) {
+                microsSystem.employeeClockStatus.clockedIn = false;
+                updateTimeClock();
+                alert('👋 Clocked out successfully');
+            }
+        }
+
+        function startBreak() {
+            microsSystem.employeeClockStatus.onBreak = true;
+            microsSystem.employeeClockStatus.breakStartTime = new Date();
+            alert('⏸️ Break started');
+        }
+
+        function endBreak() {
+            microsSystem.employeeClockStatus.onBreak = false;
+            microsSystem.employeeClockStatus.breakStartTime = null;
+            alert('▶️ Break ended');
+        }
+
+        // Manager Functions
+        function showManagerWorkstation() {
+            document.getElementById('managerWorkstation').classList.remove('hidden');
+        }
+
+        function closeManagerWorkstation() {
+            document.getElementById('managerWorkstation').classList.add('hidden');
+        }
+
+        function logoutFromPOS() {
+            if (confirm('Logout from POS system?')) {
+                showMainDashboard();
+            }
+        }
+
+        // Restaurant Operations
+        function sendToKitchen() {
+            if (microsSystem.currentOrder.length === 0) return;
+            
+            // Mark new items as sent
+            microsSystem.currentOrder.forEach(item => {
+                if (item.status === 'ordered') {
+                    item.status = 'sent';
+                    item.sentTime = new Date();
+                }
+            });
+            
+            // Add to kitchen orders
+            microsSystem.kitchenOrders.push({
+                table: microsSystem.currentTable.number,
+                orderNumber: microsSystem.orderNumber,
+                items: microsSystem.currentOrder.filter(item => item.status === 'sent'),
+                sentTime: new Date()
+            });
+            
+            updateMicrosOrderDisplay();
+            alert('📨 Order sent to kitchen');
+        }
+
+        function printGuestCheck() {
+            if (microsSystem.currentOrder.length === 0) return;
+            alert('🖨️ Guest check printed');
+        }
+
+        function processPayment() {
+            if (microsSystem.currentOrder.length === 0) return;
+            
+            const total = microsSystem.currentOrder.reduce((sum, item) => sum + item.total, 0) * 1.085;
+            
+            if (confirm(`Process payment of $${total.toFixed(2)} for Table ${microsSystem.currentTable.number}?`)) {
+                // Close table
+                microsSystem.currentTable.status = 'available';
+                microsSystem.currentTable.openTime = null;
+                microsSystem.currentTable.orderTotal = 0;
+                microsSystem.currentTable.hasOrder = false;
+                
+                // Reset interface
+                resetMicrosInterface();
+                displayMicrosTables();
+                
+                alert('💳 Payment processed successfully');
+            }
+        }
+
+        function holdOrder() {
+            alert('⏸️ Order held');
+        }
+
+        function clearCurrentOrder() {
+            if (confirm('Clear all items from current order?')) {
+                microsSystem.currentOrder = [];
+                updateMicrosOrderDisplay();
+                enableOrderActions();
+            }
+        }
+
+        // Quick Functions
+        function applyDiscount() {
+            if (microsSystem.selectedOrderItem !== null) {
+                const discountPercent = prompt('Enter discount percentage (0-100):', '10');
+                if (discountPercent && !isNaN(discountPercent)) {
+                    const item = microsSystem.currentOrder[microsSystem.selectedOrderItem];
+                    const discount = parseFloat(discountPercent) / 100;
+                    item.total = item.total * (1 - discount);
+                    updateMicrosOrderDisplay();
+                    alert(`${discountPercent}% discount applied`);
+                }
+            } else {
+                alert('Please select an item first');
+            }
+        }
+
+        function applyComps() {
+            if (microsSystem.selectedOrderItem !== null) {
+                if (confirm('Comp selected item?')) {
+                    microsSystem.currentOrder[microsSystem.selectedOrderItem].total = 0;
+                    updateMicrosOrderDisplay();
+                    alert('Item comped');
+                }
+            } else {
+                alert('Please select an item first');
+            }
+        }
+
+        function splitCheck() {
+            alert('💳 Split check functionality - divide bill between multiple payments');
+        }
+
+        function transferTable() {
+            const newTable = prompt('Transfer to table number:');
+            if (newTable && microsSystem.tables.find(t => t.number == newTable && t.status === 'available')) {
+                alert(`Order transferred to Table ${newTable}`);
+            }
+        }
+
+        function voidItem() {
+            if (microsSystem.selectedOrderItem !== null) {
+                if (confirm('Void selected item?')) {
+                    microsSystem.currentOrder.splice(microsSystem.selectedOrderItem, 1);
+                    microsSystem.selectedOrderItem = null;
+                    updateMicrosOrderDisplay();
+                    alert('Item voided');
+                }
+            } else {
+                alert('Please select an item first');
+            }
+        }
+
+        function reprint() {
+            alert('🖨️ Last receipt reprinted');
+        }
+
+        function refreshTables() {
+            displayMicrosTables();
+            alert('🔄 Tables refreshed');
+        }
+
+        // Manager Workstation Functions
+        function showKitchenDisplay() {
+            alert('🍳 Kitchen Display System - Shows all pending orders');
+        }
+
+        function showOrderQueue() {
+            alert('📋 Order Queue - Manage order flow and timing');
+        }
+
+        function showSalesReport() {
+            alert('💰 Sales Report - Real-time sales data and trends');
+        }
+
+        function showLaborReport() {
+            alert('👥 Labor Report - Employee hours and labor cost analysis');
+        }
+
+        function showInventoryReport() {
+            alert('📦 Inventory Report - Stock levels and usage tracking');
+        }
+
+        function showEmployeeManager() {
+            alert('👤 Employee Manager - Staff scheduling and performance');
+        }
+
+        function showMenuManager() {
+            alert('🍽️ Menu Manager - Item prices, descriptions, and availability');
+        }
+
+        function showSystemSettings() {
+            alert('⚙️ System Settings - Configure POS parameters and preferences');
+        }
+
+        function showQuickReports() {
+            alert('📊 Quick Reports - Hourly sales, table turns, and key metrics');
+        }
+
+        // Start elapsed time counter
+        setInterval(updateElapsedTime, 60000); // Update every minute
 
         async function loadTables() {
             // Generate demo tables
@@ -4297,52 +4887,299 @@
             // Save current session
             sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
             
-            // Hide dashboard and show restaurant POS interface
+            // Hide dashboard and show Micros-style POS interface
             document.getElementById('mainContainer').innerHTML = `
-                <div class="restaurant-pos-container">
-                    <!-- Restaurant POS Header -->
-                    <header class="restaurant-header">
-                        <div class="restaurant-logo">
-                            <i class="fas fa-utensils"></i>
-                            <span>Restaurant POS</span>
+                <div class="micros-pos-system">
+                    <!-- Micros-Style Header Bar -->
+                    <header class="micros-header">
+                        <div class="micros-logo">
+                            <div class="pos-station">Station 1</div>
+                            <div class="restaurant-name">${currentUser?.companyName || 'Restaurant Name'}</div>
                         </div>
-                        <div class="restaurant-info">
-                            <div class="server-info">
-                                <i class="fas fa-user"></i>
-                                <span>Server: ${currentUser ? currentUser.name : 'Admin'}</span>
+                        <div class="micros-status-bar">
+                            <div class="server-badge">
+                                <i class="fas fa-user-circle"></i>
+                                <div class="server-details">
+                                    <div class="server-name">${currentUser ? currentUser.name : 'Server #1'}</div>
+                                    <div class="server-id">ID: ${currentUser ? currentUser.id : '001'}</div>
+                                </div>
                             </div>
-                            <div class="date-time">
-                                <div id="currentDate"></div>
-                                <div id="currentTime"></div>
+                            <div class="shift-info">
+                                <div class="shift-time">Shift: <span id="shiftStartTime">2:00 PM</span></div>
+                                <div class="current-time" id="microsTime"></div>
                             </div>
-                        </div>
-                        <div class="restaurant-actions">
-                            <button class="glass-btn" onclick="showMainDashboard()">
-                                <i class="fas fa-home"></i> Dashboard
-                            </button>
-                            <button class="glass-btn" onclick="showManagerFunctions()">
-                                <i class="fas fa-cog"></i> Manager
-                            </button>
+                            <div class="pos-controls">
+                                <button class="micros-btn clock" onclick="showTimeClockModal()" title="Time Clock">
+                                    <i class="fas fa-clock"></i>
+                                </button>
+                                <button class="micros-btn manager" onclick="showManagerWorkstation()" title="Manager">
+                                    <i class="fas fa-user-tie"></i>
+                                </button>
+                                <button class="micros-btn reports" onclick="showQuickReports()" title="Reports">
+                                    <i class="fas fa-chart-bar"></i>
+                                </button>
+                                <button class="micros-btn logout" onclick="logoutFromPOS()" title="Logout">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                </button>
+                            </div>
                         </div>
                     </header>
 
-                    <!-- Table Selection View -->
-                    <div class="table-selection-view" id="tableSelectionView">
-                        <div class="table-grid-header">
-                            <h2><i class="fas fa-table"></i> Select Table</h2>
-                            <div class="table-controls">
-                                <button class="glass-btn" onclick="addNewTable()">
-                                    <i class="fas fa-plus"></i> Add Table
-                                </button>
-                                <button class="glass-btn" onclick="showTableStatus()">
-                                    <i class="fas fa-eye"></i> Status
-                                </button>
+                    <!-- Employee Time Clock Modal -->
+                    <div class="modal-overlay hidden" id="timeClockModal">
+                        <div class="modal-content timeclock-modal">
+                            <div class="modal-header">
+                                <h3><i class="fas fa-clock"></i> Employee Time Clock</h3>
+                                <button class="close-btn" onclick="closeTimeClockModal()">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="timeclock-interface">
+                                    <div class="current-status">
+                                        <div class="status-display">
+                                            <h4>Current Status: <span id="clockStatus" class="status-badge clocked-in">CLOCKED IN</span></h4>
+                                            <div class="time-display">
+                                                <div class="clock-in-time">Clock In: <span id="clockInTime">2:00 PM</span></div>
+                                                <div class="elapsed-time">Elapsed: <span id="elapsedTime">2h 15m</span></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="timeclock-actions">
+                                        <button class="timeclock-btn clock-in" onclick="clockIn()">
+                                            <i class="fas fa-play"></i> Clock In
+                                        </button>
+                                        <button class="timeclock-btn clock-out" onclick="clockOut()">
+                                            <i class="fas fa-stop"></i> Clock Out
+                                        </button>
+                                        <button class="timeclock-btn break-start" onclick="startBreak()">
+                                            <i class="fas fa-pause"></i> Start Break
+                                        </button>
+                                        <button class="timeclock-btn break-end" onclick="endBreak()">
+                                            <i class="fas fa-play"></i> End Break
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="tables-grid" id="tablesGrid">
-                            <!-- Tables will be loaded here -->
+                    </div>
+
+                    <!-- Manager Workstation Modal -->
+                    <div class="modal-overlay hidden" id="managerWorkstation">
+                        <div class="modal-content manager-modal">
+                            <div class="modal-header">
+                                <h3><i class="fas fa-user-tie"></i> Manager Workstation</h3>
+                                <button class="close-btn" onclick="closeManagerWorkstation()">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="manager-functions">
+                                    <div class="function-category">
+                                        <h4>Operations</h4>
+                                        <button class="manager-function-btn" onclick="showKitchenDisplay()">
+                                            <i class="fas fa-tv"></i> Kitchen Display
+                                        </button>
+                                        <button class="manager-function-btn" onclick="showTableStatus()">
+                                            <i class="fas fa-table"></i> Table Status
+                                        </button>
+                                        <button class="manager-function-btn" onclick="showOrderQueue()">
+                                            <i class="fas fa-list"></i> Order Queue
+                                        </button>
+                                    </div>
+                                    <div class="function-category">
+                                        <h4>Reports</h4>
+                                        <button class="manager-function-btn" onclick="showSalesReport()">
+                                            <i class="fas fa-dollar-sign"></i> Sales Report
+                                        </button>
+                                        <button class="manager-function-btn" onclick="showLaborReport()">
+                                            <i class="fas fa-users"></i> Labor Report
+                                        </button>
+                                        <button class="manager-function-btn" onclick="showInventoryReport()">
+                                            <i class="fas fa-boxes"></i> Inventory Report
+                                        </button>
+                                    </div>
+                                    <div class="function-category">
+                                        <h4>Administration</h4>
+                                        <button class="manager-function-btn" onclick="showEmployeeManager()">
+                                            <i class="fas fa-user-friends"></i> Employee Manager
+                                        </button>
+                                        <button class="manager-function-btn" onclick="showMenuManager()">
+                                            <i class="fas fa-utensils"></i> Menu Manager
+                                        </button>
+                                        <button class="manager-function-btn" onclick="showSystemSettings()">
+                                            <i class="fas fa-cogs"></i> System Settings
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
+
+                                         <!-- Micros-Style Main Interface -->
+                     <div class="micros-main-interface">
+                         <!-- Left Panel - Tables/Orders -->
+                         <div class="micros-left-panel">
+                             <!-- Table Selection -->
+                             <div class="micros-table-section" id="tableSection">
+                                 <div class="section-header">
+                                     <h3><i class="fas fa-table"></i> Tables</h3>
+                                     <div class="section-controls">
+                                         <button class="micros-control-btn" onclick="refreshTables()" title="Refresh">
+                                             <i class="fas fa-sync"></i>
+                                         </button>
+                                         <button class="micros-control-btn" onclick="addNewTable()" title="Add Table">
+                                             <i class="fas fa-plus"></i>
+                                         </button>
+                                     </div>
+                                 </div>
+                                 <div class="micros-tables-grid" id="microsTablesGrid">
+                                     <!-- Tables will be loaded here -->
+                                 </div>
+                             </div>
+
+                             <!-- Active Orders -->
+                             <div class="micros-orders-section" id="ordersSection">
+                                 <div class="section-header">
+                                     <h3><i class="fas fa-receipt"></i> Active Orders</h3>
+                                     <div class="order-count">
+                                         <span id="activeOrderCount">0</span> orders
+                                     </div>
+                                 </div>
+                                 <div class="active-orders-list" id="activeOrdersList">
+                                     <!-- Active orders will be shown here -->
+                                 </div>
+                             </div>
+                         </div>
+
+                         <!-- Center Panel - Menu Items -->
+                         <div class="micros-center-panel">
+                             <!-- Menu Categories -->
+                             <div class="micros-categories">
+                                 <button class="micros-category-btn active" data-category="appetizers" onclick="selectMicrosCategory('appetizers')">
+                                     APPETIZERS
+                                 </button>
+                                 <button class="micros-category-btn" data-category="entrees" onclick="selectMicrosCategory('entrees')">
+                                     ENTREES
+                                 </button>
+                                 <button class="micros-category-btn" data-category="beverages" onclick="selectMicrosCategory('beverages')">
+                                     BEVERAGES
+                                 </button>
+                                 <button class="micros-category-btn" data-category="desserts" onclick="selectMicrosCategory('desserts')">
+                                     DESSERTS
+                                 </button>
+                                 <button class="micros-category-btn" data-category="wine" onclick="selectMicrosCategory('wine')">
+                                     WINE & SPIRITS
+                                 </button>
+                                 <button class="micros-category-btn" data-category="specials" onclick="selectMicrosCategory('specials')">
+                                     DAILY SPECIALS
+                                 </button>
+                             </div>
+
+                             <!-- Menu Items Grid -->
+                             <div class="micros-menu-grid" id="microsMenuGrid">
+                                 <!-- Menu items will be loaded here -->
+                             </div>
+
+                             <!-- Quick Functions Bar -->
+                             <div class="micros-quick-functions">
+                                 <button class="quick-function-btn" onclick="applyDiscount()" title="Discount">
+                                     <i class="fas fa-percent"></i>
+                                     DISCOUNT
+                                 </button>
+                                 <button class="quick-function-btn" onclick="applyComps()" title="Comp Items">
+                                     <i class="fas fa-gift"></i>
+                                     COMP
+                                 </button>
+                                 <button class="quick-function-btn" onclick="splitCheck()" title="Split Check">
+                                     <i class="fas fa-cut"></i>
+                                     SPLIT
+                                 </button>
+                                 <button class="quick-function-btn" onclick="transferTable()" title="Transfer">
+                                     <i class="fas fa-exchange-alt"></i>
+                                     TRANSFER
+                                 </button>
+                                 <button class="quick-function-btn" onclick="voidItem()" title="Void">
+                                     <i class="fas fa-times"></i>
+                                     VOID
+                                 </button>
+                                 <button class="quick-function-btn" onclick="reprint()" title="Reprint">
+                                     <i class="fas fa-print"></i>
+                                     REPRINT
+                                 </button>
+                             </div>
+                         </div>
+
+                         <!-- Right Panel - Current Order -->
+                         <div class="micros-right-panel">
+                             <!-- Order Header -->
+                             <div class="order-header-info">
+                                 <div class="table-info">
+                                     <div class="table-number" id="currentMicrosTable">Table --</div>
+                                     <div class="guest-count" id="currentGuestCount">-- Guests</div>
+                                 </div>
+                                 <div class="order-info">
+                                     <div class="order-number">Order #<span id="currentOrderNumber">--</span></div>
+                                     <div class="order-time" id="orderStartTime">--:--</div>
+                                 </div>
+                             </div>
+
+                             <!-- Order Items -->
+                             <div class="order-items-container">
+                                 <div class="order-items-header">
+                                     <span>Qty</span>
+                                     <span>Item</span>
+                                     <span>Price</span>
+                                 </div>
+                                 <div class="order-items-list" id="microsOrderItems">
+                                     <div class="no-order-message">
+                                         <i class="fas fa-utensils"></i>
+                                         <p>Select a table to start ordering</p>
+                                     </div>
+                                 </div>
+                             </div>
+
+                             <!-- Order Totals -->
+                             <div class="order-totals-section">
+                                 <div class="total-line">
+                                     <span>Subtotal:</span>
+                                     <span id="microsSubtotal">$0.00</span>
+                                 </div>
+                                 <div class="total-line">
+                                     <span>Tax:</span>
+                                     <span id="microsTax">$0.00</span>
+                                 </div>
+                                 <div class="total-line">
+                                     <span>Service Charge:</span>
+                                     <span id="microsService">$0.00</span>
+                                 </div>
+                                 <div class="total-line grand-total">
+                                     <span>TOTAL:</span>
+                                     <span id="microsTotal">$0.00</span>
+                                 </div>
+                             </div>
+
+                             <!-- Action Buttons -->
+                             <div class="order-action-buttons">
+                                 <button class="action-btn send-order" onclick="sendToKitchen()" disabled>
+                                     <i class="fas fa-paper-plane"></i>
+                                     SEND ORDER
+                                 </button>
+                                 <button class="action-btn print-check" onclick="printGuestCheck()" disabled>
+                                     <i class="fas fa-print"></i>
+                                     PRINT CHECK
+                                 </button>
+                                 <button class="action-btn payment" onclick="processPayment()" disabled>
+                                     <i class="fas fa-credit-card"></i>
+                                     PAYMENT
+                                 </button>
+                                 <button class="action-btn hold-order" onclick="holdOrder()">
+                                     <i class="fas fa-pause"></i>
+                                     HOLD
+                                 </button>
+                                 <button class="action-btn clear-order" onclick="clearCurrentOrder()">
+                                     <i class="fas fa-trash"></i>
+                                     CLEAR
+                                 </button>
+                             </div>
+                         </div>
+                     </div>
 
                     <!-- Guest Information Modal -->
                     <div class="modal-overlay hidden" id="guestInfoModal">
