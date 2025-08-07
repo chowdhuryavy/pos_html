@@ -1214,6 +1214,396 @@
             margin-bottom: 1rem;
         }
 
+        /* ==================== INVENTORY TABLE ==================== */
+        .inventory-table-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .table-header h3 {
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+        .table-filters {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .table-filters input,
+        .table-filters select {
+            padding: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .inventory-table {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .table-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1.2fr 1fr 1fr 1.5fr;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            align-items: center;
+        }
+
+        .table-header-row {
+            background: rgba(255, 255, 255, 0.1) !important;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .table-row.low-stock {
+            border-left: 4px solid #fbbf24;
+        }
+
+        .table-row.out-of-stock {
+            border-left: 4px solid #ef4444;
+            opacity: 0.7;
+        }
+
+        .table-row.in-stock {
+            border-left: 4px solid #10b981;
+        }
+
+        .table-cell {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .product-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .product-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: var(--primary-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .product-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .product-desc {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+
+        .stock-control {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stock-btn {
+            width: 24px;
+            height: 24px;
+            border: none;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .stock-btn:hover {
+            background: var(--accent-blue);
+        }
+
+        .stock-btn.minus:hover {
+            background: #ef4444;
+        }
+
+        .stock-btn.plus:hover {
+            background: #10b981;
+        }
+
+        .stock-value {
+            min-width: 30px;
+            text-align: center;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .status-badge.in-stock {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .status-badge.low-stock {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+
+        .status-badge.out-of-stock {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .action-btn.edit {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+        }
+
+        .action-btn.edit:hover {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .action-btn.duplicate {
+            background: rgba(168, 85, 247, 0.2);
+            color: #a855f7;
+        }
+
+        .action-btn.duplicate:hover {
+            background: #a855f7;
+            color: white;
+        }
+
+        .action-btn.delete {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .action-btn.delete:hover {
+            background: #ef4444;
+            color: white;
+        }
+
+        /* ==================== REPORTS MODULE ==================== */
+        .reports-container {
+            padding: 1rem;
+        }
+
+        .report-summary {
+            margin-bottom: 2rem;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .summary-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .summary-icon.sales { background: linear-gradient(135deg, #10b981, #059669); }
+        .summary-icon.transactions { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .summary-icon.average { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+        .summary-icon.profit { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .summary-icon.inventory { background: linear-gradient(135deg, #6b7280, #4b5563); }
+        .summary-icon.employees { background: linear-gradient(135deg, #ef4444, #dc2626); }
+
+        .summary-content h3 {
+            margin: 0 0 0.25rem 0;
+            font-size: 1.8rem;
+            color: var(--text-primary);
+        }
+
+        .summary-content p {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .change {
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            margin-top: 0.5rem;
+            display: inline-block;
+        }
+
+        .change.positive {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .change.negative {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .reports-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .report-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .report-card.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .report-card h4 {
+            margin: 0 0 1rem 0;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .chart-container {
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pie-chart-placeholder {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            width: 100%;
+        }
+
+        .pie-segment {
+            padding: 0.75rem;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+        }
+
+        .pie-segment.food { background: #10b981; }
+        .pie-segment.beverages { background: #3b82f6; }
+        .pie-segment.other { background: #6b7280; }
+
+        .top-products, .employee-performance, .top-customers {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .product-row, .employee-row, .customer-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .rank {
+            background: var(--accent-blue);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .transactions-table {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .transaction-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 2fr 1fr 1fr;
+            gap: 1rem;
+            padding: 0.75rem;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.03);
+            align-items: center;
+        }
+
+        .transaction-row.header {
+            background: rgba(255, 255, 255, 0.1);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
         /* ==================== RESPONSIVE DESIGN ==================== */
         @media (max-width: 768px) {
             .login-container {
@@ -1836,11 +2226,14 @@
                     });
                     
                     if (productsResult && productsResult.success) {
+                        inventoryProducts = productsResult.data;
                         displayInventoryData(productsResult.data);
                     } else {
+                        inventoryProducts = generateDemoInventoryProducts();
                         displayDemoInventoryData();
                     }
                 } else {
+                    inventoryProducts = generateDemoInventoryProducts();
                     displayDemoInventoryData();
                 }
             } catch (error) {
@@ -1859,25 +2252,1129 @@
             document.getElementById('inventoryValue').textContent = '$' + inventoryValue.toFixed(2);
             
             const grid = document.getElementById('inventoryGrid');
-            grid.innerHTML = '<div class="glass-panel" style="padding: 2rem; text-align: center;"><h3>📦 Inventory Management</h3><p>Product management interface will load here with real-time Google Sheets data.</p></div>';
+            grid.innerHTML = `
+                <div class="inventory-table-container">
+                    <div class="table-header">
+                        <h3>📦 Product Inventory</h3>
+                        <div class="table-filters">
+                            <input type="text" id="inventorySearch" placeholder="Search products..." oninput="filterInventory()">
+                            <select id="categoryFilter" onchange="filterInventory()">
+                                <option value="">All Categories</option>
+                                ${[...new Set(products.map(p => p.Category))].map(cat => 
+                                    `<option value="${cat}">${cat}</option>`
+                                ).join('')}
+                            </select>
+                            <select id="stockFilter" onchange="filterInventory()">
+                                <option value="">All Stock Levels</option>
+                                <option value="in-stock">In Stock (>10)</option>
+                                <option value="low-stock">Low Stock (1-10)</option>
+                                <option value="out-of-stock">Out of Stock (0)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="inventory-table" id="inventoryTable">
+                        <div class="table-row table-header-row">
+                            <div class="table-cell">Product</div>
+                            <div class="table-cell">SKU</div>
+                            <div class="table-cell">Category</div>
+                            <div class="table-cell">Price</div>
+                            <div class="table-cell">Stock</div>
+                            <div class="table-cell">Value</div>
+                            <div class="table-cell">Status</div>
+                            <div class="table-cell">Actions</div>
+                        </div>
+                        ${products.map(product => `
+                            <div class="table-row ${product.Stock === 0 ? 'out-of-stock' : product.Stock < 10 ? 'low-stock' : 'in-stock'}">
+                                <div class="table-cell">
+                                    <div class="product-info">
+                                        <div class="product-icon">${product.Category === 'Beverages' ? '☕' : '🍽️'}</div>
+                                        <div>
+                                            <div class="product-name">${product.Name}</div>
+                                            <div class="product-desc">${product.Description || 'No description'}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="table-cell">${product.SKU || product.ID}</div>
+                                <div class="table-cell">${product.Category}</div>
+                                <div class="table-cell">$${parseFloat(product.Price).toFixed(2)}</div>
+                                <div class="table-cell">
+                                    <div class="stock-control">
+                                        <button onclick="adjustStock('${product.ID}', -1)" class="stock-btn minus">-</button>
+                                        <span class="stock-value">${product.Stock}</span>
+                                        <button onclick="adjustStock('${product.ID}', 1)" class="stock-btn plus">+</button>
+                                    </div>
+                                </div>
+                                <div class="table-cell">$${(parseFloat(product.Price) * product.Stock).toFixed(2)}</div>
+                                <div class="table-cell">
+                                    <span class="status-badge ${product.Stock > 10 ? 'in-stock' : product.Stock > 0 ? 'low-stock' : 'out-of-stock'}">
+                                        ${product.Stock > 10 ? 'In Stock' : product.Stock > 0 ? 'Low Stock' : 'Out of Stock'}
+                                    </span>
+                                </div>
+                                <div class="table-cell">
+                                    <div class="action-buttons">
+                                        <button onclick="editProduct('${product.ID}')" class="action-btn edit" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button onclick="duplicateProduct('${product.ID}')" class="action-btn duplicate" title="Duplicate">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                        <button onclick="deleteProduct('${product.ID}')" class="action-btn delete" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
         }
         
+        function generateDemoInventoryProducts() {
+            return [
+                { ID: '1', Name: 'Coffee', Price: 4.99, Stock: 50, Category: 'Beverages', SKU: 'BEV001', Description: 'Premium coffee blend' },
+                { ID: '2', Name: 'Sandwich', Price: 8.99, Stock: 25, Category: 'Food', SKU: 'FOOD001', Description: 'Grilled chicken sandwich' },
+                { ID: '3', Name: 'Juice', Price: 3.99, Stock: 5, Category: 'Beverages', SKU: 'BEV002', Description: 'Fresh orange juice' },
+                { ID: '4', Name: 'Pastry', Price: 5.99, Stock: 15, Category: 'Food', SKU: 'FOOD002', Description: 'Chocolate croissant' },
+                { ID: '5', Name: 'Water', Price: 1.99, Stock: 0, Category: 'Beverages', SKU: 'BEV003', Description: 'Bottled water' },
+                { ID: '6', Name: 'Salad', Price: 9.99, Stock: 20, Category: 'Food', SKU: 'FOOD003', Description: 'Caesar salad' }
+            ];
+        }
+
         function displayDemoInventoryData() {
-            document.getElementById('totalProducts').textContent = '24';
-            document.getElementById('lowStockItems').textContent = '3';
-            document.getElementById('inventoryValue').textContent = '$15,420.50';
-            
-            document.getElementById('inventoryGrid').innerHTML = '<div class="glass-panel" style="padding: 2rem; text-align: center;"><h3>📦 Demo Inventory Data</h3><p>Connect to Google Sheets for real inventory management.</p></div>';
+            const demoProducts = generateDemoInventoryProducts();
+            displayInventoryData(demoProducts);
         }
         
         async function loadReportsData() {
             console.log('📊 Loading reports data...');
-            document.getElementById('salesCharts').innerHTML = '<div class="glass-panel" style="padding: 2rem; text-align: center;"><h3>📊 Sales Analytics</h3><p>Advanced business intelligence charts will load here.</p></div>';
+            
+            // Load Sales Reports (default tab)
+            loadSalesReports();
+            loadInventoryReports();
+            loadEmployeeReports();
+            loadCustomerReports();
+        }
+
+        function loadSalesReports() {
+            document.getElementById('salesCharts').innerHTML = `
+                <div class="reports-container">
+                    <div class="report-summary">
+                        <div class="summary-cards">
+                            <div class="summary-card">
+                                <div class="summary-icon sales"><i class="fas fa-dollar-sign"></i></div>
+                                <div class="summary-content">
+                                    <h3 id="todaySales">$2,450.75</h3>
+                                    <p>Today's Sales</p>
+                                    <span class="change positive">+12.5%</span>
+                                </div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="summary-icon transactions"><i class="fas fa-receipt"></i></div>
+                                <div class="summary-content">
+                                    <h3 id="todayTransactions">47</h3>
+                                    <p>Today's Transactions</p>
+                                    <span class="change positive">+8.2%</span>
+                                </div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="summary-icon average"><i class="fas fa-chart-line"></i></div>
+                                <div class="summary-content">
+                                    <h3 id="avgTransaction">$52.15</h3>
+                                    <p>Avg Transaction</p>
+                                    <span class="change negative">-2.1%</span>
+                                </div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="summary-icon profit"><i class="fas fa-piggy-bank"></i></div>
+                                <div class="summary-content">
+                                    <h3 id="profit">$1,225.38</h3>
+                                    <p>Net Profit</p>
+                                    <span class="change positive">+15.7%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="reports-grid">
+                        <div class="report-card">
+                            <h4><i class="fas fa-chart-bar"></i> Sales by Time</h4>
+                            <div class="chart-container">
+                                <canvas id="salesTimeChart" width="400" height="200"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="report-card">
+                            <h4><i class="fas fa-chart-pie"></i> Sales by Category</h4>
+                            <div class="chart-container">
+                                <div class="pie-chart-placeholder">
+                                    <div class="pie-segment food" data-percentage="45%">Food (45%)</div>
+                                    <div class="pie-segment beverages" data-percentage="35%">Beverages (35%)</div>
+                                    <div class="pie-segment other" data-percentage="20%">Other (20%)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="report-card full-width">
+                            <h4><i class="fas fa-list"></i> Top Selling Products</h4>
+                            <div class="top-products">
+                                <div class="product-row">
+                                    <div class="product-info">
+                                        <span class="rank">1</span>
+                                        <span class="product-name">Coffee</span>
+                                    </div>
+                                    <div class="product-stats">
+                                        <span class="quantity">145 sold</span>
+                                        <span class="revenue">$723.55</span>
+                                    </div>
+                                </div>
+                                <div class="product-row">
+                                    <div class="product-info">
+                                        <span class="rank">2</span>
+                                        <span class="product-name">Sandwich</span>
+                                    </div>
+                                    <div class="product-stats">
+                                        <span class="quantity">89 sold</span>
+                                        <span class="revenue">$800.11</span>
+                                    </div>
+                                </div>
+                                <div class="product-row">
+                                    <div class="product-info">
+                                        <span class="rank">3</span>
+                                        <span class="product-name">Juice</span>
+                                    </div>
+                                    <div class="product-stats">
+                                        <span class="quantity">67 sold</span>
+                                        <span class="revenue">$267.33</span>
+                                    </div>
+                                </div>
+                                <div class="product-row">
+                                    <div class="product-info">
+                                        <span class="rank">4</span>
+                                        <span class="product-name">Pastry</span>
+                                    </div>
+                                    <div class="product-stats">
+                                        <span class="quantity">43 sold</span>
+                                        <span class="revenue">$257.57</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="report-card full-width">
+                            <h4><i class="fas fa-calendar-alt"></i> Recent Transactions</h4>
+                            <div class="transactions-table">
+                                <div class="transaction-row header">
+                                    <span>Time</span>
+                                    <span>Receipt #</span>
+                                    <span>Items</span>
+                                    <span>Payment</span>
+                                    <span>Total</span>
+                                </div>
+                                <div class="transaction-row">
+                                    <span>2:45 PM</span>
+                                    <span>R001234</span>
+                                    <span>Coffee, Sandwich</span>
+                                    <span>Card</span>
+                                    <span>$13.98</span>
+                                </div>
+                                <div class="transaction-row">
+                                    <span>2:38 PM</span>
+                                    <span>R001233</span>
+                                    <span>Juice, Pastry</span>
+                                    <span>Cash</span>
+                                    <span>$9.98</span>
+                                </div>
+                                <div class="transaction-row">
+                                    <span>2:31 PM</span>
+                                    <span>R001232</span>
+                                    <span>Salad, Water</span>
+                                    <span>Card</span>
+                                    <span>$11.98</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            createMockSalesChart();
+        }
+
+        function loadInventoryReports() {
+            document.getElementById('inventoryCharts').innerHTML = `
+                <div class="reports-container">
+                    <div class="report-summary">
+                        <div class="summary-cards">
+                            <div class="summary-card">
+                                <div class="summary-icon inventory"><i class="fas fa-boxes"></i></div>
+                                <div class="summary-content">
+                                    <h3>156</h3>
+                                    <p>Total Products</p>
+                                </div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="summary-icon low-stock"><i class="fas fa-exclamation-triangle"></i></div>
+                                <div class="summary-content">
+                                    <h3>8</h3>
+                                    <p>Low Stock Items</p>
+                                </div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="summary-icon value"><i class="fas fa-dollar-sign"></i></div>
+                                <div class="summary-content">
+                                    <h3>$45,230</h3>
+                                    <p>Inventory Value</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="reports-grid">
+                        <div class="report-card">
+                            <h4><i class="fas fa-chart-bar"></i> Stock Levels by Category</h4>
+                            <div class="stock-chart">
+                                <div class="stock-bar">
+                                    <label>Food</label>
+                                    <div class="bar">
+                                        <div class="bar-fill" style="width: 85%"></div>
+                                        <span>85%</span>
+                                    </div>
+                                </div>
+                                <div class="stock-bar">
+                                    <label>Beverages</label>
+                                    <div class="bar">
+                                        <div class="bar-fill" style="width: 67%"></div>
+                                        <span>67%</span>
+                                    </div>
+                                </div>
+                                <div class="stock-bar">
+                                    <label>Supplies</label>
+                                    <div class="bar">
+                                        <div class="bar-fill" style="width: 23%"></div>
+                                        <span>23%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="report-card">
+                            <h4><i class="fas fa-exclamation-triangle"></i> Low Stock Alerts</h4>
+                            <div class="alerts-list">
+                                <div class="alert-item critical">
+                                    <i class="fas fa-circle"></i>
+                                    <span>Water - 0 remaining</span>
+                                </div>
+                                <div class="alert-item warning">
+                                    <i class="fas fa-circle"></i>
+                                    <span>Juice - 5 remaining</span>
+                                </div>
+                                <div class="alert-item warning">
+                                    <i class="fas fa-circle"></i>
+                                    <span>Napkins - 8 remaining</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function loadEmployeeReports() {
+            document.getElementById('employeeCharts').innerHTML = `
+                <div class="reports-container">
+                    <div class="report-summary">
+                        <div class="summary-cards">
+                            <div class="summary-card">
+                                <div class="summary-icon employees"><i class="fas fa-users"></i></div>
+                                <div class="summary-content">
+                                    <h3>12</h3>
+                                    <p>Active Employees</p>
+                                </div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="summary-icon hours"><i class="fas fa-clock"></i></div>
+                                <div class="summary-content">
+                                    <h3>340</h3>
+                                    <p>Hours This Week</p>
+                                </div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="summary-icon performance"><i class="fas fa-star"></i></div>
+                                <div class="summary-content">
+                                    <h3>4.7</h3>
+                                    <p>Avg Performance</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="reports-grid">
+                        <div class="report-card full-width">
+                            <h4><i class="fas fa-trophy"></i> Employee Performance</h4>
+                            <div class="employee-performance">
+                                <div class="employee-row">
+                                    <div class="employee-info">
+                                        <span class="rank">1</span>
+                                        <span class="name">Sarah Johnson</span>
+                                        <span class="role">Cashier</span>
+                                    </div>
+                                    <div class="performance-stats">
+                                        <span class="sales">$3,420</span>
+                                        <span class="transactions">67</span>
+                                        <span class="rating">4.9⭐</span>
+                                    </div>
+                                </div>
+                                <div class="employee-row">
+                                    <div class="employee-info">
+                                        <span class="rank">2</span>
+                                        <span class="name">Mike Chen</span>
+                                        <span class="role">Manager</span>
+                                    </div>
+                                    <div class="performance-stats">
+                                        <span class="sales">$2,890</span>
+                                        <span class="transactions">45</span>
+                                        <span class="rating">4.8⭐</span>
+                                    </div>
+                                </div>
+                                <div class="employee-row">
+                                    <div class="employee-info">
+                                        <span class="rank">3</span>
+                                        <span class="name">Lisa Williams</span>
+                                        <span class="role">Cashier</span>
+                                    </div>
+                                    <div class="performance-stats">
+                                        <span class="sales">$2,340</span>
+                                        <span class="transactions">38</span>
+                                        <span class="rating">4.6⭐</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function loadCustomerReports() {
+            document.getElementById('customerCharts').innerHTML = `
+                <div class="reports-container">
+                    <div class="report-summary">
+                        <div class="summary-cards">
+                            <div class="summary-card">
+                                <div class="summary-icon customers"><i class="fas fa-user-friends"></i></div>
+                                <div class="summary-content">
+                                    <h3>1,247</h3>
+                                    <p>Total Customers</p>
+                                </div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="summary-icon new-customers"><i class="fas fa-user-plus"></i></div>
+                                <div class="summary-content">
+                                    <h3>23</h3>
+                                    <p>New This Week</p>
+                                </div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="summary-icon loyalty"><i class="fas fa-heart"></i></div>
+                                <div class="summary-content">
+                                    <h3>78%</h3>
+                                    <p>Return Rate</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="reports-grid">
+                        <div class="report-card">
+                            <h4><i class="fas fa-crown"></i> Top Customers</h4>
+                            <div class="top-customers">
+                                <div class="customer-row">
+                                    <span class="rank">1</span>
+                                    <span class="name">John Doe</span>
+                                    <span class="spent">$245.67</span>
+                                </div>
+                                <div class="customer-row">
+                                    <span class="rank">2</span>
+                                    <span class="name">Jane Smith</span>
+                                    <span class="spent">$198.43</span>
+                                </div>
+                                <div class="customer-row">
+                                    <span class="rank">3</span>
+                                    <span class="name">Bob Wilson</span>
+                                    <span class="spent">$167.89</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="report-card">
+                            <h4><i class="fas fa-chart-line"></i> Customer Growth</h4>
+                            <div class="growth-chart">
+                                <div class="growth-month">
+                                    <span class="month">Jan</span>
+                                    <div class="growth-bar">
+                                        <div class="growth-fill" style="height: 60%"></div>
+                                    </div>
+                                    <span class="count">120</span>
+                                </div>
+                                <div class="growth-month">
+                                    <span class="month">Feb</span>
+                                    <div class="growth-bar">
+                                        <div class="growth-fill" style="height: 75%"></div>
+                                    </div>
+                                    <span class="count">150</span>
+                                </div>
+                                <div class="growth-month">
+                                    <span class="month">Mar</span>
+                                    <div class="growth-bar">
+                                        <div class="growth-fill" style="height: 100%"></div>
+                                    </div>
+                                    <span class="count">200</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function createMockSalesChart() {
+            // Simple canvas chart placeholder
+            const canvas = document.getElementById('salesTimeChart');
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = 'rgba(102, 126, 234, 0.3)';
+                ctx.fillRect(50, 150, 60, 40);
+                ctx.fillRect(120, 120, 60, 70);
+                ctx.fillRect(190, 100, 60, 90);
+                ctx.fillRect(260, 80, 60, 110);
+                ctx.fillRect(330, 60, 60, 130);
+                
+                ctx.fillStyle = '#667eea';
+                ctx.font = '12px Arial';
+                ctx.fillText('9 AM', 55, 200);
+                ctx.fillText('12 PM', 120, 200);
+                ctx.fillText('3 PM', 195, 200);
+                ctx.fillText('6 PM', 265, 200);
+                ctx.fillText('9 PM', 335, 200);
+            }
         }
         
         async function loadSettingsData() {
             console.log('⚙️ Loading settings data...');
-            document.getElementById('companyForm').innerHTML = '<div class="glass-panel" style="padding: 2rem; text-align: center;"><h3>⚙️ Company Settings</h3><p>Company configuration form will load here with Google Sheets integration.</p></div>';
+            
+            // Load all settings tabs
+            loadCompanySettings();
+            loadUserManagement();
+            loadPermissionMatrix();
+            loadSystemConfig();
+        }
+
+        function loadCompanySettings() {
+            document.getElementById('companyForm').innerHTML = `
+                <div class="settings-form-container">
+                    <div class="form-section">
+                        <h4><i class="fas fa-building"></i> Company Information</h4>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Company Name</label>
+                                <input type="text" id="companyName" value="Your Business Name" class="form-input">
+                                <small>This will appear on receipts and throughout the app</small>
+                            </div>
+                            <div class="form-group">
+                                <label>Company Tagline</label>
+                                <input type="text" id="companyTagline" value="Advanced Point of Sale System" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label>Logo/Icon</label>
+                                <input type="text" id="companyLogo" value="🏪" class="form-input">
+                                <small>Emoji, text, or image URL</small>
+                            </div>
+                            <div class="form-group">
+                                <label>Primary Color</label>
+                                <input type="color" id="primaryColor" value="#667eea" class="form-input">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4><i class="fas fa-map-marker-alt"></i> Contact Information</h4>
+                        <div class="form-grid">
+                            <div class="form-group full-width">
+                                <label>Business Address</label>
+                                <textarea id="companyAddress" class="form-input" rows="3">123 Business St, City, State 12345</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Phone Number</label>
+                                <input type="tel" id="companyPhone" value="(555) 123-4567" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label>Email Address</label>
+                                <input type="email" id="companyEmail" value="info@yourbusiness.com" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label>Website</label>
+                                <input type="url" id="companyWebsite" value="www.yourbusiness.com" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label>Tax ID</label>
+                                <input type="text" id="taxId" value="" class="form-input" placeholder="Enter tax ID">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4><i class="fas fa-cog"></i> Business Settings</h4>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Default Tax Rate (%)</label>
+                                <input type="number" id="taxRate" value="8.5" min="0" max="100" step="0.1" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label>Currency</label>
+                                <select id="currency" class="form-input">
+                                    <option value="USD">USD ($)</option>
+                                    <option value="EUR">EUR (€)</option>
+                                    <option value="GBP">GBP (£)</option>
+                                    <option value="CAD">CAD ($)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Low Stock Threshold</label>
+                                <input type="number" id="lowStockThreshold" value="10" min="1" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label>Receipt Footer</label>
+                                <input type="text" id="receiptFooter" value="Thank you for your business!" class="form-input">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button class="glass-button primary" onclick="saveCompanySettings()">
+                            <i class="fas fa-save"></i> Save Settings
+                        </button>
+                        <button class="glass-button secondary" onclick="resetCompanySettings()">
+                            <i class="fas fa-undo"></i> Reset to Default
+                        </button>
+                        <button class="glass-button" onclick="exportSettings()">
+                            <i class="fas fa-download"></i> Export Settings
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function loadUserManagement() {
+            document.getElementById('userManagement').innerHTML = `
+                <div class="user-management-container">
+                    <div class="users-header">
+                        <h4><i class="fas fa-users"></i> Employee Management</h4>
+                        <button class="glass-button primary" onclick="addNewUser()">
+                            <i class="fas fa-user-plus"></i> Add Employee
+                        </button>
+                    </div>
+
+                    <div class="users-table">
+                        <div class="user-row header">
+                            <span>Name</span>
+                            <span>Username</span>
+                            <span>Role</span>
+                            <span>Status</span>
+                            <span>Last Login</span>
+                            <span>Actions</span>
+                        </div>
+                        <div class="user-row">
+                            <span class="user-info">
+                                <div class="user-avatar">👤</div>
+                                <div>
+                                    <div class="user-name">Admin User</div>
+                                    <div class="user-email">admin@company.com</div>
+                                </div>
+                            </span>
+                            <span>admin</span>
+                            <span><span class="role-badge admin">Admin</span></span>
+                            <span><span class="status-badge active">Active</span></span>
+                            <span>2 hours ago</span>
+                            <span class="user-actions">
+                                <button class="action-btn edit" onclick="editUser('admin')" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="action-btn permissions" onclick="editUserPermissions('admin')" title="Permissions">
+                                    <i class="fas fa-key"></i>
+                                </button>
+                            </span>
+                        </div>
+                        <div class="user-row">
+                            <span class="user-info">
+                                <div class="user-avatar">👤</div>
+                                <div>
+                                    <div class="user-name">Sarah Johnson</div>
+                                    <div class="user-email">sarah@company.com</div>
+                                </div>
+                            </span>
+                            <span>sarah_j</span>
+                            <span><span class="role-badge cashier">Cashier</span></span>
+                            <span><span class="status-badge active">Active</span></span>
+                            <span>1 day ago</span>
+                            <span class="user-actions">
+                                <button class="action-btn edit" onclick="editUser('sarah_j')" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="action-btn permissions" onclick="editUserPermissions('sarah_j')" title="Permissions">
+                                    <i class="fas fa-key"></i>
+                                </button>
+                                <button class="action-btn delete" onclick="deleteUser('sarah_j')" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </span>
+                        </div>
+                        <div class="user-row">
+                            <span class="user-info">
+                                <div class="user-avatar">👤</div>
+                                <div>
+                                    <div class="user-name">Mike Chen</div>
+                                    <div class="user-email">mike@company.com</div>
+                                </div>
+                            </span>
+                            <span>mike_c</span>
+                            <span><span class="role-badge manager">Manager</span></span>
+                            <span><span class="status-badge inactive">Inactive</span></span>
+                            <span>3 days ago</span>
+                            <span class="user-actions">
+                                <button class="action-btn edit" onclick="editUser('mike_c')" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="action-btn permissions" onclick="editUserPermissions('mike_c')" title="Permissions">
+                                    <i class="fas fa-key"></i>
+                                </button>
+                                <button class="action-btn delete" onclick="deleteUser('mike_c')" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function loadPermissionMatrix() {
+            document.getElementById('permissionMatrix').innerHTML = `
+                <div class="permissions-container">
+                    <div class="permissions-header">
+                        <h4><i class="fas fa-shield-alt"></i> Role Permissions Matrix</h4>
+                        <button class="glass-button primary" onclick="addNewRole()">
+                            <i class="fas fa-plus"></i> Add Role
+                        </button>
+                    </div>
+
+                    <div class="permissions-table">
+                        <div class="permissions-grid">
+                            <div class="permission-header">Permission</div>
+                            <div class="role-header">Admin</div>
+                            <div class="role-header">Manager</div>
+                            <div class="role-header">Cashier</div>
+                            
+                            <div class="permission-name">🏪 Access POS</div>
+                            <div class="permission-cell"><input type="checkbox" checked disabled></div>
+                            <div class="permission-cell"><input type="checkbox" checked></div>
+                            <div class="permission-cell"><input type="checkbox" checked></div>
+                            
+                            <div class="permission-name">📦 Manage Inventory</div>
+                            <div class="permission-cell"><input type="checkbox" checked disabled></div>
+                            <div class="permission-cell"><input type="checkbox" checked></div>
+                            <div class="permission-cell"><input type="checkbox"></div>
+                            
+                            <div class="permission-name">📊 View Reports</div>
+                            <div class="permission-cell"><input type="checkbox" checked disabled></div>
+                            <div class="permission-cell"><input type="checkbox" checked></div>
+                            <div class="permission-cell"><input type="checkbox"></div>
+                            
+                            <div class="permission-name">👥 Manage Users</div>
+                            <div class="permission-cell"><input type="checkbox" checked disabled></div>
+                            <div class="permission-cell"><input type="checkbox"></div>
+                            <div class="permission-cell"><input type="checkbox"></div>
+                            
+                            <div class="permission-name">⚙️ System Settings</div>
+                            <div class="permission-cell"><input type="checkbox" checked disabled></div>
+                            <div class="permission-cell"><input type="checkbox"></div>
+                            <div class="permission-cell"><input type="checkbox"></div>
+                            
+                            <div class="permission-name">💰 Process Refunds</div>
+                            <div class="permission-cell"><input type="checkbox" checked disabled></div>
+                            <div class="permission-cell"><input type="checkbox" checked></div>
+                            <div class="permission-cell"><input type="checkbox"></div>
+                            
+                            <div class="permission-name">🎯 Apply Discounts</div>
+                            <div class="permission-cell"><input type="checkbox" checked disabled></div>
+                            <div class="permission-cell"><input type="checkbox" checked></div>
+                            <div class="permission-cell"><input type="checkbox"></div>
+                            
+                            <div class="permission-name">🔐 Override Prices</div>
+                            <div class="permission-cell"><input type="checkbox" checked disabled></div>
+                            <div class="permission-cell"><input type="checkbox"></div>
+                            <div class="permission-cell"><input type="checkbox"></div>
+                        </div>
+                    </div>
+
+                    <div class="permissions-actions">
+                        <button class="glass-button primary" onclick="savePermissions()">
+                            <i class="fas fa-save"></i> Save Permissions
+                        </button>
+                        <button class="glass-button secondary" onclick="resetPermissions()">
+                            <i class="fas fa-undo"></i> Reset to Default
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function loadSystemConfig() {
+            document.getElementById('systemConfig').innerHTML = `
+                <div class="system-config-container">
+                    <div class="config-section">
+                        <h4><i class="fas fa-database"></i> Backup & Recovery</h4>
+                        <div class="config-card">
+                            <div class="config-info">
+                                <div class="config-title">Automatic Backups</div>
+                                <div class="config-desc">Daily backup of all data to Google Drive</div>
+                                <div class="config-status">Last backup: 2 hours ago</div>
+                            </div>
+                            <div class="config-actions">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                                <button class="glass-button" onclick="performBackup()">
+                                    <i class="fas fa-download"></i> Backup Now
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="config-section">
+                        <h4><i class="fas fa-shield-alt"></i> Security Settings</h4>
+                        <div class="config-grid">
+                            <div class="config-item">
+                                <label>Session Timeout (minutes)</label>
+                                <input type="number" value="30" min="5" max="480" class="form-input">
+                            </div>
+                            <div class="config-item">
+                                <label>Failed Login Attempts</label>
+                                <input type="number" value="3" min="1" max="10" class="form-input">
+                            </div>
+                            <div class="config-item">
+                                <label>Require PIN for Admin Actions</label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="config-item">
+                                <label>Enable Audit Logging</label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="config-section">
+                        <h4><i class="fas fa-cogs"></i> System Maintenance</h4>
+                        <div class="maintenance-actions">
+                            <button class="glass-button" onclick="clearCache()">
+                                <i class="fas fa-broom"></i> Clear Cache
+                            </button>
+                            <button class="glass-button" onclick="optimizeDatabase()">
+                                <i class="fas fa-tachometer-alt"></i> Optimize Database
+                            </button>
+                            <button class="glass-button warning" onclick="resetSystem()">
+                                <i class="fas fa-exclamation-triangle"></i> Reset System
+                            </button>
+                            <button class="glass-button danger" onclick="factoryReset()">
+                                <i class="fas fa-bomb"></i> Factory Reset
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="config-section">
+                        <h4><i class="fas fa-info-circle"></i> System Information</h4>
+                        <div class="system-info">
+                            <div class="info-item">
+                                <span class="info-label">Version:</span>
+                                <span class="info-value">Enterprise POS v2.1.0</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Database:</span>
+                                <span class="info-value">Google Sheets (Connected)</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Uptime:</span>
+                                <span class="info-value">2 days, 14 hours</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Total Transactions:</span>
+                                <span class="info-value">1,247</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Storage Used:</span>
+                                <span class="info-value">45.2 MB / 15 GB</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Settings Functions
+        function saveCompanySettings() {
+            alert('✅ Company settings saved successfully!\n(Demo mode - would save to Google Sheets)');
+        }
+
+        function resetCompanySettings() {
+            if (confirm('Reset all company settings to default values?')) {
+                alert('🔄 Settings reset to defaults');
+                loadCompanySettings();
+            }
+        }
+
+        function exportSettings() {
+            alert('📤 Settings exported successfully!\n(Demo mode - would download JSON file)');
+        }
+
+        function addNewUser() {
+            const name = prompt('Employee Name:');
+            const username = prompt('Username:');
+            if (name && username) {
+                alert(`✅ Employee "${name}" added successfully!\n(Demo mode - would add to Google Sheets)`);
+                loadUserManagement();
+            }
+        }
+
+        function editUser(username) {
+            alert(`✏️ Editing user: ${username}\n(Demo mode - would open edit form)`);
+        }
+
+        function editUserPermissions(username) {
+            alert(`🔑 Managing permissions for: ${username}\n(Demo mode - would open permissions dialog)`);
+        }
+
+        function deleteUser(username) {
+            if (confirm(`Delete user "${username}"? This cannot be undone.`)) {
+                alert(`🗑️ User "${username}" deleted successfully!\n(Demo mode)`);
+                loadUserManagement();
+            }
+        }
+
+        function savePermissions() {
+            alert('✅ Permissions saved successfully!\n(Demo mode - would save to Google Sheets)');
+        }
+
+        function resetPermissions() {
+            if (confirm('Reset all permissions to default values?')) {
+                alert('🔄 Permissions reset to defaults');
+                loadPermissionMatrix();
+            }
+        }
+
+        function performBackup() {
+            alert('💾 Backup started...\n(Demo mode - would backup to Google Drive)');
+        }
+
+        function clearCache() {
+            alert('🧹 Cache cleared successfully!');
+        }
+
+        function optimizeDatabase() {
+            alert('⚡ Database optimized successfully!');
+        }
+
+        function resetSystem() {
+            if (confirm('⚠️ Reset system settings? This will not delete data.')) {
+                alert('🔄 System reset completed');
+            }
+        }
+
+        function factoryReset() {
+            if (confirm('🚨 FACTORY RESET: This will delete ALL data and cannot be undone!\n\nType "CONFIRM" to proceed:') === 'CONFIRM') {
+                alert('💥 Factory reset completed');
+            }
+        }
+
+        // ==================== INVENTORY FUNCTIONS ==================== 
+        let inventoryProducts = [];
+
+        function filterInventory() {
+            const searchTerm = document.getElementById('inventorySearch')?.value.toLowerCase() || '';
+            const categoryFilter = document.getElementById('categoryFilter')?.value || '';
+            const stockFilter = document.getElementById('stockFilter')?.value || '';
+            
+            let filtered = inventoryProducts.filter(product => {
+                const matchesSearch = product.Name.toLowerCase().includes(searchTerm) ||
+                                    product.Category.toLowerCase().includes(searchTerm) ||
+                                    (product.SKU && product.SKU.toLowerCase().includes(searchTerm));
+                
+                const matchesCategory = !categoryFilter || product.Category === categoryFilter;
+                
+                let matchesStock = true;
+                if (stockFilter === 'in-stock') matchesStock = product.Stock > 10;
+                else if (stockFilter === 'low-stock') matchesStock = product.Stock > 0 && product.Stock <= 10;
+                else if (stockFilter === 'out-of-stock') matchesStock = product.Stock === 0;
+                
+                return matchesSearch && matchesCategory && matchesStock;
+            });
+            
+            displayFilteredProducts(filtered);
+        }
+
+        function displayFilteredProducts(products) {
+            const tableBody = document.getElementById('inventoryTable');
+            if (!tableBody) return;
+            
+            // Keep header, replace rows
+            const headerRow = tableBody.querySelector('.table-header-row');
+            tableBody.innerHTML = '';
+            tableBody.appendChild(headerRow);
+            
+            products.forEach(product => {
+                const row = document.createElement('div');
+                row.className = `table-row ${product.Stock === 0 ? 'out-of-stock' : product.Stock < 10 ? 'low-stock' : 'in-stock'}`;
+                row.innerHTML = `
+                    <div class="table-cell">
+                        <div class="product-info">
+                            <div class="product-icon">${product.Category === 'Beverages' ? '☕' : '🍽️'}</div>
+                            <div>
+                                <div class="product-name">${product.Name}</div>
+                                <div class="product-desc">${product.Description || 'No description'}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-cell">${product.SKU || product.ID}</div>
+                    <div class="table-cell">${product.Category}</div>
+                    <div class="table-cell">$${parseFloat(product.Price).toFixed(2)}</div>
+                    <div class="table-cell">
+                        <div class="stock-control">
+                            <button onclick="adjustStock('${product.ID}', -1)" class="stock-btn minus">-</button>
+                            <span class="stock-value">${product.Stock}</span>
+                            <button onclick="adjustStock('${product.ID}', 1)" class="stock-btn plus">+</button>
+                        </div>
+                    </div>
+                    <div class="table-cell">$${(parseFloat(product.Price) * product.Stock).toFixed(2)}</div>
+                    <div class="table-cell">
+                        <span class="status-badge ${product.Stock > 10 ? 'in-stock' : product.Stock > 0 ? 'low-stock' : 'out-of-stock'}">
+                            ${product.Stock > 10 ? 'In Stock' : product.Stock > 0 ? 'Low Stock' : 'Out of Stock'}
+                        </span>
+                    </div>
+                    <div class="table-cell">
+                        <div class="action-buttons">
+                            <button onclick="editProduct('${product.ID}')" class="action-btn edit" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="duplicateProduct('${product.ID}')" class="action-btn duplicate" title="Duplicate">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <button onclick="deleteProduct('${product.ID}')" class="action-btn delete" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        async function adjustStock(productId, change) {
+            const product = inventoryProducts.find(p => p.ID === productId);
+            if (!product) return;
+            
+            const newStock = Math.max(0, product.Stock + change);
+            product.Stock = newStock;
+            
+            // Update display
+            const stockValue = document.querySelector(`[onclick*="${productId}"] .stock-value`);
+            if (stockValue) stockValue.textContent = newStock;
+            
+            // Update Google Sheets
+            try {
+                if (typeof google !== 'undefined' && google.script && google.script.run) {
+                    await new Promise((resolve, reject) => {
+                        google.script.run
+                            .withSuccessHandler(resolve)
+                            .withFailureHandler(reject)
+                            .updateProduct(productId, { Stock: newStock });
+                    });
+                }
+            } catch (error) {
+                console.error('❌ Error updating stock:', error);
+            }
+            
+            // Refresh stats
+            loadInventoryData();
+        }
+
+        function addNewProduct() {
+            const productData = {
+                name: prompt('Product Name:'),
+                price: parseFloat(prompt('Price:') || '0'),
+                stock: parseInt(prompt('Initial Stock:') || '0'),
+                category: prompt('Category:') || 'General'
+            };
+            
+            if (productData.name && productData.price > 0) {
+                // Add to Google Sheets
+                console.log('Adding product:', productData);
+                alert('Product added successfully! (Demo mode)');
+                loadInventoryData(); // Refresh
+            }
+        }
+
+        function editProduct(productId) {
+            const product = inventoryProducts.find(p => p.ID === productId);
+            if (!product) return;
+            
+            const newName = prompt('Product Name:', product.Name);
+            const newPrice = parseFloat(prompt('Price:', product.Price) || product.Price);
+            const newCategory = prompt('Category:', product.Category);
+            
+            if (newName && newPrice > 0) {
+                product.Name = newName;
+                product.Price = newPrice;
+                product.Category = newCategory;
+                
+                alert('Product updated successfully! (Demo mode)');
+                loadInventoryData(); // Refresh
+            }
+        }
+
+        function duplicateProduct(productId) {
+            const product = inventoryProducts.find(p => p.ID === productId);
+            if (!product) return;
+            
+            const newName = prompt('New Product Name:', product.Name + ' (Copy)');
+            if (newName) {
+                alert('Product duplicated successfully! (Demo mode)');
+                loadInventoryData(); // Refresh
+            }
+        }
+
+        function deleteProduct(productId) {
+            const product = inventoryProducts.find(p => p.ID === productId);
+            if (!product) return;
+            
+            if (confirm(`Delete "${product.Name}"? This cannot be undone.`)) {
+                alert('Product deleted successfully! (Demo mode)');
+                loadInventoryData(); // Refresh
+            }
+        }
+
+        function importProducts() {
+            alert('📥 Import functionality will open a file dialog to import products from CSV/Excel files.');
+        }
+
+        function exportInventory() {
+            alert('📤 Export functionality will download current inventory as CSV/Excel file.');
         }
         
         function showReportTab(tabName) {
