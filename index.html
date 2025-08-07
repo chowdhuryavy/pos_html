@@ -3246,206 +3246,81 @@
                     alert('Please contact your system administrator to reset your credentials.');
                 }
 
-                            // Handle CSP and initialization with proper flow
+                                        // Simple, clean app initialization
             document.addEventListener('DOMContentLoaded', function() {
-                console.log('DOM ready, starting proper app flow...');
+                console.log('DOM ready, starting app...');
                 
-                // Set default date
-                const today = new Date().toISOString().split('T')[0];
-                const reportDateInput = document.getElementById('reportDate');
-                if (reportDateInput) {
-                    reportDateInput.value = today;
-                }
-                
-                // PROPER FLOW: Start with loading, then show login
-                console.log('Starting with loading screen...');
-                showProperLoadingFlow();
+                // Start with loading screen
+                startLoadingFlow();
             });
 
-            // Proper loading flow function
-            function showProperLoadingFlow() {
-                const loadingOverlay = document.getElementById('loading');
-                const loginModal = document.getElementById('loginModal');
-                const mainContainer = document.getElementById('mainContainer');
+            function startLoadingFlow() {
+                const loading = document.getElementById('loading');
+                const login = document.getElementById('loginModal');
+                const main = document.getElementById('mainContainer');
                 
-                // Step 1: Show loading overlay
-                if (loadingOverlay) {
-                    loadingOverlay.style.display = 'flex';
-                    loadingOverlay.style.visibility = 'visible';
-                    loadingOverlay.style.opacity = '1';
-                    console.log('✅ Loading overlay shown');
+                // Show loading
+                if (loading) {
+                    loading.style.display = 'flex';
+                    console.log('Loading shown');
                 }
                 
-                // Step 2: Hide login and main container
-                if (loginModal) {
-                    loginModal.style.display = 'none';
-                    loginModal.style.visibility = 'hidden';
-                }
-                if (mainContainer) {
-                    mainContainer.style.display = 'none';
-                    mainContainer.style.visibility = 'hidden';
-                }
+                // Hide others
+                if (login) login.style.display = 'none';
+                if (main) main.style.display = 'none';
                 
-                console.log('🔄 Loading POS System components...');
-                
-                // Step 3: Simulate loading steps with progress
-                let currentStep = 1;
-                const loadingSteps = [
-                    { step: 1, message: 'Initializing System', duration: 1000 },
-                    { step: 2, message: 'Loading Database', duration: 1500 },
-                    { step: 3, message: 'Preparing Interface', duration: 1000 }
-                ];
-                
-                function processLoadingStep(stepIndex) {
-                    if (stepIndex < loadingSteps.length) {
-                        const { step, message, duration } = loadingSteps[stepIndex];
-                        updateLoadingProgress(step, message);
-                        console.log(`📋 Step ${step}: ${message}`);
-                        
-                        setTimeout(() => {
-                            processLoadingStep(stepIndex + 1);
-                        }, duration);
-                    } else {
-                        // Step 4: Loading complete, show login
-                        setTimeout(() => {
-                            console.log('✅ Loading complete, showing login...');
-                            hideLoadingShowLogin();
-                        }, 500);
-                    }
-                }
-                
-                // Start loading process
-                processLoadingStep(0);
-            }
-            
-            // Function to hide loading and show login
-            function hideLoadingShowLogin() {
-                const loadingOverlay = document.getElementById('loading');
-                const loginModal = document.getElementById('loginModal');
-                
-                console.log('🔄 Transitioning from loading to login...');
-                console.log('Elements found:', { 
-                    loading: !!loadingOverlay, 
-                    login: !!loginModal 
-                });
-                
-                // Hide loading with fade effect
-                if (loadingOverlay) {
-                    console.log('⏳ Starting loading fade out...');
-                    loadingOverlay.classList.add('fade-out');
+                // Progress through steps
+                let step = 1;
+                function nextStep() {
+                    const progressFill = document.getElementById('progressFill');
+                    const stepElement = document.getElementById('step' + step);
                     
-                    setTimeout(() => {
-                        loadingOverlay.style.display = 'none';
-                        loadingOverlay.style.visibility = 'hidden';
-                        loadingOverlay.style.opacity = '0';
-                        console.log('✅ Loading completely hidden');
-                        
-                        // Show login modal immediately after loading is hidden
-                        if (loginModal) {
-                            console.log('🔑 Showing login modal...');
-                            loginModal.style.display = 'flex';
-                            loginModal.style.visibility = 'visible';
-                            loginModal.style.opacity = '1';
-                            loginModal.classList.remove('hidden');
-                            console.log('✅ Login modal displayed');
-                            
-                            // Focus username field
-                            setTimeout(() => {
-                                const usernameField = document.getElementById('username');
-                                if (usernameField) {
-                                    usernameField.focus();
-                                    console.log('🎯 Username field focused');
-                                }
-                            }, 100);
-                        } else {
-                            console.error('❌ Login modal not found!');
-                        }
-                    }, 500);
-                } else {
-                    console.error('❌ Loading overlay not found!');
-                    // Try to show login anyway
-                    if (loginModal) {
-                        loginModal.style.display = 'flex';
-                        loginModal.style.visibility = 'visible';
-                        loginModal.style.opacity = '1';
-                        console.log('✅ Login shown (no loading found)');
-                    }
-                }
-            }
-            
-            // Update loading progress function
-            function updateLoadingProgress(step, message) {
-                const steps = ['step1', 'step2', 'step3'];
-                const progressFill = document.getElementById('progressFill');
-                
-                // Update step indicators
-                steps.forEach((stepId, index) => {
-                    const stepElement = document.getElementById(stepId);
                     if (stepElement) {
-                        if (index < step) {
-                            stepElement.classList.add('active');
-                            stepElement.textContent = index === step - 1 ? message : 'Complete';
-                        } else {
-                            stepElement.classList.remove('active');
-                        }
+                        stepElement.classList.add('active');
+                        if (step === 1) stepElement.textContent = 'Initializing System';
+                        if (step === 2) stepElement.textContent = 'Loading Database';
+                        if (step === 3) stepElement.textContent = 'Preparing Interface';
                     }
-                });
-                
-                // Update progress bar
-                if (progressFill) {
-                    const progress = (step / steps.length) * 100;
-                    progressFill.style.width = `${progress}%`;
-                }
-            }
-            
-            // Handle CSP frame restriction - simplified approach
-            try {
-                if (window.parent !== window.self) {
-                    console.log('Running in iframe, checking for CSP restrictions...');
                     
-                    try {
-                        const parentLocation = window.parent.location.href;
-                        console.log('Parent access allowed - continuing normally');
-                    } catch (e) {
-                        console.log('Sandboxed iframe detected, showing direct link option');
-                        
-                        // Show a simple notification
-                        setTimeout(() => {
-                            const currentUrl = window.location.href.replace('/userCodeAppPanel', '');
-                            const notification = document.createElement('div');
-                            notification.innerHTML = `
-                                <div style="position: fixed; top: 20px; right: 20px; background: #2196f3; color: white; 
-                                           padding: 15px; border-radius: 8px; z-index: 10001; max-width: 300px;
-                                           box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
-                                    <div style="margin-bottom: 8px;"><strong>🔗 Better Experience Available</strong></div>
-                                    <div style="margin-bottom: 10px; font-size: 13px;">Open in new tab for full functionality:</div>
-                                    <button onclick="window.open('${currentUrl}', '_blank')" 
-                                            style="background: white; color: #2196f3; border: none; padding: 8px 12px; 
-                                                   border-radius: 4px; cursor: pointer; font-weight: 500;">
-                                        Open in New Tab
-                                    </button>
-                                    <button onclick="this.parentElement.parentElement.remove()" 
-                                            style="background: transparent; color: white; border: 1px solid white; 
-                                                   padding: 6px 10px; border-radius: 4px; cursor: pointer; margin-left: 8px;">
-                                        ✕
-                                    </button>
-                                </div>
-                            `;
-                            document.body.appendChild(notification);
-                            
-                            // Auto-remove after 15 seconds
-                            setTimeout(() => {
-                                if (notification.parentElement) {
-                                    notification.remove();
-                                }
-                            }, 15000);
-                        }, 2000);
+                    if (progressFill) {
+                        progressFill.style.width = (step * 33.33) + '%';
+                    }
+                    
+                    console.log('Step', step, 'complete');
+                    step++;
+                    
+                    if (step <= 3) {
+                        setTimeout(nextStep, 1200);
+                    } else {
+                        // Loading complete, show login
+                        setTimeout(showLogin, 800);
                     }
                 }
-            } catch (e) {
-                console.log('Frame context check completed:', e.message);
+                
+                // Start first step
+                setTimeout(nextStep, 500);
             }
-            });
+
+            function showLogin() {
+                const loading = document.getElementById('loading');
+                const login = document.getElementById('loginModal');
+                
+                console.log('Showing login');
+                
+                if (loading) {
+                    loading.style.display = 'none';
+                }
+                
+                if (login) {
+                    login.style.display = 'flex';
+                    
+                    // Focus username
+                    setTimeout(function() {
+                        const username = document.getElementById('username');
+                        if (username) username.focus();
+                    }, 100);
+                }
+            }
             </script>
 
                 <?= include('pos-script'); ?>

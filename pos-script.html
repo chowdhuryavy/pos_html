@@ -27,6 +27,34 @@ document.addEventListener('DOMContentLoaded', function() {
         initializeApp();
         setupEventListeners();
         console.log('✅ POS script initialization completed');
+        
+        // Override window.showMainApp to ensure it works from login
+        window.showMainApp = function() {
+            console.log('🚀 Main app requested, showing POS interface...');
+            
+            const loading = document.getElementById('loading');
+            const login = document.getElementById('loginModal');
+            const main = document.getElementById('mainContainer');
+            
+            // Hide loading and login
+            if (loading) loading.style.display = 'none';
+            if (login) login.style.display = 'none';
+            
+            // Show main container
+            if (main) {
+                main.style.display = 'block';
+                console.log('✅ Main container shown');
+                
+                // Initialize content
+                setTimeout(() => {
+                    initializeMainAppContent();
+                }, 100);
+            } else {
+                console.error('❌ Main container not found!');
+                createFallbackMainApp();
+            }
+        };
+        
     } catch (error) {
         console.error('❌ POS script initialization error:', error);
     }
@@ -205,7 +233,7 @@ function initializeApp() {
     });
     
     // Don't force UI state here - let the proper flow handle it
-    // Just check for saved sessions
+    // Just check for saved sessions and set up handlers for login button
     
     // Check if user is already logged in
     const savedUser = sessionStorage.getItem('posUser') || localStorage.getItem('posUser');
