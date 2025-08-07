@@ -2136,11 +2136,21 @@
                  const brandTextH1 = document.querySelector('.brand-text h1');
                  const brandTextP = document.querySelector('.brand-text p');
                  
-                 if (heroTitle) heroTitle.textContent = branding.companyName || 'Enterprise POS';
-                 if (heroSubtitle) heroSubtitle.textContent = branding.tagline || 'Advanced Point of Sale System';
-                 if (brandLogo) brandLogo.textContent = branding.logo || '🏪';
-                 if (brandTextH1) brandTextH1.textContent = branding.companyName || 'Enterprise POS';
-                 if (brandTextP) brandTextP.textContent = branding.tagline || 'Advanced Point of Sale System';
+                                   if (heroTitle) heroTitle.textContent = branding.companyName || 'Enterprise POS';
+                  if (heroSubtitle) heroSubtitle.textContent = branding.tagline || 'Advanced Point of Sale System';
+                  
+                  // Handle logo display (emoji/text vs image URL)
+                  if (brandLogo) {
+                      const logo = branding.logo || '🏪';
+                      if (logo.startsWith('http') || logo.startsWith('data:')) {
+                          brandLogo.innerHTML = `<img src="${logo}" alt="Logo" style="width: 60px; height: 60px; object-fit: contain;">`;
+                      } else {
+                          brandLogo.textContent = logo;
+                      }
+                  }
+                  
+                  if (brandTextH1) brandTextH1.textContent = branding.companyName || 'Enterprise POS';
+                  if (brandTextP) brandTextP.textContent = branding.tagline || 'Advanced Point of Sale System';
                  
                  // Update page title
                  document.title = `${branding.companyName || 'Enterprise POS'} - Advanced POS System`;
@@ -2171,24 +2181,51 @@
          }
 
         function updateDashboardStats(data) {
-            const updates = {
-                'todayTransactions': data.todayTransactions,
-                'todayRevenue': '$' + data.todayRevenue.toLocaleString(),
-                'totalProducts': data.totalProducts,
-                'lowStockCount': data.lowStockCount,
-                'monthlyGrowth': '+' + data.monthlyGrowth + '%',
-                'avgTransaction': '$' + data.avgTransaction.toFixed(2),
-                'activeUsers': data.activeUsers,
-                'systemHealth': data.systemHealth + '%'
-            };
-            
-            Object.entries(updates).forEach(([id, value]) => {
-                const element = document.getElementById(id);
-                if (element) {
-                    element.textContent = value;
-                    element.style.animation = 'pulse 0.5s ease';
-                }
-            });
+            try {
+                const safeNumber = (value, defaultValue = 0) => {
+                    const num = parseFloat(value);
+                    return isNaN(num) ? defaultValue : num;
+                };
+                
+                const updates = {
+                    'todayTransactions': data.todayTransactions || 0,
+                    'todayRevenue': '$' + safeNumber(data.todayRevenue).toLocaleString(),
+                    'totalProducts': data.totalProducts || 0,
+                    'lowStockCount': data.lowStockCount || 0,
+                    'monthlyGrowth': '+' + safeNumber(data.monthlyGrowth).toFixed(1) + '%',
+                    'avgTransaction': '$' + safeNumber(data.avgTransaction).toFixed(2),
+                    'activeUsers': data.activeUsers || 0,
+                    'systemHealth': safeNumber(data.systemHealth, 100) + '%'
+                };
+                
+                Object.entries(updates).forEach(([id, value]) => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.textContent = value;
+                        element.style.animation = 'pulse 0.5s ease';
+                    }
+                });
+            } catch (error) {
+                console.error('❌ Error updating dashboard stats:', error);
+                // Set safe default values
+                const defaultUpdates = {
+                    'todayTransactions': '0',
+                    'todayRevenue': '$0',
+                    'totalProducts': '0',
+                    'lowStockCount': '0',
+                    'monthlyGrowth': '+0.0%',
+                    'avgTransaction': '$0.00',
+                    'activeUsers': '0',
+                    'systemHealth': '100%'
+                };
+                
+                Object.entries(defaultUpdates).forEach(([id, value]) => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.textContent = value;
+                    }
+                });
+            }
         }
 
         // ==================== MODULE NAVIGATION ==================== 
@@ -3405,28 +3442,424 @@
             event.target.classList.add('active');
         }
 
-        // ==================== POS FUNCTIONS ==================== 
-        let posCart = [];
-        let posProducts = [];
-        let posCustomers = [];
-        let selectedCustomer = null;
-        let selectedPaymentMethod = 'cash';
+        // ==================== RESTAURANT POS FUNCTIONS ==================== 
+        let currentTable = null;
+        let currentOrder = [];
+        let guestCount = 2;
+        let guestName = '';
+        let tables = [];
+        let menuItems = [];
+        let currentCategory = 'food';
+        let currentSubcategory = null;
 
-        async function initializePOSInterface() {
-            console.log('🏪 Initializing POS Interface...');
+        async function initializeRestaurantPOS() {
+            console.log('🍽️ Initializing Restaurant POS...');
             
             // Start date/time updates
             updateDateTime();
             setInterval(updateDateTime, 1000);
             
-            // Load data
-            await loadPOSProducts();
-            await loadPOSCustomers();
+            // Load restaurant data
+            await loadTables();
+            await loadMenuItems();
             
-            // Initialize empty cart
-            updateCartDisplay();
+            // Show table selection initially
+            showTableSelection();
             
-            console.log('✅ POS Interface initialized');
+            console.log('✅ Restaurant POS initialized');
+        }
+
+        async function loadTables() {
+            // Generate demo tables
+            tables = [];
+            for (let i = 1; i <= 20; i++) {
+                tables.push({
+                    number: i,
+                    status: Math.random() > 0.7 ? 'occupied' : 'available',
+                    guests: Math.floor(Math.random() * 6) + 1,
+                    server: Math.random() > 0.5 ? 'John' : 'Sarah',
+                    orderTime: new Date(Date.now() - Math.random() * 3600000).toLocaleTimeString(),
+                    total: Math.random() > 0.5 ? (Math.random() * 100 + 20).toFixed(2) : null
+                });
+            }
+            
+            displayTables();
+        }
+
+        function displayTables() {
+            const tablesGrid = document.getElementById('tablesGrid');
+            if (!tablesGrid) return;
+            
+            tablesGrid.innerHTML = tables.map(table => `
+                <div class="table-card ${table.status}" onclick="selectTable(${table.number})">
+                    <div class="table-number">${table.number}</div>
+                    <div class="table-status">
+                        <span class="status-indicator ${table.status}"></span>
+                        ${table.status === 'occupied' ? 'Occupied' : 'Available'}
+                    </div>
+                    ${table.status === 'occupied' ? `
+                        <div class="table-details">
+                            <div class="table-guests">${table.guests} guests</div>
+                            <div class="table-time">${table.orderTime}</div>
+                            <div class="table-total">$${table.total || '0.00'}</div>
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        function selectTable(tableNumber) {
+            currentTable = tables.find(t => t.number === tableNumber);
+            
+            if (currentTable.status === 'available') {
+                // Show guest info modal for new table
+                showGuestInfoModal();
+            } else {
+                // Open existing order
+                resumeOrder();
+            }
+        }
+
+        function showGuestInfoModal() {
+            const modal = document.getElementById('guestInfoModal');
+            modal.classList.remove('hidden');
+            document.getElementById('guestCount').textContent = '2';
+            document.getElementById('guestName').value = '';
+            document.getElementById('specialRequests').value = '';
+            guestCount = 2;
+        }
+
+        function closeGuestModal() {
+            document.getElementById('guestInfoModal').classList.add('hidden');
+        }
+
+        function adjustGuestCount(change) {
+            guestCount = Math.max(1, guestCount + change);
+            document.getElementById('guestCount').textContent = guestCount;
+        }
+
+        function startOrder() {
+            guestName = document.getElementById('guestName').value;
+            const specialRequests = document.getElementById('specialRequests').value;
+            
+            // Update table status
+            currentTable.status = 'occupied';
+            currentTable.guests = guestCount;
+            currentTable.server = currentUser ? currentUser.name : 'Admin';
+            currentTable.orderTime = new Date().toLocaleTimeString();
+            
+            // Close modal and show order interface
+            closeGuestModal();
+            showOrderInterface();
+        }
+
+        function resumeOrder() {
+            showOrderInterface();
+        }
+
+        function showTableSelection() {
+            document.getElementById('tableSelectionView').classList.remove('hidden');
+            document.getElementById('orderInterface').classList.add('hidden');
+        }
+
+        function showOrderInterface() {
+            document.getElementById('tableSelectionView').classList.add('hidden');
+            document.getElementById('orderInterface').classList.remove('hidden');
+            
+            // Update table info display
+            document.getElementById('currentTableNumber').textContent = `Table ${currentTable.number}`;
+            document.getElementById('currentGuestInfo').textContent = `${currentTable.guests} Guest${currentTable.guests !== 1 ? 's' : ''}`;
+            
+            // Load menu for current category
+            showCategory('food');
+        }
+
+        async function loadMenuItems() {
+            // Generate demo menu items
+            menuItems = {
+                food: {
+                    appetizers: [
+                        { id: 'app1', name: 'Caesar Salad', price: 12.99, description: 'Fresh romaine, parmesan, croutons' },
+                        { id: 'app2', name: 'Chicken Wings', price: 14.99, description: '8 pieces with choice of sauce' },
+                        { id: 'app3', name: 'Mozzarella Sticks', price: 9.99, description: '6 pieces with marinara sauce' }
+                    ],
+                    mains: [
+                        { id: 'main1', name: 'Grilled Salmon', price: 24.99, description: 'Atlantic salmon with vegetables' },
+                        { id: 'main2', name: 'Ribeye Steak', price: 32.99, description: '12oz ribeye with mashed potatoes' },
+                        { id: 'main3', name: 'Chicken Parmesan', price: 19.99, description: 'Breaded chicken with pasta' }
+                    ],
+                    desserts: [
+                        { id: 'des1', name: 'Chocolate Cake', price: 7.99, description: 'Rich chocolate layer cake' },
+                        { id: 'des2', name: 'Cheesecake', price: 6.99, description: 'New York style cheesecake' }
+                    ]
+                },
+                beverage: {
+                    coffee: [
+                        { id: 'cof1', name: 'Cappuccino', price: 4.99, description: 'Espresso with steamed milk' },
+                        { id: 'cof2', name: 'Latte', price: 5.49, description: 'Espresso with steamed milk and foam' }
+                    ],
+                    soft: [
+                        { id: 'sod1', name: 'Coca Cola', price: 2.99, description: 'Classic cola' },
+                        { id: 'sod2', name: 'Sprite', price: 2.99, description: 'Lemon-lime soda' }
+                    ],
+                    alcohol: [
+                        { id: 'alc1', name: 'House Wine', price: 8.99, description: 'Red or white wine' },
+                        { id: 'alc2', name: 'Beer', price: 5.99, description: 'Draft beer selection' }
+                    ]
+                },
+                misc: {
+                    service: [
+                        { id: 'srv1', name: 'Service Charge', price: 5.00, description: 'Additional service fee' },
+                        { id: 'srv2', name: 'Delivery Fee', price: 3.00, description: 'Delivery service charge' }
+                    ]
+                },
+                function: {
+                    discounts: [
+                        { id: 'dis1', name: '10% Discount', price: -0.10, description: '10% off total bill', type: 'percentage' },
+                        { id: 'dis2', name: '$5 Off', price: -5.00, description: '$5 off total bill', type: 'fixed' }
+                    ],
+                    modifiers: [
+                        { id: 'mod1', name: 'Extra Sauce', price: 1.50, description: 'Additional sauce' },
+                        { id: 'mod2', name: 'Extra Cheese', price: 2.00, description: 'Additional cheese' }
+                    ]
+                }
+            };
+        }
+
+        function showCategory(category) {
+            currentCategory = category;
+            
+            // Update active category button
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-category="${category}"]`).classList.add('active');
+            
+            // Show subcategories
+            displaySubcategories(category);
+            
+            // Show first subcategory items by default
+            const subcategories = Object.keys(menuItems[category] || {});
+            if (subcategories.length > 0) {
+                showSubcategory(subcategories[0]);
+            }
+        }
+
+        function displaySubcategories(category) {
+            const subcategorySection = document.getElementById('subcategorySection');
+            const subcategories = Object.keys(menuItems[category] || {});
+            
+            subcategorySection.innerHTML = subcategories.map(subcat => `
+                <button class="subcategory-btn ${!currentSubcategory ? 'active' : ''}" 
+                        onclick="showSubcategory('${subcat}')" data-subcategory="${subcat}">
+                    ${subcat.charAt(0).toUpperCase() + subcat.slice(1)}
+                </button>
+            `).join('');
+        }
+
+        function showSubcategory(subcategory) {
+            currentSubcategory = subcategory;
+            
+            // Update active subcategory button
+            document.querySelectorAll('.subcategory-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-subcategory="${subcategory}"]`)?.classList.add('active');
+            
+            // Display menu items
+            displayMenuItems();
+        }
+
+        function displayMenuItems() {
+            const menuGrid = document.getElementById('menuGrid');
+            const items = menuItems[currentCategory]?.[currentSubcategory] || [];
+            
+            menuGrid.innerHTML = items.map(item => `
+                <div class="menu-item" onclick="addToOrder('${item.id}')">
+                    <div class="menu-item-header">
+                        <h4>${item.name}</h4>
+                        <span class="price">$${item.price.toFixed(2)}</span>
+                    </div>
+                    <p class="description">${item.description}</p>
+                </div>
+            `).join('');
+        }
+
+        function addToOrder(itemId) {
+            // Find item in menu
+            let foundItem = null;
+            Object.values(menuItems).forEach(category => {
+                Object.values(category).forEach(subcategory => {
+                    const item = subcategory.find(i => i.id === itemId);
+                    if (item) foundItem = item;
+                });
+            });
+            
+            if (!foundItem) return;
+            
+            // Check if item already in order
+            const existingItem = currentOrder.find(item => item.id === itemId);
+            
+            if (existingItem) {
+                existingItem.quantity++;
+                existingItem.total = existingItem.quantity * existingItem.price;
+            } else {
+                currentOrder.push({
+                    ...foundItem,
+                    quantity: 1,
+                    total: foundItem.price
+                });
+            }
+            
+            updateOrderDisplay();
+        }
+
+        function updateOrderDisplay() {
+            const orderItems = document.getElementById('orderItems');
+            
+            if (currentOrder.length === 0) {
+                orderItems.innerHTML = `
+                    <div class="empty-order">
+                        <i class="fas fa-clipboard-list"></i>
+                        <p>No items ordered yet</p>
+                    </div>
+                `;
+            } else {
+                orderItems.innerHTML = currentOrder.map(item => `
+                    <div class="order-item">
+                        <div class="item-info">
+                            <div class="item-name">${item.name}</div>
+                            <div class="item-price">$${item.price.toFixed(2)} each</div>
+                        </div>
+                        <div class="quantity-controls">
+                            <button class="qty-btn" onclick="updateOrderQuantity('${item.id}', -1)">-</button>
+                            <span class="quantity">${item.quantity}</span>
+                            <button class="qty-btn" onclick="updateOrderQuantity('${item.id}', 1)">+</button>
+                            <button class="remove-btn" onclick="removeFromOrder('${item.id}')">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            updateOrderTotals();
+        }
+
+        function updateOrderTotals() {
+            const subtotal = currentOrder.reduce((sum, item) => sum + item.total, 0);
+            const tax = subtotal * 0.085;
+            const total = subtotal + tax;
+            
+            document.getElementById('orderSubtotal').textContent = '$' + subtotal.toFixed(2);
+            document.getElementById('orderTax').textContent = '$' + tax.toFixed(2);
+            document.getElementById('orderTotal').textContent = '$' + total.toFixed(2);
+        }
+
+        function updateOrderQuantity(itemId, change) {
+            const item = currentOrder.find(item => item.id === itemId);
+            if (!item) return;
+            
+            const newQuantity = item.quantity + change;
+            
+            if (newQuantity <= 0) {
+                removeFromOrder(itemId);
+            } else {
+                item.quantity = newQuantity;
+                item.total = item.quantity * item.price;
+                updateOrderDisplay();
+            }
+        }
+
+        function removeFromOrder(itemId) {
+            currentOrder = currentOrder.filter(item => item.id !== itemId);
+            updateOrderDisplay();
+        }
+
+        function goBackToTables() {
+            if (currentOrder.length > 0) {
+                if (confirm('You have items in the current order. Save as draft?')) {
+                    // Save draft order logic here
+                }
+            }
+            showTableSelection();
+        }
+
+        function sendToKitchen() {
+            if (currentOrder.length === 0) {
+                alert('No items to send to kitchen');
+                return;
+            }
+            
+            alert('Order sent to kitchen! 🍳');
+            // Kitchen order logic here
+        }
+
+        function processPayment() {
+            if (currentOrder.length === 0) {
+                alert('No items to process payment for');
+                return;
+            }
+            
+            const total = currentOrder.reduce((sum, item) => sum + item.total, 0) * 1.085;
+            alert(`Processing payment of $${total.toFixed(2)} for Table ${currentTable.number}`);
+            
+            // Clear order and return to table selection
+            currentOrder = [];
+            currentTable.status = 'available';
+            updateOrderDisplay();
+            showTableSelection();
+            displayTables();
+        }
+
+        function holdOrder() {
+            alert('Order held - you can resume it later');
+        }
+
+        function clearOrder() {
+            if (confirm('Clear all items from order?')) {
+                currentOrder = [];
+                updateOrderDisplay();
+            }
+        }
+
+        function splitBill() {
+            alert('Split bill functionality - divide order between multiple payments');
+        }
+
+        function printBill() {
+            alert('Printing bill for Table ' + currentTable.number);
+        }
+
+        function addNewTable() {
+            const tableNumber = prompt('Enter new table number:');
+            if (tableNumber && !tables.find(t => t.number == tableNumber)) {
+                tables.push({
+                    number: parseInt(tableNumber),
+                    status: 'available',
+                    guests: 0,
+                    server: '',
+                    orderTime: null,
+                    total: null
+                });
+                displayTables();
+            }
+        }
+
+        function showTableStatus() {
+            const occupied = tables.filter(t => t.status === 'occupied').length;
+            const available = tables.filter(t => t.status === 'available').length;
+            alert(`Table Status:\n\nOccupied: ${occupied}\nAvailable: ${available}\nTotal: ${tables.length}`);
+        }
+
+        function showManagerFunctions() {
+            alert('Manager Functions:\n\n• View Reports\n• Manage Staff\n• System Settings\n• Backup Data');
+        }
+
+        function filterMenuItems() {
+            const searchTerm = document.getElementById('menuSearch').value.toLowerCase();
+            // Implement menu search logic
+            displayMenuItems();
         }
 
         function updateDateTime() {
@@ -3864,54 +4297,200 @@
             // Save current session
             sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
             
-            // Hide dashboard and show POS interface
+            // Hide dashboard and show restaurant POS interface
             document.getElementById('mainContainer').innerHTML = `
-                <div class="pos-container">
-                    <!-- POS Header -->
-                    <header class="pos-header">
-                        <div class="pos-title">
-                            <i class="fas fa-cash-register"></i>
-                            <span>POS Terminal</span>
+                <div class="restaurant-pos-container">
+                    <!-- Restaurant POS Header -->
+                    <header class="restaurant-header">
+                        <div class="restaurant-logo">
+                            <i class="fas fa-utensils"></i>
+                            <span>Restaurant POS</span>
                         </div>
-                        <div class="pos-info">
-                            <div class="cashier-info">
+                        <div class="restaurant-info">
+                            <div class="server-info">
                                 <i class="fas fa-user"></i>
-                                <span>Cashier: ${currentUser ? currentUser.name : 'Admin'}</span>
+                                <span>Server: ${currentUser ? currentUser.name : 'Admin'}</span>
                             </div>
                             <div class="date-time">
                                 <div id="currentDate"></div>
                                 <div id="currentTime"></div>
                             </div>
                         </div>
-                        <div class="pos-actions">
+                        <div class="restaurant-actions">
                             <button class="glass-btn" onclick="showMainDashboard()">
-                                <i class="fas fa-tachometer-alt"></i> Dashboard
+                                <i class="fas fa-home"></i> Dashboard
+                            </button>
+                            <button class="glass-btn" onclick="showManagerFunctions()">
+                                <i class="fas fa-cog"></i> Manager
                             </button>
                         </div>
                     </header>
 
-                    <div class="pos-main">
-                        <!-- Products Section -->
-                        <main class="products-section">
-                            <div class="products-header">
-                                <div class="search-bar">
-                                    <i class="fas fa-search"></i>
-                                    <input type="text" id="productSearch" placeholder="Search products..." oninput="filterProducts()">
-                                </div>
-                                <div class="barcode-scanner">
-                                    <input type="text" id="barcodeInput" placeholder="Scan barcode..." onkeypress="handleBarcodeInput(event)">
-                                    <button class="scan-btn" onclick="focusBarcode()">
-                                        <i class="fas fa-barcode"></i>
-                                    </button>
+                    <!-- Table Selection View -->
+                    <div class="table-selection-view" id="tableSelectionView">
+                        <div class="table-grid-header">
+                            <h2><i class="fas fa-table"></i> Select Table</h2>
+                            <div class="table-controls">
+                                <button class="glass-btn" onclick="addNewTable()">
+                                    <i class="fas fa-plus"></i> Add Table
+                                </button>
+                                <button class="glass-btn" onclick="showTableStatus()">
+                                    <i class="fas fa-eye"></i> Status
+                                </button>
+                            </div>
+                        </div>
+                        <div class="tables-grid" id="tablesGrid">
+                            <!-- Tables will be loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Guest Information Modal -->
+                    <div class="modal-overlay hidden" id="guestInfoModal">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3><i class="fas fa-users"></i> Guest Information</h3>
+                                <button class="close-btn" onclick="closeGuestModal()">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="guest-form">
+                                    <div class="form-group">
+                                        <label>Number of Guests</label>
+                                        <div class="guest-counter">
+                                            <button class="counter-btn" onclick="adjustGuestCount(-1)">-</button>
+                                            <span id="guestCount">2</span>
+                                            <button class="counter-btn" onclick="adjustGuestCount(1)">+</button>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Guest Name (Optional)</label>
+                                        <input type="text" id="guestName" placeholder="Enter guest name" class="form-input">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Special Requests</label>
+                                        <textarea id="specialRequests" placeholder="Any special requests..." class="form-input" rows="3"></textarea>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="products-grid" id="productsGrid">
-                                <div class="loading-products">
-                                    <i class="fas fa-spinner fa-spin"></i>
-                                    <p>Loading products...</p>
-                                </div>
+                            <div class="modal-footer">
+                                <button class="glass-btn secondary" onclick="closeGuestModal()">Cancel</button>
+                                <button class="glass-btn primary" onclick="startOrder()">Start Order</button>
                             </div>
-                        </main>
+                        </div>
+                    </div>
+
+                                         <!-- Order Interface (Hidden by default) -->
+                     <div class="order-interface hidden" id="orderInterface">
+                         <div class="order-header">
+                             <div class="table-info">
+                                 <span class="table-number" id="currentTableNumber">Table 1</span>
+                                 <span class="guest-info" id="currentGuestInfo">2 Guests</span>
+                             </div>
+                             <div class="order-controls">
+                                 <button class="glass-btn" onclick="goBackToTables()">
+                                     <i class="fas fa-arrow-left"></i> Tables
+                                 </button>
+                                 <button class="glass-btn" onclick="sendToKitchen()">
+                                     <i class="fas fa-paper-plane"></i> Send to Kitchen
+                                 </button>
+                             </div>
+                         </div>
+
+                         <div class="restaurant-main">
+                             <!-- Category Buttons -->
+                             <div class="category-section">
+                                 <div class="category-buttons">
+                                     <button class="category-btn active" data-category="food" onclick="showCategory('food')">
+                                         <i class="fas fa-utensils"></i>
+                                         <span>FOOD</span>
+                                     </button>
+                                     <button class="category-btn" data-category="beverage" onclick="showCategory('beverage')">
+                                         <i class="fas fa-coffee"></i>
+                                         <span>BEVERAGE</span>
+                                     </button>
+                                     <button class="category-btn" data-category="misc" onclick="showCategory('misc')">
+                                         <i class="fas fa-ellipsis-h"></i>
+                                         <span>MISC</span>
+                                     </button>
+                                     <button class="category-btn" data-category="function" onclick="showCategory('function')">
+                                         <i class="fas fa-cogs"></i>
+                                         <span>FUNCTION</span>
+                                     </button>
+                                 </div>
+
+                                 <!-- Sub-category Buttons -->
+                                 <div class="subcategory-section" id="subcategorySection">
+                                     <!-- Subcategories will be loaded here -->
+                                 </div>
+                             </div>
+
+                             <!-- Menu Items -->
+                             <div class="menu-section">
+                                 <div class="menu-header">
+                                     <div class="search-bar">
+                                         <i class="fas fa-search"></i>
+                                         <input type="text" id="menuSearch" placeholder="Search menu items..." oninput="filterMenuItems()">
+                                     </div>
+                                 </div>
+                                 <div class="menu-grid" id="menuGrid">
+                                     <!-- Menu items will be loaded here -->
+                                 </div>
+                             </div>
+
+                             <!-- Order Display -->
+                             <div class="order-section">
+                                 <div class="order-header">
+                                     <h3><i class="fas fa-receipt"></i> Current Order</h3>
+                                     <div class="order-actions">
+                                         <button class="action-btn" onclick="holdOrder()" title="Hold Order">
+                                             <i class="fas fa-pause"></i>
+                                         </button>
+                                         <button class="action-btn" onclick="clearOrder()" title="Clear Order">
+                                             <i class="fas fa-trash"></i>
+                                         </button>
+                                     </div>
+                                 </div>
+                                 
+                                 <div class="order-items" id="orderItems">
+                                     <div class="empty-order">
+                                         <i class="fas fa-clipboard-list"></i>
+                                         <p>No items ordered yet</p>
+                                     </div>
+                                 </div>
+                                 
+                                 <!-- Order Totals -->
+                                 <div class="order-totals">
+                                     <div class="total-line">
+                                         <span>Subtotal:</span>
+                                         <span id="orderSubtotal">$0.00</span>
+                                     </div>
+                                     <div class="total-line">
+                                         <span>Tax:</span>
+                                         <span id="orderTax">$0.00</span>
+                                     </div>
+                                     <div class="total-line total">
+                                         <span>Total:</span>
+                                         <span id="orderTotal">$0.00</span>
+                                     </div>
+                                 </div>
+
+                                 <!-- Payment Section -->
+                                 <div class="payment-section">
+                                     <button class="payment-btn full-width" onclick="processPayment()">
+                                         <i class="fas fa-credit-card"></i>
+                                         Process Payment
+                                     </button>
+                                     <div class="payment-options">
+                                         <button class="payment-option" onclick="splitBill()">
+                                             <i class="fas fa-cut"></i> Split Bill
+                                         </button>
+                                         <button class="payment-option" onclick="printBill()">
+                                             <i class="fas fa-print"></i> Print Bill
+                                         </button>
+                                     </div>
+                                 </div>
+                             </div>
+                         </div>
+                     </div>
 
                         <!-- Cart Section -->
                         <aside class="cart-section">
@@ -4001,8 +4580,8 @@
                 </div>
             `;
             
-            // Initialize POS interface
-            initializePOSInterface();
+            // Initialize Restaurant POS interface
+            initializeRestaurantPOS();
         }
 
         function showAdvancedInventoryInterface() {
