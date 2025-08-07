@@ -1756,7 +1756,638 @@
             }
         }
 
-        /* ==================== ADVANCED POS SYSTEM STYLES ==================== */
+        /* ==================== AUTHENTIC MICROS POS STYLES ==================== */
+        .authentic-micros-pos {
+            height: 100vh;
+            background: #f0f0f0;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .micros-top-bar {
+            background: linear-gradient(to bottom, #ffffff, #e0e0e0);
+            border-bottom: 2px solid #333;
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .pos-station-info {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .station-id {
+            background: #333;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .restaurant-name {
+            font-weight: bold;
+            font-size: 18px;
+            color: #333;
+        }
+
+        .employee-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .employee-name {
+            font-weight: bold;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .employee-id {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .time-display {
+            text-align: right;
+        }
+
+        .current-time {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .current-date {
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Main Menu Styles */
+        .pos-main-menu {
+            flex: 1;
+            padding: 20px;
+            background: #f8f8f8;
+        }
+
+        .menu-title {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .menu-title h2 {
+            color: #333;
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .menu-subtitle {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .pos-menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .menu-section {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .menu-section h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+            border-bottom: 2px solid #007acc;
+            padding-bottom: 8px;
+            font-size: 18px;
+        }
+
+        .menu-buttons {
+            display: grid;
+            gap: 10px;
+        }
+
+        .pos-menu-btn {
+            background: linear-gradient(to bottom, #ffffff, #f0f0f0);
+            border: 2px solid #ccc;
+            border-radius: 6px;
+            padding: 15px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .pos-menu-btn:hover {
+            background: linear-gradient(to bottom, #e6f3ff, #cce6ff);
+            border-color: #007acc;
+            transform: translateY(-1px);
+        }
+
+        .pos-menu-btn.primary {
+            background: linear-gradient(to bottom, #007acc, #005999);
+            color: white;
+            border-color: #005999;
+            font-weight: bold;
+        }
+
+        .pos-menu-btn.primary:hover {
+            background: linear-gradient(to bottom, #0088dd, #006aaa);
+        }
+
+        .pos-menu-btn.danger {
+            background: linear-gradient(to bottom, #dc3545, #c82333);
+            color: white;
+            border-color: #c82333;
+        }
+
+        .pos-menu-btn.danger:hover {
+            background: linear-gradient(to bottom, #e85463, #d73444);
+        }
+
+        .pos-menu-btn i {
+            font-size: 18px;
+            min-width: 20px;
+        }
+
+        .pos-menu-btn span {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .pos-menu-btn small {
+            display: block;
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+
+        /* Modal Styles */
+        .micros-modal {
+            background: white;
+            border: 3px solid #333;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .micros-modal .modal-header {
+            background: linear-gradient(to bottom, #007acc, #005999);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px 5px 0 0;
+            border-bottom: 2px solid #333;
+        }
+
+        .micros-modal .modal-header h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .micros-modal .modal-body {
+            padding: 20px;
+        }
+
+        .number-input-section {
+            margin-bottom: 20px;
+        }
+
+        .number-input-section label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .micros-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .number-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .num-btn {
+            background: linear-gradient(to bottom, #ffffff, #f0f0f0);
+            border: 2px solid #ccc;
+            border-radius: 6px;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .num-btn:hover {
+            background: linear-gradient(to bottom, #e6f3ff, #cce6ff);
+            border-color: #007acc;
+        }
+
+        .num-btn.clear {
+            background: linear-gradient(to bottom, #ffc107, #e0a800);
+            color: white;
+        }
+
+        .num-btn.backspace {
+            background: linear-gradient(to bottom, #6c757d, #545b62);
+            color: white;
+        }
+
+        .guest-input-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-row label {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .pax-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pax-btn {
+            background: linear-gradient(to bottom, #007acc, #005999);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .micros-btn {
+            background: linear-gradient(to bottom, #ffffff, #f0f0f0);
+            border: 2px solid #ccc;
+            border-radius: 6px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+
+        .micros-btn.primary {
+            background: linear-gradient(to bottom, #007acc, #005999);
+            color: white;
+            border-color: #005999;
+        }
+
+        .micros-btn.secondary {
+            background: linear-gradient(to bottom, #6c757d, #545b62);
+            color: white;
+            border-color: #545b62;
+        }
+
+        .micros-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        /* Order Entry Screen */
+        .order-entry-screen {
+            height: 100vh;
+            background: #f8f8f8;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .order-entry-header {
+            background: linear-gradient(to bottom, #ffffff, #e0e0e0);
+            border-bottom: 2px solid #333;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .check-info, .employee-check-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .check-number, .table-number {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .employee-name, .open-time {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .order-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .header-btn {
+            background: linear-gradient(to bottom, #ffffff, #f0f0f0);
+            border: 2px solid #ccc;
+            border-radius: 4px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .header-btn:hover {
+            background: linear-gradient(to bottom, #e6f3ff, #cce6ff);
+            border-color: #007acc;
+        }
+
+        /* Dual Panel Layout */
+        .dual-panel-container {
+            display: flex;
+            flex: 1;
+            gap: 10px;
+            padding: 10px;
+        }
+
+        .order-panel, .guest-panel {
+            background: white;
+            border: 2px solid #ccc;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .order-panel {
+            flex: 2;
+        }
+
+        .guest-panel {
+            flex: 1;
+        }
+
+        .panel-header {
+            background: linear-gradient(to bottom, #007acc, #005999);
+            color: white;
+            padding: 12px 16px;
+            border-bottom: 2px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-header h3 {
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .order-status {
+            background: #28a745;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .order-items-display {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .order-items-header {
+            background: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+            padding: 10px;
+            display: grid;
+            grid-template-columns: 50px 1fr 80px 80px;
+            gap: 10px;
+            font-weight: bold;
+            font-size: 12px;
+            color: #333;
+        }
+
+        .order-items-list {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+        }
+
+        .no-items-message {
+            text-align: center;
+            color: #666;
+            padding: 40px 20px;
+        }
+
+        .no-items-message i {
+            font-size: 48px;
+            margin-bottom: 10px;
+            opacity: 0.5;
+        }
+
+        .order-totals {
+            border-top: 2px solid #333;
+            padding: 15px;
+            background: #f8f9fa;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .total-row.grand-total {
+            border-top: 2px solid #333;
+            padding-top: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .guest-details {
+            padding: 15px;
+            flex: 1;
+        }
+
+        .detail-section {
+            margin-bottom: 20px;
+        }
+
+        .detail-section h4 {
+            color: #333;
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+
+        .detail-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+        }
+
+        .detail-item label {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .special-requests-display {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            font-size: 13px;
+            min-height: 60px;
+        }
+
+        /* Function Panels */
+        .function-panels {
+            display: flex;
+            height: 200px;
+            gap: 10px;
+            padding: 0 10px 10px 10px;
+        }
+
+        .menu-functions, .order-functions {
+            background: white;
+            border: 2px solid #ccc;
+            border-radius: 6px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .menu-functions h4, .order-functions h4 {
+            background: linear-gradient(to bottom, #6c757d, #545b62);
+            color: white;
+            margin: 0;
+            padding: 10px 15px;
+            font-size: 14px;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .category-buttons, .function-buttons {
+            padding: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .category-function-btn, .function-btn {
+            background: linear-gradient(to bottom, #ffffff, #f0f0f0);
+            border: 2px solid #ccc;
+            border-radius: 4px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            text-align: center;
+            min-width: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .category-function-btn:hover, .function-btn:hover {
+            background: linear-gradient(to bottom, #e6f3ff, #cce6ff);
+            border-color: #007acc;
+        }
+
+        .category-function-btn.active {
+            background: linear-gradient(to bottom, #007acc, #005999);
+            color: white;
+            border-color: #005999;
+        }
+
+        .function-btn.discount { border-color: #ffc107; }
+        .function-btn.comp { border-color: #28a745; }
+        .function-btn.void { border-color: #dc3545; }
+        .function-btn.modify { border-color: #17a2b8; }
+        .function-btn.payment { border-color: #28a745; }
+        .function-btn.hold { border-color: #ffc107; }
+        .function-btn.transfer { border-color: #6f42c1; }
+        .function-btn.close { border-color: #343a40; }
+
+        .menu-items-display {
+            background: #f8f9fa;
+            border-top: 1px solid #ddd;
+            padding: 10px;
+            flex: 1;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 8px;
+        }
+
+        .menu-item-btn {
+            background: linear-gradient(to bottom, #ffffff, #f0f0f0);
+            border: 2px solid #ccc;
+            border-radius: 4px;
+            padding: 10px;
+            cursor: pointer;
+            font-size: 11px;
+            text-align: center;
+            height: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .menu-item-btn:hover {
+            background: linear-gradient(to bottom, #e6f3ff, #cce6ff);
+            border-color: #007acc;
+        }
+
+        .menu-item-btn .item-name {
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .menu-item-btn .item-price {
+            color: #007acc;
+            font-weight: bold;
+        }
+
+        /* ==================== END AUTHENTIC MICROS STYLES ==================== */
         .micros-pos-system {
             height: 100vh;
             display: flex;
@@ -5864,45 +6495,400 @@
             // Save current session
             sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
             
-            // Hide dashboard and show Micros-style POS interface
+            // Hide dashboard and show authentic Micros POS interface
             document.getElementById('mainContainer').innerHTML = `
-                <div class="micros-pos-system">
-                    <!-- Micros-Style Header Bar -->
-                    <header class="micros-header">
-                        <div class="micros-logo">
-                            <div class="pos-station">Station 1</div>
-                            <div class="restaurant-name">${currentUser?.companyName || 'Restaurant Name'}</div>
+                <div class="authentic-micros-pos">
+                    <!-- Micros Header -->
+                    <div class="micros-top-bar">
+                        <div class="pos-station-info">
+                            <span class="station-id">WS1</span>
+                            <span class="restaurant-name">${currentUser?.companyName || 'RESTAURANT POS'}</span>
                         </div>
-                        <div class="micros-status-bar">
-                            <div class="server-badge">
-                                <i class="fas fa-user-circle"></i>
-                                <div class="server-details">
-                                    <div class="server-name">${currentUser ? currentUser.name : 'Server #1'}</div>
-                                    <div class="server-id">ID: ${currentUser ? currentUser.id : '001'}</div>
+                        <div class="employee-info">
+                            <span class="employee-name">${currentUser ? currentUser.name : 'Server 1'}</span>
+                            <span class="employee-id">ID: ${currentUser ? currentUser.id : '001'}</span>
+                        </div>
+                        <div class="time-display">
+                            <div id="currentTime" class="current-time"></div>
+                            <div id="currentDate" class="current-date"></div>
+                        </div>
+                    </div>
+
+                    <!-- Main POS Menu Screen -->
+                    <div class="pos-main-menu" id="posMainMenu">
+                        <div class="menu-title">
+                            <h2>MICROS POS - Main Menu</h2>
+                            <div class="menu-subtitle">Select an option to continue</div>
+                        </div>
+                        
+                        <div class="pos-menu-grid">
+                            <!-- Primary Functions -->
+                            <div class="menu-section">
+                                <h3>Order Functions</h3>
+                                <div class="menu-buttons">
+                                    <button class="pos-menu-btn primary" onclick="beginCheck()">
+                                        <i class="fas fa-plus-circle"></i>
+                                        <span>Begin Check</span>
+                                        <small>Start new order</small>
+                                    </button>
+                                    <button class="pos-menu-btn" onclick="openExistingCheck()">
+                                        <i class="fas fa-folder-open"></i>
+                                        <span>Open Check</span>
+                                        <small>Resume existing order</small>
+                                    </button>
+                                    <button class="pos-menu-btn" onclick="transferCheck()">
+                                        <i class="fas fa-exchange-alt"></i>
+                                        <span>Transfer Check</span>
+                                        <small>Move to another table</small>
+                                    </button>
                                 </div>
                             </div>
-                            <div class="shift-info">
-                                <div class="shift-time">Shift: <span id="shiftStartTime">2:00 PM</span></div>
-                                <div class="current-time" id="microsTime"></div>
+
+                            <!-- Reports Section -->
+                            <div class="menu-section">
+                                <h3>Reports & Analytics</h3>
+                                <div class="menu-buttons">
+                                    <button class="pos-menu-btn" onclick="showDailyRVCReport()">
+                                        <i class="fas fa-chart-line"></i>
+                                        <span>Daily RVC Report</span>
+                                        <small>Revenue, Volume, Cost</small>
+                                    </button>
+                                    <button class="pos-menu-btn" onclick="showTipsReport()">
+                                        <i class="fas fa-dollar-sign"></i>
+                                        <span>Tips Report</span>
+                                        <small>Daily tips summary</small>
+                                    </button>
+                                    <button class="pos-menu-btn" onclick="showSalesReport()">
+                                        <i class="fas fa-receipt"></i>
+                                        <span>Sales Report</span>
+                                        <small>Detailed sales data</small>
+                                    </button>
+                                    <button class="pos-menu-btn" onclick="showMenuEngineering()">
+                                        <i class="fas fa-cogs"></i>
+                                        <span>Menu Engineering</span>
+                                        <small>Item performance analysis</small>
+                                    </button>
+                                </div>
                             </div>
-                            <div class="pos-controls">
-                                <button class="micros-btn clock" onclick="showTimeClockModal()" title="Time Clock">
-                                    <i class="fas fa-clock"></i>
-                                </button>
-                                <button class="micros-btn manager" onclick="showManagerWorkstation()" title="Manager">
-                                    <i class="fas fa-user-tie"></i>
-                                </button>
-                                <button class="micros-btn reports" onclick="showQuickReports()" title="Reports">
-                                    <i class="fas fa-chart-bar"></i>
-                                </button>
-                                <button class="micros-btn logout" onclick="logoutFromPOS()" title="Logout">
-                                    <i class="fas fa-sign-out-alt"></i>
-                                </button>
+
+                            <!-- Management Functions -->
+                            <div class="menu-section">
+                                <h3>Management</h3>
+                                <div class="menu-buttons">
+                                    <button class="pos-menu-btn" onclick="showTableStatus()">
+                                        <i class="fas fa-table"></i>
+                                        <span>Table Status</span>
+                                        <small>View all tables</small>
+                                    </button>
+                                    <button class="pos-menu-btn" onclick="showEmployeeManager()">
+                                        <i class="fas fa-users"></i>
+                                        <span>Employee Manager</span>
+                                        <small>Staff management</small>
+                                    </button>
+                                    <button class="pos-menu-btn" onclick="showInventoryManager()">
+                                        <i class="fas fa-boxes"></i>
+                                        <span>Inventory</span>
+                                        <small>Stock management</small>
+                                    </button>
+                                    <button class="pos-menu-btn" onclick="showSystemSettings()">
+                                        <i class="fas fa-cog"></i>
+                                        <span>System Settings</span>
+                                        <small>Configure POS</small>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Utilities -->
+                            <div class="menu-section">
+                                <h3>Utilities</h3>
+                                <div class="menu-buttons">
+                                    <button class="pos-menu-btn" onclick="showTimeClockModal()">
+                                        <i class="fas fa-clock"></i>
+                                        <span>Time Clock</span>
+                                        <small>Clock in/out</small>
+                                    </button>
+                                    <button class="pos-menu-btn" onclick="showManagerFunctions()">
+                                        <i class="fas fa-user-tie"></i>
+                                        <span>Manager Functions</span>
+                                        <small>Advanced options</small>
+                                    </button>
+                                    <button class="pos-menu-btn" onclick="backupData()">
+                                        <i class="fas fa-save"></i>
+                                        <span>Backup Data</span>
+                                        <small>Save system data</small>
+                                    </button>
+                                    <button class="pos-menu-btn danger" onclick="logoutFromPOS()">
+                                        <i class="fas fa-sign-out-alt"></i>
+                                        <span>Logout</span>
+                                        <small>Exit POS system</small>
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </header>
+                    </div>
 
-                    <!-- Employee Time Clock Modal -->
+                    <!-- Table Number Input Modal -->
+                    <div class="modal-overlay hidden" id="tableNumberModal">
+                        <div class="micros-modal">
+                            <div class="modal-header">
+                                <h3>Enter Table Number</h3>
+                            </div>
+                            <div class="modal-body">
+                                <div class="number-input-section">
+                                    <label>Table Number:</label>
+                                    <input type="number" id="tableNumberInput" class="micros-input" min="1" max="999" placeholder="Enter table number">
+                                </div>
+                                <div class="number-pad">
+                                    <button class="num-btn" onclick="addToTableNumber('1')">1</button>
+                                    <button class="num-btn" onclick="addToTableNumber('2')">2</button>
+                                    <button class="num-btn" onclick="addToTableNumber('3')">3</button>
+                                    <button class="num-btn" onclick="addToTableNumber('4')">4</button>
+                                    <button class="num-btn" onclick="addToTableNumber('5')">5</button>
+                                    <button class="num-btn" onclick="addToTableNumber('6')">6</button>
+                                    <button class="num-btn" onclick="addToTableNumber('7')">7</button>
+                                    <button class="num-btn" onclick="addToTableNumber('8')">8</button>
+                                    <button class="num-btn" onclick="addToTableNumber('9')">9</button>
+                                    <button class="num-btn clear" onclick="clearTableNumber()">Clear</button>
+                                    <button class="num-btn" onclick="addToTableNumber('0')">0</button>
+                                    <button class="num-btn backspace" onclick="backspaceTableNumber()">⌫</button>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="micros-btn secondary" onclick="cancelTableInput()">Cancel</button>
+                                <button class="micros-btn primary" onclick="confirmTableNumber()">Continue</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Guest Details Modal -->
+                    <div class="modal-overlay hidden" id="guestDetailsModal">
+                        <div class="micros-modal">
+                            <div class="modal-header">
+                                <h3>Guest Information - Table <span id="selectedTableNum"></span></h3>
+                            </div>
+                            <div class="modal-body">
+                                <div class="guest-input-form">
+                                    <div class="form-row">
+                                        <label>Number of Guests (Pax):</label>
+                                        <div class="pax-controls">
+                                            <button class="pax-btn" onclick="adjustPaxCount(-1)">-</button>
+                                            <input type="number" id="paxCount" class="micros-input" value="2" min="1" max="20">
+                                            <button class="pax-btn" onclick="adjustPaxCount(1)">+</button>
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <label>Guest Name (Optional):</label>
+                                        <input type="text" id="guestNameInput" class="micros-input" placeholder="Enter guest name">
+                                    </div>
+                                    <div class="form-row">
+                                        <label>Special Requests:</label>
+                                        <textarea id="specialRequestsInput" class="micros-input" rows="3" placeholder="Any special requests or notes..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="micros-btn secondary" onclick="cancelGuestInput()">Back</button>
+                                <button class="micros-btn primary" onclick="startOrderEntry()">Start Order</button>
+                            </div>
+                                                 </div>
+                     </div>
+
+                     <!-- Dual Panel Order Entry Screen -->
+                     <div class="order-entry-screen hidden" id="orderEntryScreen">
+                         <!-- Order Entry Header -->
+                         <div class="order-entry-header">
+                             <div class="check-info">
+                                 <span class="check-number">Check #<span id="checkNumber">1001</span></span>
+                                 <span class="table-number">Table <span id="orderTableNumber">1</span></span>
+                             </div>
+                             <div class="employee-check-info">
+                                 <span class="employee-name">${currentUser ? currentUser.name : 'Server 1'}</span>
+                                 <span class="open-time" id="openTime">12:34 PM</span>
+                             </div>
+                             <div class="order-actions">
+                                 <button class="header-btn" onclick="goBackToMainMenu()">
+                                     <i class="fas fa-arrow-left"></i> Main Menu
+                                 </button>
+                                 <button class="header-btn" onclick="printCheck()">
+                                     <i class="fas fa-print"></i> Print
+                                 </button>
+                             </div>
+                         </div>
+
+                         <!-- Dual Panel Layout -->
+                         <div class="dual-panel-container">
+                             <!-- Left Panel - Order Details -->
+                             <div class="order-panel">
+                                 <div class="panel-header">
+                                     <h3>Order Details</h3>
+                                     <div class="order-status">Status: Open</div>
+                                 </div>
+                                 
+                                 <div class="order-items-display">
+                                     <div class="order-items-header">
+                                         <span>Qty</span>
+                                         <span>Item</span>
+                                         <span>Price</span>
+                                         <span>Total</span>
+                                     </div>
+                                     <div class="order-items-list" id="orderItemsList">
+                                         <div class="no-items-message">
+                                             <i class="fas fa-utensils"></i>
+                                             <p>No items ordered yet</p>
+                                             <small>Select items from the menu below</small>
+                                         </div>
+                                     </div>
+                                 </div>
+
+                                 <div class="order-totals">
+                                     <div class="total-row">
+                                         <span>Subtotal:</span>
+                                         <span id="orderSubtotal">$0.00</span>
+                                     </div>
+                                     <div class="total-row">
+                                         <span>Tax (8.5%):</span>
+                                         <span id="orderTax">$0.00</span>
+                                     </div>
+                                     <div class="total-row">
+                                         <span>Gratuity:</span>
+                                         <span id="orderGratuity">$0.00</span>
+                                     </div>
+                                     <div class="total-row grand-total">
+                                         <span>Total:</span>
+                                         <span id="orderGrandTotal">$0.00</span>
+                                     </div>
+                                 </div>
+                             </div>
+
+                             <!-- Right Panel - Guest & Check Details -->
+                             <div class="guest-panel">
+                                 <div class="panel-header">
+                                     <h3>Guest & Check Information</h3>
+                                 </div>
+                                 
+                                 <div class="guest-details">
+                                     <div class="detail-section">
+                                         <h4>Table Information</h4>
+                                         <div class="detail-grid">
+                                             <div class="detail-item">
+                                                 <label>Table Number:</label>
+                                                 <span id="guestTableNumber">1</span>
+                                             </div>
+                                             <div class="detail-item">
+                                                 <label>Number of Guests:</label>
+                                                 <span id="guestCount">2</span>
+                                             </div>
+                                             <div class="detail-item">
+                                                 <label>Guest Name:</label>
+                                                 <span id="guestName">Walk-in</span>
+                                             </div>
+                                         </div>
+                                     </div>
+
+                                     <div class="detail-section">
+                                         <h4>Check Information</h4>
+                                         <div class="detail-grid">
+                                             <div class="detail-item">
+                                                 <label>Check Number:</label>
+                                                 <span id="checkNumberDisplay">1001</span>
+                                             </div>
+                                             <div class="detail-item">
+                                                 <label>Employee:</label>
+                                                 <span id="employeeName">${currentUser ? currentUser.name : 'Server 1'}</span>
+                                             </div>
+                                             <div class="detail-item">
+                                                 <label>Opening Time:</label>
+                                                 <span id="openingTime">12:34 PM</span>
+                                             </div>
+                                         </div>
+                                     </div>
+
+                                     <div class="detail-section">
+                                         <h4>Special Requests</h4>
+                                         <div class="special-requests-display" id="specialRequestsDisplay">
+                                             <em>No special requests</em>
+                                         </div>
+                                     </div>
+                                 </div>
+                             </div>
+                         </div>
+
+                         <!-- Bottom Function Panels -->
+                         <div class="function-panels">
+                             <!-- Left Functions - Menu Categories -->
+                             <div class="menu-functions">
+                                 <h4>Menu Categories</h4>
+                                 <div class="category-buttons">
+                                     <button class="category-function-btn active" onclick="selectCategory('food')">
+                                         <i class="fas fa-utensils"></i>
+                                         <span>Food</span>
+                                     </button>
+                                     <button class="category-function-btn" onclick="selectCategory('beverage')">
+                                         <i class="fas fa-coffee"></i>
+                                         <span>Beverage</span>
+                                     </button>
+                                     <button class="category-function-btn" onclick="selectCategory('alcohol')">
+                                         <i class="fas fa-wine-glass"></i>
+                                         <span>Alcohol</span>
+                                     </button>
+                                     <button class="category-function-btn" onclick="selectCategory('dessert')">
+                                         <i class="fas fa-ice-cream"></i>
+                                         <span>Dessert</span>
+                                     </button>
+                                     <button class="category-function-btn" onclick="selectCategory('misc')">
+                                         <i class="fas fa-ellipsis-h"></i>
+                                         <span>Misc</span>
+                                     </button>
+                                 </div>
+                                 
+                                 <!-- Menu Items Display -->
+                                 <div class="menu-items-display" id="menuItemsDisplay">
+                                     <!-- Menu items will be loaded here based on selected category -->
+                                 </div>
+                             </div>
+
+                             <!-- Right Functions - Order Operations -->
+                             <div class="order-functions">
+                                 <h4>Order Functions</h4>
+                                 <div class="function-buttons">
+                                     <button class="function-btn discount" onclick="applyDiscount()">
+                                         <i class="fas fa-percent"></i>
+                                         <span>Discount</span>
+                                     </button>
+                                     <button class="function-btn comp" onclick="compItem()">
+                                         <i class="fas fa-gift"></i>
+                                         <span>Comp</span>
+                                     </button>
+                                     <button class="function-btn void" onclick="voidItem()">
+                                         <i class="fas fa-times"></i>
+                                         <span>Void</span>
+                                     </button>
+                                     <button class="function-btn modify" onclick="modifyItem()">
+                                         <i class="fas fa-edit"></i>
+                                         <span>Modify</span>
+                                     </button>
+                                     <button class="function-btn payment" onclick="processPayment()">
+                                         <i class="fas fa-credit-card"></i>
+                                         <span>Payment</span>
+                                     </button>
+                                     <button class="function-btn hold" onclick="holdCheck()">
+                                         <i class="fas fa-pause"></i>
+                                         <span>Hold</span>
+                                     </button>
+                                     <button class="function-btn transfer" onclick="transferCheck()">
+                                         <i class="fas fa-exchange-alt"></i>
+                                         <span>Transfer</span>
+                                     </button>
+                                     <button class="function-btn close" onclick="closeCheck()">
+                                         <i class="fas fa-check"></i>
+                                         <span>Close Check</span>
+                                     </button>
+                                 </div>
+                             </div>
+                         </div>
+                     </div>
+
+                     <!-- Employee Time Clock Modal -->
                     <div class="modal-overlay hidden" id="timeClockModal">
                         <div class="modal-content timeclock-modal">
                             <div class="modal-header">
