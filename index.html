@@ -658,6 +658,136 @@
         .animate-delay-3 { animation-delay: 0.3s; }
         .animate-delay-4 { animation-delay: 0.4s; }
 
+        /* ==================== MODULE INTERFACES ==================== */
+        .module-container {
+            padding: 2rem;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .module-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .module-title {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .module-title h2 {
+            margin: 0;
+            font-size: 1.8rem;
+            color: var(--text-primary);
+        }
+
+        .module-content {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .inventory-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background: var(--primary-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .stat-content h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .stat-content p {
+            margin: 0;
+            opacity: 0.7;
+            font-size: 0.9rem;
+        }
+
+        .inventory-controls, .report-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .report-tabs, .settings-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-button {
+            background: none;
+            border: none;
+            padding: 1rem 1.5rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 8px 8px 0 0;
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab-button:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+        }
+
+        .tab-button.active {
+            color: var(--accent-blue);
+            border-bottom-color: var(--accent-blue);
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .report-tab, .settings-tab {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .report-tab.active, .settings-tab.active {
+            display: block;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
         /* ==================== RESPONSIVE DESIGN ==================== */
         @media (max-width: 768px) {
             .login-container {
@@ -1266,6 +1396,92 @@
             showAdvancedSettingsInterface();
         }
 
+        // ==================== NAVIGATION SUPPORT FUNCTIONS ==================== 
+        async function loadInventoryData() {
+            try {
+                console.log('📦 Loading inventory data...');
+                
+                if (typeof google !== 'undefined' && google.script && google.script.run) {
+                    const productsResult = await new Promise((resolve, reject) => {
+                        google.script.run
+                            .withSuccessHandler(resolve)
+                            .withFailureHandler(reject)
+                            .getProducts();
+                    });
+                    
+                    if (productsResult && productsResult.success) {
+                        displayInventoryData(productsResult.data);
+                    } else {
+                        displayDemoInventoryData();
+                    }
+                } else {
+                    displayDemoInventoryData();
+                }
+            } catch (error) {
+                console.error('❌ Error loading inventory:', error);
+                displayDemoInventoryData();
+            }
+        }
+        
+        function displayInventoryData(products) {
+            const totalProducts = products.length;
+            const lowStockItems = products.filter(p => p.Stock < 10).length;
+            const inventoryValue = products.reduce((sum, p) => sum + (p.Price * p.Stock), 0);
+            
+            document.getElementById('totalProducts').textContent = totalProducts;
+            document.getElementById('lowStockItems').textContent = lowStockItems;
+            document.getElementById('inventoryValue').textContent = '$' + inventoryValue.toFixed(2);
+            
+            const grid = document.getElementById('inventoryGrid');
+            grid.innerHTML = '<div class="glass-panel" style="padding: 2rem; text-align: center;"><h3>📦 Inventory Management</h3><p>Product management interface will load here with real-time Google Sheets data.</p></div>';
+        }
+        
+        function displayDemoInventoryData() {
+            document.getElementById('totalProducts').textContent = '24';
+            document.getElementById('lowStockItems').textContent = '3';
+            document.getElementById('inventoryValue').textContent = '$15,420.50';
+            
+            document.getElementById('inventoryGrid').innerHTML = '<div class="glass-panel" style="padding: 2rem; text-align: center;"><h3>📦 Demo Inventory Data</h3><p>Connect to Google Sheets for real inventory management.</p></div>';
+        }
+        
+        async function loadReportsData() {
+            console.log('📊 Loading reports data...');
+            document.getElementById('salesCharts').innerHTML = '<div class="glass-panel" style="padding: 2rem; text-align: center;"><h3>📊 Sales Analytics</h3><p>Advanced business intelligence charts will load here.</p></div>';
+        }
+        
+        async function loadSettingsData() {
+            console.log('⚙️ Loading settings data...');
+            document.getElementById('companyForm').innerHTML = '<div class="glass-panel" style="padding: 2rem; text-align: center;"><h3>⚙️ Company Settings</h3><p>Company configuration form will load here with Google Sheets integration.</p></div>';
+        }
+        
+        function showReportTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.report-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + 'Report').classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        function showSettingsTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.settings-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + 'Settings').classList.add('active');
+            event.target.classList.add('active');
+        }
+
         // ==================== UTILITY FUNCTIONS ==================== 
         function showError(message) {
             console.error('❌ Error:', message);
@@ -1280,9 +1496,41 @@
 
         function logout() {
             console.log('🚪 Logging out...');
+            
+            // Clear user data
             currentUser = null;
             dashboardData = null;
-            location.reload();
+            
+            // Clear stored sessions
+            sessionStorage.removeItem('currentUser');
+            sessionStorage.removeItem('userSession');
+            localStorage.removeItem('posCart');
+            
+            // Hide main dashboard
+            const mainContainer = document.getElementById('mainContainer');
+            if (mainContainer) {
+                mainContainer.classList.add('hidden');
+            }
+            
+            // Reset and show login
+            resetLoginForm();
+            showLogin();
+            
+            console.log('✅ Logged out successfully');
+        }
+        
+        function resetLoginForm() {
+            // Clear form fields
+            const username = document.getElementById('username');
+            const pin = document.getElementById('pin');
+            const password = document.getElementById('password');
+            
+            if (username) username.value = '';
+            if (pin) pin.value = '';
+            if (password) password.value = '';
+            
+            // Reset to PIN mode
+            switchAuthType('pin');
         }
 
         // Advanced POS Interface
@@ -1297,15 +1545,179 @@
         }
 
         function showAdvancedInventoryInterface() {
-            alert('🚧 Advanced Inventory interface will be implemented next. This will include:\n\n• Real-time stock tracking\n• Automated reordering\n• Supplier management\n• Cost tracking\n• Inventory analytics');
+            console.log('📦 Opening Advanced Inventory...');
+            
+            // Save current session
+            sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            // Hide dashboard and show inventory interface
+            document.getElementById('mainContainer').innerHTML = `
+                <div class="module-container">
+                    <div class="module-header">
+                        <div class="module-title">
+                            <i class="fas fa-boxes"></i>
+                            <h2>Advanced Inventory Management</h2>
+                        </div>
+                        <button class="glass-button" onclick="showMainDashboard()">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </button>
+                    </div>
+                    
+                    <div class="module-content">
+                        <div class="inventory-stats">
+                            <div class="stat-card">
+                                <div class="stat-icon"><i class="fas fa-cubes"></i></div>
+                                <div class="stat-content">
+                                    <h3 id="totalProducts">Loading...</h3>
+                                    <p>Total Products</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                                <div class="stat-content">
+                                    <h3 id="lowStockItems">Loading...</h3>
+                                    <p>Low Stock Items</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
+                                <div class="stat-content">
+                                    <h3 id="inventoryValue">Loading...</h3>
+                                    <p>Total Value</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="inventory-controls">
+                            <button class="glass-button" onclick="addNewProduct()">
+                                <i class="fas fa-plus"></i> Add Product
+                            </button>
+                            <button class="glass-button" onclick="importProducts()">
+                                <i class="fas fa-upload"></i> Import Products
+                            </button>
+                            <button class="glass-button" onclick="exportInventory()">
+                                <i class="fas fa-download"></i> Export Inventory
+                            </button>
+                        </div>
+                        
+                        <div class="inventory-table">
+                            <div id="inventoryGrid">Loading inventory...</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            loadInventoryData();
         }
 
         function showAdvancedReportsInterface() {
-            alert('🚧 Advanced Reports interface will be implemented next. This will include:\n\n• Real-time business intelligence\n• Predictive analytics\n• Custom report builder\n• Automated insights\n• Export capabilities');
+            console.log('📊 Opening Advanced Reports...');
+            
+            // Save current session
+            sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            // Hide dashboard and show reports interface
+            document.getElementById('mainContainer').innerHTML = `
+                <div class="module-container">
+                    <div class="module-header">
+                        <div class="module-title">
+                            <i class="fas fa-chart-line"></i>
+                            <h2>Advanced Business Reports</h2>
+                        </div>
+                        <button class="glass-button" onclick="showMainDashboard()">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </button>
+                    </div>
+                    
+                    <div class="module-content">
+                        <div class="report-tabs">
+                            <button class="tab-button active" onclick="showReportTab('sales')">Sales Reports</button>
+                            <button class="tab-button" onclick="showReportTab('inventory')">Inventory Reports</button>
+                            <button class="tab-button" onclick="showReportTab('employees')">Employee Reports</button>
+                            <button class="tab-button" onclick="showReportTab('customers')">Customer Reports</button>
+                        </div>
+                        
+                        <div class="report-content">
+                            <div id="salesReport" class="report-tab active">
+                                <h3>Sales Performance</h3>
+                                <div id="salesCharts">Loading charts...</div>
+                            </div>
+                            
+                            <div id="inventoryReport" class="report-tab">
+                                <h3>Inventory Analysis</h3>
+                                <div id="inventoryCharts">Loading charts...</div>
+                            </div>
+                            
+                            <div id="employeesReport" class="report-tab">
+                                <h3>Employee Performance</h3>
+                                <div id="employeeCharts">Loading charts...</div>
+                            </div>
+                            
+                            <div id="customersReport" class="report-tab">
+                                <h3>Customer Analytics</h3>
+                                <div id="customerCharts">Loading charts...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            loadReportsData();
         }
 
         function showAdvancedSettingsInterface() {
-            alert('🚧 Advanced Settings interface will be implemented next. This will include:\n\n• User permission management\n• Integration configuration\n• Security settings\n• Backup & restore\n• System monitoring');
+            console.log('⚙️ Opening Advanced Settings...');
+            
+            // Save current session
+            sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            // Hide dashboard and show settings interface
+            document.getElementById('mainContainer').innerHTML = `
+                <div class="module-container">
+                    <div class="module-header">
+                        <div class="module-title">
+                            <i class="fas fa-cogs"></i>
+                            <h2>Advanced System Settings</h2>
+                        </div>
+                        <button class="glass-button" onclick="showMainDashboard()">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </button>
+                    </div>
+                    
+                    <div class="module-content">
+                        <div class="settings-tabs">
+                            <button class="tab-button active" onclick="showSettingsTab('company')">Company Settings</button>
+                            <button class="tab-button" onclick="showSettingsTab('users')">User Management</button>
+                            <button class="tab-button" onclick="showSettingsTab('permissions')">Permissions</button>
+                            <button class="tab-button" onclick="showSettingsTab('system')">System Config</button>
+                        </div>
+                        
+                        <div class="settings-content">
+                            <div id="companySettings" class="settings-tab active">
+                                <h3>Company Information</h3>
+                                <div id="companyForm">Loading settings...</div>
+                            </div>
+                            
+                            <div id="userSettings" class="settings-tab">
+                                <h3>User Management</h3>
+                                <div id="userManagement">Loading users...</div>
+                            </div>
+                            
+                            <div id="permissionSettings" class="settings-tab">
+                                <h3>Permission Matrix</h3>
+                                <div id="permissionMatrix">Loading permissions...</div>
+                            </div>
+                            
+                            <div id="systemSettings" class="settings-tab">
+                                <h3>System Configuration</h3>
+                                <div id="systemConfig">Loading config...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            loadSettingsData();
         }
     </script>
 
