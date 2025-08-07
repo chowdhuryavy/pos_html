@@ -3299,7 +3299,7 @@
             console.log('📝 Login attempt:', { username, authType: currentAuthType, hasCredential: !!credential });
             
             if (!username || !credential) {
-                alert(`Please enter both username and ${currentAuthType.toUpperCase()}`);
+                alert('Please enter both username and ' + currentAuthType.toUpperCase());
                 return;
             }
             
@@ -3677,7 +3677,7 @@
              ];
              
              return products.map(product => `
-                 <div onclick="addToCart(${product.id}, '${product.name}', ${product.price})" 
+                 <div onclick="addToCart(${product.id}, &quot;${product.name}&quot;, ${product.price})" 
                       style="background: #f9f9f9; border: 1px solid #eee; border-radius: 8px; padding: 15px; 
                              cursor: pointer; text-align: center; transition: all 0.3s ease;"
                       onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 15px rgba(0,0,0,0.1)'" 
@@ -3816,7 +3816,7 @@
          window.searchProducts = function() {
              const searchTerm = document.getElementById('productSearch').value.toLowerCase();
              console.log('🔍 Searching products:', searchTerm);
-             alert('Search functionality: Looking for "' + searchTerm + '"\\nThis would filter the product grid in a real implementation.');
+             alert('Search functionality: Looking for "' + searchTerm + '". This would filter the product grid in a real implementation.');
          };
          
          // Process checkout
@@ -4212,11 +4212,11 @@
                           </span>
                       </td>
                       <td style="padding: 12px;">
-                          <button onclick="editProduct('${item.name}')" 
-                                  style="background: #2196f3; color: white; border: none; padding: 6px 12px; 
-                                         border-radius: 3px; cursor: pointer; font-size: 12px; margin-right: 5px;">
-                              Edit
-                          </button>
+                                                     <button onclick="editProduct(&quot;${item.name}&quot;)" 
+                                   style="background: #2196f3; color: white; border: none; padding: 6px 12px; 
+                                          border-radius: 3px; cursor: pointer; font-size: 12px; margin-right: 5px;">
+                               Edit
+                           </button>
                       </td>
                   </tr>
               `).join('');
@@ -4321,7 +4321,7 @@
                   return;
               }
               
-              alert(\`Product "${name}" added successfully!\\nPrice: $\${price}\\nStock: \${stock}\\nCategory: \${category}\`);
+                             alert('Product "' + name + '" added successfully! Price: $' + price + ', Stock: ' + stock + ', Category: ' + category);
               
               // Clear form
               document.getElementById('productName').value = '';
@@ -4339,16 +4339,16 @@
                   return;
               }
               
-              alert(\`Stock adjusted for "\${product}"\\nAmount: \${amount}\\nReason: \${reason}\`);
+                             alert('Stock adjusted for "' + product + '". Amount: ' + amount + ', Reason: ' + reason);
               
               // Clear form
               document.getElementById('adjustAmount').value = '';
               document.getElementById('adjustReason').value = '';
           };
           
-          window.exportReports = function() {
-              alert('Exporting reports to CSV...\\nThis would download a CSV file with all transaction data.');
-          };
+                     window.exportReports = function() {
+               alert('Exporting reports to CSV. This would download a CSV file with all transaction data.');
+           };
           
           window.saveStoreSettings = function() {
               alert('Store settings saved successfully!');
@@ -4364,20 +4364,20 @@
                   return;
               }
               
-              alert(\`User "\${username}" added successfully!\\nRole: \${role}\`);
+                             alert('User "' + username + '" added successfully! Role: ' + role);
               
               // Clear form
               document.getElementById('newUsername').value = '';
               document.getElementById('newPassword').value = '';
           };
           
-          window.backupData = function() {
-              alert('Creating backup...\\nThis would create a backup of all system data.');
-          };
+                     window.backupData = function() {
+               alert('Creating backup. This would create a backup of all system data.');
+           };
           
-          window.syncInventory = function() {
-              alert('Syncing inventory...\\nThis would sync inventory with external systems.');
-          };
+                     window.syncInventory = function() {
+               alert('Syncing inventory. This would sync inventory with external systems.');
+           };
           
           window.clearLogs = function() {
               if (confirm('Are you sure you want to clear all system logs?')) {
@@ -4386,7 +4386,7 @@
           };
           
           window.editProduct = function(productName) {
-              alert(\`Editing product: "\${productName}"\\nThis would open a product edit form.\`);
+                             alert('Editing product: "' + productName + '". This would open a product edit form.');
           };
 
                                         // Simple, clean app initialization
@@ -4431,7 +4431,7 @@
                                             This app needs to run in a new tab for full functionality due to browser security policies.
                                         </p>
                                         <div style="margin-bottom: 25px;">
-                                            <button onclick="window.open('${directUrl}', '_blank'); window.close();" 
+                                            <button onclick="window.open(window.location.href.replace('/userCodeAppPanel', ''), '_blank'); window.close();" 
                                                     style="background: #667eea; color: white; border: none; padding: 15px 30px; 
                                                            border-radius: 8px; font-size: 16px; font-weight: 500; cursor: pointer; 
                                                            margin-right: 10px; transition: background 0.3s;">
