@@ -7523,8 +7523,413 @@
                 </div>
             `;
             
-            // Initialize Restaurant POS interface
-            initializeRestaurantPOS();
+            // Initialize the authentic Micros POS system
+            initializeAuthenticMicrosPOS();
+        }
+
+        function showAdvancedPOSInterface() {
+            console.log('🏪 Opening Authentic Micros POS System...');
+            
+            // Save current session
+            sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            // Hide dashboard and show authentic Micros POS interface
+            document.getElementById('mainContainer').innerHTML = `
+                <div class="authentic-micros-pos">
+                    <!-- Micros Header -->
+                    <div class="micros-top-bar">
+                        <div class="pos-station-info">
+                            <span class="station-id">WS1</span>
+                            <span class="restaurant-name">${currentUser?.companyName || 'RESTAURANT POS'}</span>
+                        </div>
+                        <div class="employee-info">
+                            <span class="employee-name">${currentUser ? currentUser.name : 'Server 1'}</span>
+                            <span class="employee-id">ID: ${currentUser ? currentUser.id : '001'}</span>
+                        </div>
+                        <div class="time-display">
+                            <div id="currentTime" class="current-time"></div>
+                            <div id="currentDate" class="current-date"></div>
+                        </div>
+                    </div>
+
+                    <!-- Main POS Menu Screen -->
+                    <div class="pos-main-menu" id="posMainMenu">
+                        <div class="menu-title">
+                            <h2>MICROS POS - Main Menu</h2>
+                            <div class="menu-subtitle">Select an option to continue</div>
+                        </div>
+                        
+                        <div class="pos-menu-grid">
+                            <!-- Primary Functions -->
+                            <div class="menu-section">
+                                <h3>Order Functions</h3>
+                                <div class="menu-buttons">
+                                    <button class="pos-menu-btn primary" onclick="beginCheck()">
+                                        <i class="fas fa-plus-circle"></i>
+                                        <span>Begin Check</span>
+                                        <small>Start new order</small>
+                                    </button>
+                                    <button class="pos-menu-btn" onclick="openExistingCheck()">
+                                        <i class="fas fa-folder-open"></i>
+                                        <span>Open Check</span>
+                                        <small>Resume existing order</small>
+                                    </button>
+                                    <button class="pos-menu-btn" onclick="transferCheck()">
+                                        <i class="fas fa-exchange-alt"></i>
+                                        <span>Transfer Check</span>
+                                        <small>Move to another table</small>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Reports Section -->
+                            <div class="menu-section">
+                                <h3>Reports & Analytics</h3>
+                                <div class="menu-buttons">
+                                    <button class="pos-menu-btn" onclick="showDailyRVCReport()">
+                                        <i class="fas fa-chart-line"></i>
+                                        <span>Daily RVC Report</span>
+                                        <small>Revenue, Volume, Cost</small>
+                                    </button>
+                                    <button class="pos-menu-btn" onclick="showTipsReport()">
+                                        <i class="fas fa-dollar-sign"></i>
+                                        <span>Tips Report</span>
+                                        <small>Daily tips summary</small>
+                                    </button>
+                                    <button class="pos-menu-btn" onclick="showSalesReport()">
+                                        <i class="fas fa-receipt"></i>
+                                        <span>Sales Report</span>
+                                        <small>Detailed sales data</small>
+                                    </button>
+                                    <button class="pos-menu-btn" onclick="showMenuEngineering()">
+                                        <i class="fas fa-cogs"></i>
+                                        <span>Menu Engineering</span>
+                                        <small>Item performance analysis</small>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Management Functions -->
+                            <div class="menu-section">
+                                <h3>Management</h3>
+                                <div class="menu-buttons">
+                                    <button class="pos-menu-btn" onclick="showTableStatus()">
+                                        <i class="fas fa-table"></i>
+                                        <span>Table Status</span>
+                                        <small>View all tables</small>
+                                    </button>
+                                    <button class="pos-menu-btn" onclick="showEmployeeManager()">
+                                        <i class="fas fa-users"></i>
+                                        <span>Employee Manager</span>
+                                        <small>Staff management</small>
+                                    </button>
+                                    <button class="pos-menu-btn" onclick="showInventoryManager()">
+                                        <i class="fas fa-boxes"></i>
+                                        <span>Inventory</span>
+                                        <small>Stock management</small>
+                                    </button>
+                                    <button class="pos-menu-btn" onclick="showSystemSettings()">
+                                        <i class="fas fa-cog"></i>
+                                        <span>System Settings</span>
+                                        <small>Configure POS</small>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Utilities -->
+                            <div class="menu-section">
+                                <h3>Utilities</h3>
+                                <div class="menu-buttons">
+                                    <button class="pos-menu-btn" onclick="showTimeClockModal()">
+                                        <i class="fas fa-clock"></i>
+                                        <span>Time Clock</span>
+                                        <small>Clock in/out</small>
+                                    </button>
+                                    <button class="pos-menu-btn" onclick="showManagerFunctions()">
+                                        <i class="fas fa-user-tie"></i>
+                                        <span>Manager Functions</span>
+                                        <small>Advanced options</small>
+                                    </button>
+                                    <button class="pos-menu-btn" onclick="backupData()">
+                                        <i class="fas fa-save"></i>
+                                        <span>Backup Data</span>
+                                        <small>Save system data</small>
+                                    </button>
+                                    <button class="pos-menu-btn" onclick="showMainDashboard()">
+                                        <i class="fas fa-arrow-left"></i>
+                                        <span>Back to Dashboard</span>
+                                        <small>Return to main menu</small>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Table Number Input Modal -->
+                    <div class="modal-overlay hidden" id="tableNumberModal">
+                        <div class="micros-modal">
+                            <div class="modal-header">
+                                <h3>Enter Table Number</h3>
+                            </div>
+                            <div class="modal-body">
+                                <div class="number-input-section">
+                                    <label>Table Number:</label>
+                                    <input type="number" id="tableNumberInput" class="micros-input" min="1" max="999" placeholder="Enter table number">
+                                </div>
+                                <div class="number-pad">
+                                    <button class="num-btn" onclick="addToTableNumber('1')">1</button>
+                                    <button class="num-btn" onclick="addToTableNumber('2')">2</button>
+                                    <button class="num-btn" onclick="addToTableNumber('3')">3</button>
+                                    <button class="num-btn" onclick="addToTableNumber('4')">4</button>
+                                    <button class="num-btn" onclick="addToTableNumber('5')">5</button>
+                                    <button class="num-btn" onclick="addToTableNumber('6')">6</button>
+                                    <button class="num-btn" onclick="addToTableNumber('7')">7</button>
+                                    <button class="num-btn" onclick="addToTableNumber('8')">8</button>
+                                    <button class="num-btn" onclick="addToTableNumber('9')">9</button>
+                                    <button class="num-btn clear" onclick="clearTableNumber()">Clear</button>
+                                    <button class="num-btn" onclick="addToTableNumber('0')">0</button>
+                                    <button class="num-btn backspace" onclick="backspaceTableNumber()">⌫</button>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="micros-btn secondary" onclick="cancelTableInput()">Cancel</button>
+                                <button class="micros-btn primary" onclick="confirmTableNumber()">Continue</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Guest Details Modal -->
+                    <div class="modal-overlay hidden" id="guestDetailsModal">
+                        <div class="micros-modal">
+                            <div class="modal-header">
+                                <h3>Guest Information - Table <span id="selectedTableNum"></span></h3>
+                            </div>
+                            <div class="modal-body">
+                                <div class="guest-input-form">
+                                    <div class="form-row">
+                                        <label>Number of Guests (Pax):</label>
+                                        <div class="pax-controls">
+                                            <button class="pax-btn" onclick="adjustPaxCount(-1)">-</button>
+                                            <input type="number" id="paxCount" class="micros-input" value="2" min="1" max="20">
+                                            <button class="pax-btn" onclick="adjustPaxCount(1)">+</button>
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <label>Guest Name (Optional):</label>
+                                        <input type="text" id="guestNameInput" class="micros-input" placeholder="Enter guest name">
+                                    </div>
+                                    <div class="form-row">
+                                        <label>Special Requests:</label>
+                                        <textarea id="specialRequestsInput" class="micros-input" rows="3" placeholder="Any special requests or notes..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="micros-btn secondary" onclick="cancelGuestInput()">Back</button>
+                                <button class="micros-btn primary" onclick="startOrderEntry()">Start Order</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dual Panel Order Entry Screen -->
+                    <div class="order-entry-screen hidden" id="orderEntryScreen">
+                        <!-- Order Entry Header -->
+                        <div class="order-entry-header">
+                            <div class="check-info">
+                                <span class="check-number">Check #<span id="checkNumber">1001</span></span>
+                                <span class="table-number">Table <span id="orderTableNumber">1</span></span>
+                            </div>
+                            <div class="employee-check-info">
+                                <span class="employee-name">${currentUser ? currentUser.name : 'Server 1'}</span>
+                                <span class="open-time" id="openTime">12:34 PM</span>
+                            </div>
+                            <div class="order-actions">
+                                <button class="header-btn" onclick="goBackToMainMenu()">
+                                    <i class="fas fa-arrow-left"></i> Main Menu
+                                </button>
+                                <button class="header-btn" onclick="printCheck()">
+                                    <i class="fas fa-print"></i> Print
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Dual Panel Layout -->
+                        <div class="dual-panel-container">
+                            <!-- Left Panel - Order Details -->
+                            <div class="order-panel">
+                                <div class="panel-header">
+                                    <h3>Order Details</h3>
+                                    <div class="order-status">Status: Open</div>
+                                </div>
+                                
+                                <div class="order-items-display">
+                                    <div class="order-items-header">
+                                        <span>Qty</span>
+                                        <span>Item</span>
+                                        <span>Price</span>
+                                        <span>Total</span>
+                                    </div>
+                                    <div class="order-items-list" id="orderItemsList">
+                                        <div class="no-items-message">
+                                            <i class="fas fa-utensils"></i>
+                                            <p>No items ordered yet</p>
+                                            <small>Select items from the menu below</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="order-totals">
+                                    <div class="total-row">
+                                        <span>Subtotal:</span>
+                                        <span id="orderSubtotal">$0.00</span>
+                                    </div>
+                                    <div class="total-row">
+                                        <span>Tax (8.5%):</span>
+                                        <span id="orderTax">$0.00</span>
+                                    </div>
+                                    <div class="total-row">
+                                        <span>Gratuity:</span>
+                                        <span id="orderGratuity">$0.00</span>
+                                    </div>
+                                    <div class="total-row grand-total">
+                                        <span>Total:</span>
+                                        <span id="orderGrandTotal">$0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right Panel - Guest & Check Details -->
+                            <div class="guest-panel">
+                                <div class="panel-header">
+                                    <h3>Guest & Check Information</h3>
+                                </div>
+                                
+                                <div class="guest-details">
+                                    <div class="detail-section">
+                                        <h4>Table Information</h4>
+                                        <div class="detail-grid">
+                                            <div class="detail-item">
+                                                <label>Table Number:</label>
+                                                <span id="guestTableNumber">1</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <label>Number of Guests:</label>
+                                                <span id="guestCount">2</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <label>Guest Name:</label>
+                                                <span id="guestName">Walk-in</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="detail-section">
+                                        <h4>Check Information</h4>
+                                        <div class="detail-grid">
+                                            <div class="detail-item">
+                                                <label>Check Number:</label>
+                                                <span id="checkNumberDisplay">1001</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <label>Employee:</label>
+                                                <span id="employeeName">${currentUser ? currentUser.name : 'Server 1'}</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <label>Opening Time:</label>
+                                                <span id="openingTime">12:34 PM</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="detail-section">
+                                        <h4>Special Requests</h4>
+                                        <div class="special-requests-display" id="specialRequestsDisplay">
+                                            <em>No special requests</em>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bottom Function Panels -->
+                        <div class="function-panels">
+                            <!-- Left Functions - Menu Categories -->
+                            <div class="menu-functions">
+                                <h4>Menu Categories</h4>
+                                <div class="category-buttons">
+                                    <button class="category-function-btn active" onclick="selectCategory('food')">
+                                        <i class="fas fa-utensils"></i>
+                                        <span>Food</span>
+                                    </button>
+                                    <button class="category-function-btn" onclick="selectCategory('beverage')">
+                                        <i class="fas fa-coffee"></i>
+                                        <span>Beverage</span>
+                                    </button>
+                                    <button class="category-function-btn" onclick="selectCategory('alcohol')">
+                                        <i class="fas fa-wine-glass"></i>
+                                        <span>Alcohol</span>
+                                    </button>
+                                    <button class="category-function-btn" onclick="selectCategory('dessert')">
+                                        <i class="fas fa-ice-cream"></i>
+                                        <span>Dessert</span>
+                                    </button>
+                                    <button class="category-function-btn" onclick="selectCategory('misc')">
+                                        <i class="fas fa-ellipsis-h"></i>
+                                        <span>Misc</span>
+                                    </button>
+                                </div>
+                                
+                                <!-- Menu Items Display -->
+                                <div class="menu-items-display" id="menuItemsDisplay">
+                                    <!-- Menu items will be loaded here based on selected category -->
+                                </div>
+                            </div>
+
+                            <!-- Right Functions - Order Operations -->
+                            <div class="order-functions">
+                                <h4>Order Functions</h4>
+                                <div class="function-buttons">
+                                    <button class="function-btn discount" onclick="applyDiscount()">
+                                        <i class="fas fa-percent"></i>
+                                        <span>Discount</span>
+                                    </button>
+                                    <button class="function-btn comp" onclick="compItem()">
+                                        <i class="fas fa-gift"></i>
+                                        <span>Comp</span>
+                                    </button>
+                                    <button class="function-btn void" onclick="voidItem()">
+                                        <i class="fas fa-times"></i>
+                                        <span>Void</span>
+                                    </button>
+                                    <button class="function-btn modify" onclick="modifyItem()">
+                                        <i class="fas fa-edit"></i>
+                                        <span>Modify</span>
+                                    </button>
+                                    <button class="function-btn payment" onclick="processPayment()">
+                                        <i class="fas fa-credit-card"></i>
+                                        <span>Payment</span>
+                                    </button>
+                                    <button class="function-btn hold" onclick="holdCheck()">
+                                        <i class="fas fa-pause"></i>
+                                        <span>Hold</span>
+                                    </button>
+                                    <button class="function-btn transfer" onclick="transferCheck()">
+                                        <i class="fas fa-exchange-alt"></i>
+                                        <span>Transfer</span>
+                                    </button>
+                                    <button class="function-btn close" onclick="closeCheck()">
+                                        <i class="fas fa-check"></i>
+                                        <span>Close Check</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Initialize the authentic Micros POS system
+            initializeAuthenticMicrosPOS();
         }
 
         function showAdvancedInventoryInterface() {
