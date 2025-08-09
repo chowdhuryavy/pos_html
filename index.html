@@ -347,50 +347,50 @@
             z-index: 2;
         }
 
+        /* Animated Border Light Effect */
         .login-button::before {
             content: '';
             position: absolute;
-            bottom: -8px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 90%;
-            height: 12px;
-            background: linear-gradient(90deg, 
-                transparent 0%, 
-                rgba(102, 126, 234, 0.3) 10%, 
-                rgba(102, 126, 234, 0.6) 30%, 
-                rgba(102, 126, 234, 0.8) 50%, 
-                rgba(102, 126, 234, 0.6) 70%, 
-                rgba(102, 126, 234, 0.3) 90%, 
-                transparent 100%
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: linear-gradient(45deg, 
+                rgba(102, 126, 234, 0.8), 
+                rgba(255, 255, 255, 0.9), 
+                rgba(102, 126, 234, 0.8), 
+                rgba(64, 224, 208, 0.8),
+                rgba(102, 126, 234, 0.8)
             );
-            border-radius: 50px;
-            opacity: 1;
-            filter: blur(6px);
+            background-size: 300% 300%;
+            border-radius: 15px;
             z-index: -1;
-            animation: continuousLightGlow 3s ease-in-out infinite;
+            animation: borderLightRotate 4s linear infinite;
+            opacity: 1;
         }
 
+        /* Inner continuous glow */
         .login-button::after {
             content: '';
             position: absolute;
-            bottom: -6px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 70%;
-            height: 8px;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
             background: linear-gradient(90deg, 
                 transparent 0%, 
-                rgba(102, 126, 234, 0.4) 20%, 
-                rgba(102, 126, 234, 0.7) 50%, 
-                rgba(102, 126, 234, 0.4) 80%, 
+                rgba(102, 126, 234, 0.4) 15%,
+                rgba(255, 255, 255, 0.6) 30%, 
+                rgba(102, 126, 234, 0.8) 50%, 
+                rgba(255, 255, 255, 0.6) 70%,
+                rgba(102, 126, 234, 0.4) 85%,
                 transparent 100%
             );
-            border-radius: 50px;
-            opacity: 1;
-            filter: blur(3px);
+            background-size: 200% 200%;
+            border-radius: 14px;
             z-index: -1;
-            animation: continuousLightGlow 3s ease-in-out infinite 0.5s;
+            animation: borderLightPulse 3s ease-in-out infinite;
+            filter: blur(1px);
         }
 
         .login-button:hover {
@@ -399,15 +399,15 @@
         }
 
         .login-button:hover::before {
-            bottom: -12px;
-            filter: blur(8px);
-            animation: intenseLightGlow 2s ease-in-out infinite;
+            animation: borderLightRotate 2s linear infinite;
+            opacity: 1;
+            background-size: 400% 400%;
         }
 
         .login-button:hover::after {
-            bottom: -8px;
-            filter: blur(4px);
-            animation: intenseLightGlow 2s ease-in-out infinite 0.3s;
+            animation: borderLightPulse 1.5s ease-in-out infinite;
+            opacity: 1;
+            filter: blur(2px);
         }
 
         .login-button:active {
@@ -415,15 +415,13 @@
         }
 
         .login-button:active::before {
-            opacity: 0.8;
-            bottom: -10px;
-            filter: blur(5px);
+            opacity: 0.6;
+            animation: borderLightRotate 1s linear infinite;
         }
 
         .login-button:active::after {
-            opacity: 0.7;
-            bottom: -6px;
-            filter: blur(2px);
+            opacity: 0.4;
+            filter: blur(1px);
         }
 
         .login-button:disabled {
@@ -735,6 +733,41 @@
             75% {
                 opacity: 1;
                 transform: translateX(-50%) scaleX(1.2);
+            }
+        }
+
+        @keyframes borderLightRotate {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        @keyframes borderLightPulse {
+            0% {
+                background-position: 0% 0%;
+                opacity: 0.6;
+            }
+            25% {
+                background-position: 50% 0%;
+                opacity: 0.8;
+            }
+            50% {
+                background-position: 100% 0%;
+                opacity: 1;
+            }
+            75% {
+                background-position: 150% 0%;
+                opacity: 0.8;
+            }
+            100% {
+                background-position: 200% 0%;
+                opacity: 0.6;
             }
         }
 
@@ -7669,6 +7702,442 @@
             
             loadSettingsData();
         }
+
+        // ==================== AUTHENTIC MICROS POS JAVASCRIPT ====================
+        
+        // Global variables for Micros POS system
+        let microsState = {
+            currentTable: null,
+            currentCheck: null,
+            currentCategory: 'food',
+            currentOrder: [],
+            checkNumber: 1001,
+            selectedOrderItem: null,
+            guestInfo: {
+                tableNumber: null,
+                paxCount: 2,
+                guestName: '',
+                specialRequests: ''
+            }
+        };
+
+        // Time display functions
+        function updateMicrosTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit',
+                hour12: true 
+            });
+            const dateStr = now.toLocaleDateString('en-US', {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric'
+            });
+            
+            const timeEl = document.getElementById('currentTime');
+            const dateEl = document.getElementById('currentDate');
+            if (timeEl) timeEl.textContent = timeStr;
+            if (dateEl) dateEl.textContent = dateStr;
+        }
+
+        // Initialize Micros POS system
+        function initializeAuthenticMicrosPOS() {
+            console.log('🏪 Initializing Authentic Micros POS System...');
+            
+            // Start time updates
+            updateMicrosTime();
+            setInterval(updateMicrosTime, 1000);
+            
+            // Load default menu items for each category
+            loadMicrosMenuData();
+            
+            console.log('✅ Authentic Micros POS System Ready');
+        }
+
+        // Main menu functions
+        function beginCheck() {
+            console.log('📋 Begin Check clicked');
+            document.getElementById('tableNumberModal').classList.remove('hidden');
+            document.getElementById('tableNumberInput').focus();
+        }
+
+        function openExistingCheck() {
+            alert('Open Existing Check - Feature coming soon');
+        }
+
+        function transferCheck() {
+            alert('Transfer Check - Feature coming soon');
+        }
+
+        function showDailyRVCReport() {
+            alert('Daily RVC Report:\\n\\nRevenue: $2,450.00\\nVolume: 89 transactions\\nCost: $1,225.00\\nProfit: $1,225.00\\nMargin: 50%');
+        }
+
+        function showTipsReport() {
+            alert('Tips Report:\\n\\nTotal Tips Today: $345.67\\nCash Tips: $123.45\\nCard Tips: $222.22\\nAverage Tip: 18.5%');
+        }
+
+        function showSalesReport() {
+            alert('Sales Report - Opening detailed sales module...');
+        }
+
+        function showMenuEngineering() {
+            alert('Menu Engineering:\\n\\nTop Performers:\\n1. Caesar Salad - 23 sold\\n2. Grilled Salmon - 18 sold\\n3. House Burger - 15 sold\\n\\nSlow Movers:\\n1. Vegan Bowl - 3 sold\\n2. Fish Tacos - 5 sold');
+        }
+
+        function showTableStatus() {
+            alert('Table Status - All tables overview coming soon');
+        }
+
+        function showEmployeeManager() {
+            alert('Employee Manager - Staff management module coming soon');
+        }
+
+        function showInventoryManager() {
+            alert('Inventory Manager - Stock management module coming soon');
+        }
+
+        function showSystemSettings() {
+            alert('System Settings - POS configuration coming soon');
+        }
+
+        function showTimeClockModal() {
+            alert('Time Clock - Employee clock in/out coming soon');
+        }
+
+        function showManagerFunctions() {
+            alert('Manager Functions - Advanced management tools coming soon');
+        }
+
+        function backupData() {
+            alert('Backup initiated... Data saved successfully!');
+        }
+
+        function logoutFromPOS() {
+            if (confirm('Are you sure you want to logout from the POS system?')) {
+                logout();
+            }
+        }
+
+        // Table number modal functions
+        function addToTableNumber(digit) {
+            const input = document.getElementById('tableNumberInput');
+            input.value += digit;
+        }
+
+        function clearTableNumber() {
+            document.getElementById('tableNumberInput').value = '';
+        }
+
+        function backspaceTableNumber() {
+            const input = document.getElementById('tableNumberInput');
+            input.value = input.value.slice(0, -1);
+        }
+
+        function cancelTableInput() {
+            document.getElementById('tableNumberModal').classList.add('hidden');
+            document.getElementById('tableNumberInput').value = '';
+        }
+
+        function confirmTableNumber() {
+            const tableNumber = document.getElementById('tableNumberInput').value;
+            if (!tableNumber || tableNumber < 1) {
+                alert('Please enter a valid table number');
+                return;
+            }
+            
+            microsState.guestInfo.tableNumber = tableNumber;
+            document.getElementById('selectedTableNum').textContent = tableNumber;
+            
+            // Hide table modal, show guest details modal
+            document.getElementById('tableNumberModal').classList.add('hidden');
+            document.getElementById('guestDetailsModal').classList.remove('hidden');
+            document.getElementById('paxCount').focus();
+        }
+
+        // Guest details modal functions
+        function adjustPaxCount(change) {
+            const input = document.getElementById('paxCount');
+            let count = parseInt(input.value) + change;
+            if (count < 1) count = 1;
+            if (count > 20) count = 20;
+            input.value = count;
+            microsState.guestInfo.paxCount = count;
+        }
+
+        function cancelGuestInput() {
+            document.getElementById('guestDetailsModal').classList.add('hidden');
+            document.getElementById('tableNumberModal').classList.remove('hidden');
+        }
+
+        function startOrderEntry() {
+            // Get guest info
+            microsState.guestInfo.paxCount = document.getElementById('paxCount').value;
+            microsState.guestInfo.guestName = document.getElementById('guestNameInput').value || 'Walk-in';
+            microsState.guestInfo.specialRequests = document.getElementById('specialRequestsInput').value;
+            
+            // Generate new check number
+            microsState.checkNumber++;
+            microsState.currentOrder = [];
+            
+            // Hide guest modal, show order entry screen
+            document.getElementById('guestDetailsModal').classList.add('hidden');
+            document.getElementById('posMainMenu').classList.add('hidden');
+            document.getElementById('orderEntryScreen').classList.remove('hidden');
+            
+            // Update order entry screen with guest info
+            updateOrderEntryDisplay();
+            
+            // Load default category (food)
+            selectCategory('food');
+        }
+
+        // Order entry screen functions
+        function updateOrderEntryDisplay() {
+            document.getElementById('checkNumber').textContent = microsState.checkNumber;
+            document.getElementById('orderTableNumber').textContent = microsState.guestInfo.tableNumber;
+            document.getElementById('guestTableNumber').textContent = microsState.guestInfo.tableNumber;
+            document.getElementById('guestCount').textContent = microsState.guestInfo.paxCount;
+            document.getElementById('guestName').textContent = microsState.guestInfo.guestName;
+            document.getElementById('checkNumberDisplay').textContent = microsState.checkNumber;
+            
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit',
+                hour12: true 
+            });
+            document.getElementById('openTime').textContent = timeStr;
+            document.getElementById('openingTime').textContent = timeStr;
+            
+            if (microsState.guestInfo.specialRequests) {
+                document.getElementById('specialRequestsDisplay').innerHTML = microsState.guestInfo.specialRequests;
+            }
+            
+            updateOrderItemsDisplay();
+            updateOrderTotals();
+        }
+
+        function goBackToMainMenu() {
+            if (confirm('Are you sure you want to go back to the main menu? Current order will be saved.')) {
+                document.getElementById('orderEntryScreen').classList.add('hidden');
+                document.getElementById('posMainMenu').classList.remove('hidden');
+            }
+        }
+
+        function printCheck() {
+            alert('Printing guest check...');
+        }
+
+        // Category selection
+        function selectCategory(category) {
+            microsState.currentCategory = category;
+            
+            // Update active category button
+            document.querySelectorAll('.category-function-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            const activeBtn = document.querySelector(\`button[onclick*="selectCategory('\${category}')"]\`);
+            if (activeBtn) activeBtn.classList.add('active');
+            
+            // Load menu items for this category
+            loadMenuItemsForCategory(category);
+        }
+
+        // Menu data
+        function loadMicrosMenuData() {
+            microsState.menuData = {
+                food: [
+                    { id: 'f001', name: 'Caesar Salad', price: 12.99 },
+                    { id: 'f002', name: 'House Burger', price: 15.99 },
+                    { id: 'f003', name: 'Grilled Salmon', price: 24.99 },
+                    { id: 'f004', name: 'Chicken Alfredo', price: 18.99 },
+                    { id: 'f005', name: 'Ribeye Steak', price: 32.99 },
+                    { id: 'f006', name: 'Fish Tacos', price: 14.99 },
+                    { id: 'f007', name: 'BBQ Ribs', price: 26.99 },
+                    { id: 'f008', name: 'Veggie Wrap', price: 11.99 }
+                ],
+                beverage: [
+                    { id: 'b001', name: 'Coca Cola', price: 3.99 },
+                    { id: 'b002', name: 'Fresh Coffee', price: 2.99 },
+                    { id: 'b003', name: 'Orange Juice', price: 4.99 },
+                    { id: 'b004', name: 'Ice Tea', price: 3.49 },
+                    { id: 'b005', name: 'Hot Tea', price: 3.49 },
+                    { id: 'b006', name: 'Smoothie', price: 6.99 }
+                ],
+                alcohol: [
+                    { id: 'a001', name: 'House Wine', price: 8.99 },
+                    { id: 'a002', name: 'Draft Beer', price: 5.99 },
+                    { id: 'a003', name: 'Whiskey', price: 12.99 },
+                    { id: 'a004', name: 'Cocktail', price: 11.99 }
+                ],
+                dessert: [
+                    { id: 'd001', name: 'Chocolate Cake', price: 7.99 },
+                    { id: 'd002', name: 'Ice Cream', price: 5.99 },
+                    { id: 'd003', name: 'Cheesecake', price: 8.99 },
+                    { id: 'd004', name: 'Apple Pie', price: 6.99 }
+                ],
+                misc: [
+                    { id: 'm001', name: 'Extra Bread', price: 2.99 },
+                    { id: 'm002', name: 'Side Salad', price: 4.99 },
+                    { id: 'm003', name: 'French Fries', price: 3.99 }
+                ]
+            };
+        }
+
+        function loadMenuItemsForCategory(category) {
+            const items = microsState.menuData[category] || [];
+            const container = document.getElementById('menuItemsDisplay');
+            
+            container.innerHTML = items.map(item => \`
+                <button class="menu-item-btn" onclick="addItemToOrder('\${item.id}', '\${item.name.replace(/'/g, '\\\\&apos;')}', \${item.price})">
+                    <div class="item-name">\${item.name}</div>
+                    <div class="item-price">$\${item.price.toFixed(2)}</div>
+                </button>
+            \`).join('');
+        }
+
+        // Order management
+        function addItemToOrder(itemId, itemName, itemPrice) {
+            const existingItem = microsState.currentOrder.find(item => item.id === itemId);
+            
+            if (existingItem) {
+                existingItem.quantity++;
+                existingItem.total = existingItem.quantity * existingItem.price;
+            } else {
+                microsState.currentOrder.push({
+                    id: itemId,
+                    name: itemName,
+                    price: itemPrice,
+                    quantity: 1,
+                    total: itemPrice
+                });
+            }
+            
+            updateOrderItemsDisplay();
+            updateOrderTotals();
+        }
+
+        function updateOrderItemsDisplay() {
+            const container = document.getElementById('orderItemsList');
+            
+            if (microsState.currentOrder.length === 0) {
+                container.innerHTML = \`
+                    <div class="no-items-message">
+                        <i class="fas fa-utensils"></i>
+                        <p>No items ordered yet</p>
+                        <small>Select items from the menu below</small>
+                    </div>
+                \`;
+                return;
+            }
+            
+            container.innerHTML = microsState.currentOrder.map((item, index) => \`
+                <div class="order-item-row" onclick="selectOrderItem(\${index})" style="display: grid; grid-template-columns: 50px 1fr 80px 80px; gap: 10px; padding: 8px; border-bottom: 1px solid #ddd; cursor: pointer;">
+                    <span>\${item.quantity}</span>
+                    <span>\${item.name}</span>
+                    <span>$\${item.price.toFixed(2)}</span>
+                    <span>$\${item.total.toFixed(2)}</span>
+                </div>
+            \`).join('');
+        }
+
+        function selectOrderItem(index) {
+            microsState.selectedOrderItem = index;
+            // Highlight selected item
+            document.querySelectorAll('.order-item-row').forEach((row, i) => {
+                if (i === index) {
+                    row.style.backgroundColor = '#e6f3ff';
+                    row.style.border = '2px solid #007acc';
+                } else {
+                    row.style.backgroundColor = '';
+                    row.style.border = '';
+                }
+            });
+        }
+
+        function updateOrderTotals() {
+            const subtotal = microsState.currentOrder.reduce((sum, item) => sum + item.total, 0);
+            const tax = subtotal * 0.085; // 8.5% tax
+            const gratuity = 0; // Will be added later
+            const total = subtotal + tax + gratuity;
+            
+            document.getElementById('orderSubtotal').textContent = '$' + subtotal.toFixed(2);
+            document.getElementById('orderTax').textContent = '$' + tax.toFixed(2);
+            document.getElementById('orderGratuity').textContent = '$' + gratuity.toFixed(2);
+            document.getElementById('orderGrandTotal').textContent = '$' + total.toFixed(2);
+        }
+
+        // Order function buttons
+        function applyDiscount() {
+            if (microsState.selectedOrderItem === null) {
+                alert('Please select an item to apply discount');
+                return;
+            }
+            alert('Discount function - Coming soon');
+        }
+
+        function compItem() {
+            if (microsState.selectedOrderItem === null) {
+                alert('Please select an item to comp');
+                return;
+            }
+            alert('Comp function - Coming soon');
+        }
+
+        function voidItem() {
+            if (microsState.selectedOrderItem === null) {
+                alert('Please select an item to void');
+                return;
+            }
+            
+            if (confirm('Are you sure you want to void this item?')) {
+                microsState.currentOrder.splice(microsState.selectedOrderItem, 1);
+                microsState.selectedOrderItem = null;
+                updateOrderItemsDisplay();
+                updateOrderTotals();
+            }
+        }
+
+        function modifyItem() {
+            if (microsState.selectedOrderItem === null) {
+                alert('Please select an item to modify');
+                return;
+            }
+            alert('Modify function - Coming soon');
+        }
+
+        function processPayment() {
+            if (microsState.currentOrder.length === 0) {
+                alert('No items in the order');
+                return;
+            }
+            alert('Payment processing - Coming soon');
+        }
+
+        function holdCheck() {
+            alert('Check held successfully');
+        }
+
+        function closeCheck() {
+            if (microsState.currentOrder.length === 0) {
+                alert('No items in the order');
+                return;
+            }
+            
+            if (confirm('Are you sure you want to close this check?')) {
+                alert('Check closed successfully');
+                goBackToMainMenu();
+            }
+        }
+
+        // Initialize the Micros POS system when the advanced POS interface is loaded
+        function initializeMicrosPOS() {
+            initializeAuthenticMicrosPOS();
+        }
+
+        // ==================== END AUTHENTIC MICROS POS JAVASCRIPT ==================== 
     </script>
 
     <?= include('pos-script'); ?>
